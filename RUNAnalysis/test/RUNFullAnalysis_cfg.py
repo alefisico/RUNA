@@ -1,10 +1,11 @@
 import FWCore.ParameterSet.Config as cms
 from FWCore.ParameterSet.VarParsing import VarParsing
 
+### Example how to run
+### cmsRun RUNFullAnalysis_cfg.py PROC=RPVStopStopToJets_UDD312_M-100 jecVersion=supportFiles/Spring16_23Sep2016V2 namePUFile=supportFiles/PileupData2016BCDEFGH_ReReco_69200.root maxEvents=10000 CSVFile=supportFiles/CSVv2_Moriond17_B_H.csv cMVAFile=supportFiles/cMVAv2_Moriond17_B_H.csv
+
 ###############################
 ####### Parameters ############
-###############################
-
 options = VarParsing ('python')
 
 ### General Options
