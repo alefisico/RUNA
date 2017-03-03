@@ -155,13 +155,6 @@ process.BoostedAnalysisPlots = cms.EDAnalyzer('RUNBoostedAnalysis',
 		LHEcont			= cms.bool( True if 'QCD_Pt' in NAME else False ), ## logic is oposite
 		scale 			= cms.double( SF ),
 		mkTree			= cms.bool( True ),
-		jetTrimmedMass 		= cms.InputTag('jetsAK8CHS:jetAK8CHStrimmedMass'+('' if '312' in NAME else 'CHS')),
-		jetSoftDropMass		= cms.InputTag('jetsAK8CHS:jetAK8CHSsoftDropMass'+('' if '312' in NAME else 'CHS')),
-		jetPrunedMass 		= cms.InputTag('jetsAK8CHS:jetAK8CHSprunedMass'+('' if '312' in NAME else 'CHS')),
-		jetFilteredMass		= cms.InputTag('jetsAK8CHS:jetAK8CHSfilteredMass'+('' if '312' in NAME else 'CHS')),
-		jetTau1 		= cms.InputTag('jetsAK8CHS:jetAK8CHStau1'+('' if '312' in NAME else 'CHS')),
-		jetTau2 		= cms.InputTag('jetsAK8CHS:jetAK8CHStau2'+('' if '312' in NAME else 'CHS')),
-		jetTau3 		= cms.InputTag('jetsAK8CHS:jetAK8CHStau3'+('' if '312' in NAME else 'CHS')),
 )
 
 #process.BoostedAnalysisPlotsSortInMass = process.BoostedAnalysisPlots.clone( sortInMass = cms.bool( True ), mkTree = cms.bool( False ) )

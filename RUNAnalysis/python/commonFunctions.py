@@ -81,7 +81,7 @@ def getHistoFromTree( fileName, treeName, plotVar, cuts, histo, numentries=False
 	chain = TChain( treeName )
 	chain.Add( fileName ) 
 	if not numentries: numEntries = chain.GetEntries()
-	else: numEntries = int( chain.GetEntries())
+	else: numEntries = int( chain.GetEntries()*0.05 )
 	print '|---> Plotting: '+plotVar+'>>'+str(histo.GetName()), numEntries, chain.GetEntries(), cuts 
 	chain.Draw( plotVar+'>>'+str(histo.GetName()), cuts, 'goff', numEntries, skipEvents ) ### goff no graphics generated
 
@@ -93,7 +93,7 @@ def get2DHistoFromTree( fileName, treeName, plotVar1, plotVar2, cuts, histo, num
 	chain = TChain( treeName )
 	chain.Add( fileName ) 
 	if not numEntries: numEntries = chain.GetEntriesFast()
-	else: numEntries = int( chain.GetEntriesFast())
+	else: numEntries = int( chain.GetEntriesFast()*0.05 )
 	print '|---> Plotting: '+plotVar1+':'+plotVar2+'>>'+str(histo.GetName()), cuts
 	chain.Draw( plotVar2+':'+plotVar1+'>>'+str(histo.GetName()), cuts, 'goff', numEntries, skipEvents  )
 

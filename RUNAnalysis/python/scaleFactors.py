@@ -158,9 +158,9 @@ dictEvents = {
 #		'TTJets_HT-2500toInf' :	[  	507842. 	 ],
 		'WJetsToQQ' : 	[ 1026587., 	1025005 ],
 		'WWTo4Q' : 	[ 1998400., 	1813904 ],
-		'ZJetsToQQ' : 	[ 992590 ],
+		#'ZJetsToQQ' : 	[ 992590 ],
 		'ZZTo4Q' : 	[ 30454227., 	29948451 ],
-		'WZ' : 	[  		],
+		'WZ' : 	[ 2995828  		],
 
 		#### RPV Stop
 		##### Centrally produced
