@@ -42,6 +42,7 @@ def myAnalyzer( dictSamples, preselection, cuts, signalName, UNC ):
 
 	for sam in dictSamples:
 		allHistos[ "HT_cutBestPair_"+sam ] = TH1F( "HT_cutBestPair_"+sam, "HT_cutBestPair_"+sam, 5000, 0., 5000 )
+		allHistos[ "NPV_cutBestPair_"+sam ] = TH1F( "NPV_cutBestPair_"+sam, "NPV_cutBestPair_"+sam, 100, 0., 100 )
 		allHistos[ "jet1Pt_cutBestPair_"+sam ] = TH1F( "jet1Pt_cutBestPair_"+sam, "jet1Pt_cutBestPair_"+sam, 3000, 0., 3000 )
 		allHistos[ "jet2Pt_cutBestPair_"+sam ] = TH1F( "jet2Pt_cutBestPair_"+sam, "jet2Pt_cutBestPair_"+sam, 3000, 0., 3000 )
 		allHistos[ "jet3Pt_cutBestPair_"+sam ] = TH1F( "jet3Pt_cutBestPair_"+sam, "jet3Pt_cutBestPair_"+sam, 3000, 0., 3000 )
@@ -91,13 +92,11 @@ def myAnalyzer( dictSamples, preselection, cuts, signalName, UNC ):
 	#treeName = 'ResolvedAnalysisPlotsScouting/RUNATree'
 	treeName = 'ResolvedAnalysisPlots/RUNATree'
 
-	'''
 	if 'JetHT' in args.samples: 
 		for era in [ 'B', 'C', 'D', 'E', 'F', 'G', 'H' ]:
 			dictSamples[ 'JetHT_Run2016'+era ] = dictSamples[ 'JetHT_Run2016' ].replace('2016', '2016'+era)
 		dictSamples.pop( 'JetHT_Run2016' )
 		fullSel = fullSel + TCut('Entry$ % '+str(randint(0,10))+' == 0')
-	'''
 
 	for sample in dictSamples:
 
@@ -125,6 +124,12 @@ def myAnalyzer( dictSamples, preselection, cuts, signalName, UNC ):
 				'massAve', 
 				presel,
 				allHistos[ 'massAve_cutBestPair_'+sample ], 
+				( True if 'JetHT' in sample else False ) )
+
+		getHistoFromTree( fileSample, treeName,
+				'numPV', 
+				presel,
+				allHistos[ 'NPV_cutBestPair_'+sample ], 
 				( True if 'JetHT' in sample else False ) )
 
 		getHistoFromTree( fileSample, treeName,
@@ -480,13 +485,13 @@ if __name__ == '__main__':
 	else: folder = 'Rootfiles/'
 
 	allSamples = {}
-	allSamples[ 'JetHT_Run2016'] = folder+'/RUNAnalysis_JetHT_Run2016C_V2p1_'+args.version+'.root'
-	allSamples[ 'RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) ] = folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+args.mass+'_80X_V2p1_'+args.version+'.root'
-	allSamples[ 'TTJets' ] = folder+'/RUNAnalysis_TT_80X_V2p1_'+args.version+'.root'
-    	allSamples[ 'ZJetsToQQ' ] = folder+'/RUNAnalysis_ZJetsToQQ_80X_V2p1_'+args.version+'.root'
-    	allSamples[ 'WJetsToQQ' ] = folder+'/RUNAnalysis_WJetsToQQ_80X_V2p1_'+args.version+'.root'
-	allSamples[ 'Dibosons' ] = folder+'/RUNAnalysis_Dibosons_80X_V2p1_'+args.version+'.root'
-	allSamples[ 'QCD'+args.qcd+'All' ] = folder+'/RUNAnalysis_QCD'+args.qcd+'All_80X_V2p1_'+args.version+'.root'
+	allSamples[ 'JetHT_Run2016'] = folder+'/RUNAnalysis_JetHT_Run2016C_V2p3_'+args.version+'.root'
+	allSamples[ 'RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) ] = folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+args.mass+'_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'TTJets' ] = folder+'/RUNAnalysis_TT_80X_V2p3_'+args.version+'.root'
+    	allSamples[ 'ZJetsToQQ' ] = folder+'/RUNAnalysis_ZJetsToQQ_80X_V2p3_'+args.version+'.root'
+    	allSamples[ 'WJetsToQQ' ] = folder+'/RUNAnalysis_WJetsToQQ_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'Dibosons' ] = folder+'/RUNAnalysis_Dibosons_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'QCD'+args.qcd+'All' ] = folder+'/RUNAnalysis_QCD'+args.qcd+'All_80X_V2p3_'+args.version+'.root'
 
 	if 'RPV' in args.samples: args.samples = 'RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)
 	if 'single' in args.process: 
@@ -498,7 +503,7 @@ if __name__ == '__main__':
 		dictSamples = allSamples
 		signalSample = 'RPVStopStopToJets_'+args.decay+'_M-'+args.mass+'_All'
 
-	preselection = '(jetsPt[0]>80) && (jetsPt[1]>80) && (jetsPt[2]>80) && (jetsPt[3]>80) && (HT>850)' 
+	preselection = '(jetsPt[0]>80) && (jetsPt[1]>80) && (jetsPt[2]>80) && (jetsPt[3]>80) && (HT>900)' 
 	cuts = '(delta1>200) && (delta2>200) && (massAsym<0.1) && (deltaEta<1.)'
 	#preselection = '(jetsPt[0]>50) * (jetsPt[1]>50) *(jetsPt[2]>50) *(jetsPt[3]>50) * (HT>500)' 
 	#cuts = '(delta1>200) * (delta2>200) * (massAsym<0.1) * (deltaEta<1.5)'
