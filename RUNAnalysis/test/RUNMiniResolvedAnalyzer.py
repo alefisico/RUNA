@@ -30,7 +30,7 @@ def myAnalyzer( dictSamples, preselection, cuts, signalName, UNC ):
 
 
 	#outputFileName = 'Rootfiles/RUNMiniScoutingResolvedAnalysis_'+signalName+UNC+'_'+( '' if 'JetHT' in signalName else '80X_')+'V2p1_'+args.version+'p1.root' 
-	outputFileName = 'Rootfiles/RUNMiniResolvedAnalysis_'+signalName+UNC+'_'+( '' if 'JetHT' in signalName else '80X_')+'V2p1_'+args.version+'p1.root' 
+	outputFileName = 'Rootfiles/RUNMiniResolvedAnalysis_'+signalName+UNC+'_'+( '' if 'JetHT' in signalName else 'Moriond17')+'80X_V2p3_'+args.version+'p1.root' 
 	outputFile = TFile( outputFileName, 'RECREATE' )
 
 
@@ -50,7 +50,7 @@ def myAnalyzer( dictSamples, preselection, cuts, signalName, UNC ):
 		allHistos[ "massAve_cutBestPair_"+sam ] = TH1F( "massAve_cutBestPair_"+sam, "massAve_cutBestPair_"+sam, 3000, 0., 3000 )
 		allHistos[ "massAsym_cutBestPair_"+sam ] = TH1F( "massAsym_cutBestPair_"+sam, "massAsym_cutBestPair_"+sam, 20, 0., 1 )
 		allHistos[ "deltaEta_cutBestPair_"+sam ] = TH1F( "deltaEta_cutBestPair_"+sam, "deltaEta_cutBestPair_"+sam, 50, 0., 5 )
-		allHistos[ 'deltavsMassAve_cutBestPair_'+sam ] = TH2F( 'deltavsMassAvecut_BestPair_'+sam, 'deltavsMassAvecut_BestPair_'+sam, 1000, 0., 1000, 1000, 0., 1000. )
+		allHistos[ 'deltavsMassAve_cutBestPair_'+sam ] = TH2F( 'deltavsMassAve_cutBestPair_'+sam, 'deltavsMassAve_cutBestPair_'+sam, 1000, 0., 1000, 1000, 0., 1000. )
 
 		allHistos[ "massAve_delta_"+sam ] = TH1F( "massAve_delta_"+sam, "massAve_delta_"+sam, 3000, 0., 3000 )
 		allHistos[ "HT_delta_"+sam ] = TH1F( "HT_delta_"+sam, "HT_delta_"+sam, 5000, 0., 5000 )
@@ -91,12 +91,6 @@ def myAnalyzer( dictSamples, preselection, cuts, signalName, UNC ):
 
 	#treeName = 'ResolvedAnalysisPlotsScouting/RUNATree'
 	treeName = 'ResolvedAnalysisPlots/RUNATree'
-
-	if 'JetHT' in args.samples: 
-		for era in [ 'B', 'C', 'D', 'E', 'F', 'G', 'H' ]:
-			dictSamples[ 'JetHT_Run2016'+era ] = dictSamples[ 'JetHT_Run2016' ].replace('2016', '2016'+era)
-		dictSamples.pop( 'JetHT_Run2016' )
-		fullSel = fullSel + TCut('Entry$ % '+str(randint(0,10))+' == 0')
 
 	for sample in dictSamples:
 
@@ -485,7 +479,13 @@ if __name__ == '__main__':
 	else: folder = 'Rootfiles/'
 
 	allSamples = {}
-	allSamples[ 'JetHT_Run2016'] = folder+'/RUNAnalysis_JetHT_Run2016C_V2p3_'+args.version+'.root'
+	#allSamples[ 'JetHT_Run2016B'] = folder+'/RUNAnalysis_JetHT_Run2016B_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'JetHT_Run2016C'] = folder+'/RUNAnalysis_JetHT_Run2016C_80X_V2p3_'+args.version+'.root'
+	#allSamples[ 'JetHT_Run2016D'] = folder+'/RUNAnalysis_JetHT_Run2016D_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'JetHT_Run2016E'] = folder+'/RUNAnalysis_JetHT_Run2016E_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'JetHT_Run2016F'] = folder+'/RUNAnalysis_JetHT_Run2016F_80X_V2p3_'+args.version+'.root'
+	#allSamples[ 'JetHT_Run2016G'] = folder+'/RUNAnalysis_JetHT_Run2016G_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'JetHT_Run2016H'] = folder+'/RUNAnalysis_JetHT_Run2016H_80X_V2p3_'+args.version+'.root'
 	allSamples[ 'RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) ] = folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+args.mass+'_80X_V2p3_'+args.version+'.root'
 	allSamples[ 'TTJets' ] = folder+'/RUNAnalysis_TT_80X_V2p3_'+args.version+'.root'
     	allSamples[ 'ZJetsToQQ' ] = folder+'/RUNAnalysis_ZJetsToQQ_80X_V2p3_'+args.version+'.root'
