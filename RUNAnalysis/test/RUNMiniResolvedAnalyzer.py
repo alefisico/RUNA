@@ -41,6 +41,7 @@ def myAnalyzer( dictSamples, preselection, cuts, signalName, UNC ):
 	maxHT		= 1500
 
 	for sam in dictSamples:
+		if 'JetHT' in sam: sam = 'JetHT_Run2016'
 		allHistos[ "HT_cutBestPair_"+sam ] = TH1F( "HT_cutBestPair_"+sam, "HT_cutBestPair_"+sam, 5000, 0., 5000 )
 		allHistos[ "NPV_cutBestPair_"+sam ] = TH1F( "NPV_cutBestPair_"+sam, "NPV_cutBestPair_"+sam, 100, 0., 100 )
 		allHistos[ "jet1Pt_cutBestPair_"+sam ] = TH1F( "jet1Pt_cutBestPair_"+sam, "jet1Pt_cutBestPair_"+sam, 3000, 0., 3000 )
