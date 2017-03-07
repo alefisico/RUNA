@@ -604,9 +604,9 @@ void RUNBoostedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup) 
 
 		for( const auto & p : *genParticles ) {  
 
+			const reco::Candidate * mother = p.mother();
 			if( p.status() == 22 ) {
 
-				const reco::Candidate * mother = p.mother();
 				if( p.pdgId() == 6 ) { 
 					genPartonPt1 = p.pt();
 					genPartonMass1 = p.mass();
@@ -619,8 +619,11 @@ void RUNBoostedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup) 
 					//LogWarning("pat") << p.pdgId();
 					genPartonDau11ID = p.pdgId();
 				}
-				if( (mother->pdgId() == 6) && ( TMath::Abs(p.pdgId()) == 5 )) genPartonDau12ID = p.pdgId();
 				if( (mother->pdgId() == -6) && ( TMath::Abs(p.pdgId()) == 24 )) genPartonDau21ID = p.pdgId();
+
+			}
+			if( p.status() == 23 ) {
+				if( (mother->pdgId() == 6) && ( TMath::Abs(p.pdgId()) == 5 )) genPartonDau12ID = p.pdgId();
 				if( (mother->pdgId() == -6) && ( TMath::Abs(p.pdgId()) == 5 )) genPartonDau22ID = p.pdgId();
 			}
 		}
@@ -1326,6 +1329,14 @@ void RUNBoostedAnalysis::beginJob() {
 		//RUNAtree->Branch( "scaleWeights", &scaleWeights );
 		//RUNAtree->Branch( "pdfWeights", &pdfWeights );
 		//RUNAtree->Branch( "alphaWeights", &alphaWeights );
+		RUNAtree->Branch( "genPartonPt1", &genPartonPt1, "genPartonPt1/F" );
+		RUNAtree->Branch( "genPartonMass1", &genPartonMass1, "genPartonMass1/F" );
+		RUNAtree->Branch( "genPartonDau11ID", &genPartonDau11ID, "genPartonDau11ID/F" );
+		RUNAtree->Branch( "genPartonDau12ID", &genPartonDau12ID, "genPartonDau12ID/F" );
+		RUNAtree->Branch( "genPartonPt2", &genPartonPt2, "genPartonPt2/F" );
+		RUNAtree->Branch( "genPartonMass2", &genPartonMass2, "genPartonMass2/F" );
+		RUNAtree->Branch( "genPartonDau21ID", &genPartonDau21ID, "genPartonDau21ID/F" );
+		RUNAtree->Branch( "genPartonDau22ID", &genPartonDau22ID, "genPartonDau22ID/F" );
 		RUNAtree->Branch( "muonsPt", "vector<float>", &muonsPt);
 		RUNAtree->Branch( "numMuon", &numMuon, "numMuon/I" );
 		RUNAtree->Branch( "elesPt", "vector<float>", &elesPt);
