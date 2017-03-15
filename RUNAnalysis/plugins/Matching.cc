@@ -86,12 +86,20 @@ class Matching : public edm::EDAnalyzer {
 //
 // constants, enums and typedefs
 //
-typedef struct {
+/*typedef struct {
 	bool pass;
 	double deltaR;
 	int indexJet;
 	pat::Jet matchJet;
-} matched;
+} matched;*/
+
+typedef struct {
+	pat::JetCollection AK8matchedJets;
+	pat::JetCollection AK4matchedJets;
+	reco::CandidateCollection daughters;
+	TLorentzVector genPartP4;
+	int genPartId;
+} fullParentInfo;
 
 //
 // static data member definitions
@@ -142,54 +150,82 @@ bool isAncestor(reco::Candidate & ancestor, const reco::Candidate * particle) {
 	return false;
 }
 
-matched checkDeltaR(reco::Candidate & p1, Handle<pat::JetCollection> jets, double minDeltaR){
+/*matched checkDeltaR(reco::Candidate & p1, Handle<pat::JetCollection> jets, double minDeltaR, TH1D * histo){
 
 	std::vector<double> deltaRVec;
 	pat::Jet matchedJet;
 	double deltaR = 99999;
-	int ind = -1;
+	//int ind = -1;
 
 	//edm::LogWarning("genParticle ")  << p1.pdgId() << " " << jets->size();
 
 	for( unsigned int j=0; j<jets->size(); j++ ) {
 		const pat::Jet & p2 = (*jets)[j];
-		double tmpdeltaR = reco::deltaR2( p1.rapidity(), p1.phi(), p2.rapidity(), p2.phi() );
-		//edm::LogWarning("calc deltaR") << tmpdeltaR << " " << j;
+	//for( auto & p2 : jets ) {
+		double tmpdeltaR2 = reco::deltaR2( p1.rapidity(), p1.phi(), p2.rapidity(), p2.phi() );
+		double tmpdeltaR4 = reco::deltaR2( p1.eta(), p1.phi(), p2.eta(), p2.phi() );
+		TLorentzVector tmp1, tmp2;
+		tmp1.SetPtEtaPhiE( p1.pt(), p1.eta(), p1.phi(), p1.energy() );
+		tmp2.SetPtEtaPhiE( p2.pt(), p2.eta(), p2.phi(), p2.energy() );
+		double tmpdeltaR = tmp1.DeltaR( tmp2 );
+		double tmpdeltaR3 = TMath::Sqrt( TMath::Power( (p1.eta()-p2.eta()), 2) + TMath::Power( (p1.phi()-p2.phi()), 2) );
+		histo->Fill( tmpdeltaR );
+		//edm::LogWarning("calc deltaR") << " " << tmpdeltaR << " " << tmpdeltaR2 << " " << tmpdeltaR3 << " " << tmpdeltaR4;
 		if( tmpdeltaR < deltaR ) {
 			deltaR = tmpdeltaR;
-			ind = j;
+			//ind = j;
 			matchedJet = p2;
 		}
 		//dummy+=1;
 	}
-	//edm::LogWarning("deltaR") << deltaR << " " << ind ;
+	//edm::LogWarning("deltaR") << deltaR; // << " " << ind ;
 	matched results;
 	if( deltaR < minDeltaR) {
+		//edm::LogWarning("pass") << deltaR << " " << ind ;
 		results.pass = true;
 		results.deltaR = deltaR;
-		results.indexJet = ind;
+		//results.indexJet = ind;
 		results.matchJet = matchedJet;
 	} else {
 		results.pass = false;
 	}
 
 	return results;
+}*/
+
+pat::Jet checkDeltaR(reco::Candidate & p1, Handle<pat::JetCollection> jets, double minDeltaR, TH1D * histo){
+
+	pat::Jet matchedJet;
+	double deltaR = 99999;
+
+	for( unsigned int j=0; j<jets->size(); j++ ) {
+		const pat::Jet & p2 = (*jets)[j];
+		//double tmpdeltaR2 = reco::deltaR2( p1.rapidity(), p1.phi(), p2.rapidity(), p2.phi() );
+		double tmpdeltaR = reco::deltaR2( p1.eta(), p1.phi(), p2.eta(), p2.phi() );
+		//TLorentzVector tmp1, tmp2;
+		//tmp1.SetPtEtaPhiE( p1.pt(), p1.eta(), p1.phi(), p1.energy() );
+		//tmp2.SetPtEtaPhiE( p2.pt(), p2.eta(), p2.phi(), p2.energy() );
+		//double tmpdeltaR = tmp1.DeltaR( tmp2 );
+		//double tmpdeltaR3 = TMath::Sqrt( TMath::Power( (p1.eta()-p2.eta()), 2) + TMath::Power( (p1.phi()-p2.phi()), 2) );
+		histo->Fill( tmpdeltaR );
+		//edm::LogWarning("calc deltaR") << " " << tmpdeltaR << " " << tmpdeltaR2 << " " << tmpdeltaR3 << " " << tmpdeltaR4;
+		if( tmpdeltaR < deltaR ) {
+			deltaR = tmpdeltaR;
+			if( deltaR < minDeltaR ) matchedJet = p2;
+		}
+	}
+	//edm::LogWarning("deltaR") << deltaR; // << " " << ind ;
+	return matchedJet; 
 }
 
-std::map< int, reco::CandidateCollection > checkDaughters( reco::CandidateCollection pCollection, reco::CandidateCollection finalParticlesCollection ){
+reco::CandidateCollection checkDaughters( reco::Candidate & p1, reco::CandidateCollection finalParticlesCollection ){
 
-	std::map< int, reco::CandidateCollection >  daughtersParticle;
-	int dummy = 0;
-	for( auto & p : pCollection ) {
-		reco::CandidateCollection tmp1;
-		for( auto & fp : finalParticlesCollection ) {
-			const reco::Candidate * finalMother = fp.mother();
-			if( isAncestor( p, finalMother ) ) tmp1.push_back( fp ); // LogWarning("Particle found 1") << jp1->pdgId() << " " << fp.pdgId(); }
-		}
-		daughtersParticle[ dummy ] = tmp1;
-		dummy+=1;
+	reco::CandidateCollection daughters;
+	for( auto & fp : finalParticlesCollection ) {
+		const reco::Candidate * finalMother = fp.mother();
+		if( isAncestor( p1, finalMother ) ) daughters.push_back( fp ); // LogWarning("Particle found 1") << jp1->pdgId() << " " << fp.pdgId(); }
 	}
-	return daughtersParticle;
+	return daughters;
 }
 
 // ------------ method called for each event  ------------
@@ -216,10 +252,17 @@ Matching::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 		if( ( TMath::Abs( p.pdgId() ) == particle1 ) && p.status() == 22 ) { 
 			p1Collection.push_back( p );
+			histos1D_[ "p1FathersPdgId" ]->Fill( TMath::Abs( p.pdgId() ) );
 			//LogWarning("mother") << p.pdgId();
 		}
-		if( ( TMath::Abs( p.pdgId() ) == particle2 ) && p.status() == 22 ) p2Collection.push_back( p );
-		if( ( TMath::Abs( p.pdgId() ) == particle3 ) && p.status() == 22 ) p3Collection.push_back( p );
+		if( ( TMath::Abs( p.pdgId() ) == particle2 ) && p.status() == 22 ) { 
+			p2Collection.push_back( p );
+			histos1D_[ "p2FathersPdgId" ]->Fill( TMath::Abs( p.pdgId() ) );
+		}
+		if( ( TMath::Abs( p.pdgId() ) == particle3 ) && p.status() == 22 ) {
+			p3Collection.push_back( p );
+			histos1D_[ "p3FathersPdgId" ]->Fill( TMath::Abs( p.pdgId() ) );
+		}
 
 		bool parton = ( ( TMath::Abs( p.pdgId() ) < 6 ) || ( p.pdgId() == 21 )  );
 		if( p.status() == 23 && parton ) { 
@@ -229,10 +272,44 @@ Matching::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	}
 
-	std::map< int, reco::CandidateCollection  > daughtersParticle1, daughtersParticle2, daughtersParticle3;
-	daughtersParticle1 = checkDaughters( p1Collection, finalParticlesCollection ); 
-	daughtersParticle2 = checkDaughters( p2Collection, finalParticlesCollection ); 
-	daughtersParticle3 = checkDaughters( p3Collection, finalParticlesCollection ); 
+	//reco::CandidateCollection  daughtersParticle1, daughtersParticle2, daughtersParticle3;
+	vector< fullParentInfo > parents1; 
+	for( auto & part : p1Collection ) {
+
+		reco::CandidateCollection daughtersCollection = checkDaughters( part, finalParticlesCollection ); 
+		
+		pat::JetCollection ak8JetsMatched, ak4JetsMatched;
+		double tmpJetPt = -999;
+		for( auto & dau : daughtersCollection ) {
+			//LogWarning( "daughters") << part.pdgId() << " " << dau.pdgId();
+			pat::Jet tmpAK8Jet = checkDeltaR( dau, AK8jets, 0.8, histos1D_[ "p1DaughtersAK8DeltaR" ] );
+			if( ( tmpAK8Jet.pt() > 0 ) && ( tmpJetPt != tmpAK8Jet.pt() ) ) {
+				LogWarning("test") << tmpJetPt << " " << tmpAK8Jet.pt();
+				ak8JetsMatched.push_back( tmpAK8Jet );
+				tmpJetPt = tmpAK8Jet.pt();
+			}
+
+			pat::Jet tmpAK4Jet = checkDeltaR( dau, AK4jets, 0.4, histos1D_[ "p1DaughtersAK4DeltaR" ] );
+			ak4JetsMatched.push_back( tmpAK4Jet );
+		}
+
+		for( auto & ak8J : ak8JetsMatched ) LogWarning("matched AK8") << ak8J.pt();
+		for( auto & ak4J : ak4JetsMatched ) LogWarning("matched AK4") << ak4J.pt();
+		TLorentzVector tmpParentP4;
+		tmpParentP4.SetPtEtaPhiE( part.pt(), part.eta(), part.phi(), part.energy() );
+		
+		fullParentInfo tmpParent;
+		tmpParent.genPartP4 = tmpParentP4;
+		tmpParent.genPartId = part.pdgId();
+		tmpParent.AK8matchedJets = ak8JetsMatched;
+		tmpParent.AK4matchedJets = ak4JetsMatched;
+		tmpParent.daughters = daughtersCollection;
+		parents1.push_back( tmpParent );
+	}
+	
+	/*for( auto & parent : parents1 ){
+		LogWarning("test") << parent.genPartId << " " << parent.AK8matchedJets.size() << " " << parent.daughters.size();
+	}*/
 
 	/*
 	LogWarning("number of daughters 1") << daughtersParticle1.size() << " " << daughtersParticle1[0].size();
@@ -240,15 +317,17 @@ Matching::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	LogWarning("number of daughters 3") << daughtersParticle3.size() << " " << daughtersParticle3[0].size();
 	*/
 	
-	// Particle 1
+	/*/ Particle 1
 	map< int, matched > AK8Particle1, AK4Particle1;
 	for ( auto set : daughtersParticle1 ) {
 		int numAK8matched = 0;
 		for ( reco::Candidate & p : set.second ) {
 			//LogWarning("test") << set.first << " " << p.pdgId();
+			histos1D_[ "p1DaughtersPdgId" ]->Fill( p.pdgId() );
 	       		matched infoMatchedAK8;
 			//LogWarning("START AK8") << AK8jets->size();
-			infoMatchedAK8 = checkDeltaR( p, AK8jets, 0.8 );
+			infoMatchedAK8 = checkDeltaR( p, AK8jets, 0.8, histos1D_[ "p1DaughtersAK8DeltaR" ] );
+			histos1D_[ "p1AK8DeltaR" ]->Fill( infoMatchedAK8.deltaR  );
 			bool passParAK8 = infoMatchedAK8.pass;
 			if ( passParAK8 ) {
 				AK8Particle1[ p.pdgId() ] = infoMatchedAK8;
@@ -261,9 +340,12 @@ Matching::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 			for ( reco::Candidate & p : set.second ) {
 				matched infoMatchedAK4;
 				//LogWarning("START AK4") << AK4jets->size();
-				infoMatchedAK4 = checkDeltaR( p, AK4jets, 0.4 );
+				infoMatchedAK4 = checkDeltaR( p, AK4jets, 0.4, histos1D_[ "p1DaughtersAK4DeltaR" ]);
 				bool passParAK4 = infoMatchedAK4.pass;
-				if ( passParAK4 ) AK4Particle1[ p.pdgId() ] = infoMatchedAK4;
+				if ( passParAK4 ) {
+					AK4Particle1[ p.pdgId() ] = infoMatchedAK4;
+					histos1D_[ "p1AK4DeltaR" ]->Fill( infoMatchedAK4.deltaR  );
+				}
 			}
 		}
 	}
@@ -279,7 +361,7 @@ Matching::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 		oneBoostedP1+=1;
 	} else none+=1;
 
-
+	*/
 
 }
 
@@ -289,12 +371,31 @@ void Matching::beginJob() {
 
 	edm::Service< TFileService > fileService;
 
-	histos1D_[ "p1DaughtersDeltaR" ] = fileService->make< TH1D >( "p1DaughtersDeltaR", "p1DaughtersDeltaR", 150, 0., 1.5 );
-	histos1D_[ "p1DaughtersDeltaR" ]->SetXTitle( "#Delta R( parton, parton)" );
+	histos1D_[ "p1FathersPdgId" ] = fileService->make< TH1D >( "p1FathersPdgId", "p1FathersPdgId", 50, 1000000, 1000050 );
+	histos1D_[ "p1FathersPdgId" ]->SetXTitle( "abs(pdfId) p1Collection Fathers" );
+	histos1D_[ "p2FathersPdgId" ] = fileService->make< TH1D >( "p2FathersPdgId", "p2FathersPdgId", 50, 1000000, 1000050 );
+	histos1D_[ "p2FathersPdgId" ]->SetXTitle( "abs(pdfId) p2Collection Fathers" );
+	histos1D_[ "p3FathersPdgId" ] = fileService->make< TH1D >( "p3FathersPdgId", "p3FathersPdgId", 50, 1000000, 1000050 );
+	histos1D_[ "p3FathersPdgId" ]->SetXTitle( "abs(pdfId) p3Collection Fathers" );
+
+	histos1D_[ "p1DaughtersPdgId" ] = fileService->make< TH1D >( "p1DaughtersPdgId", "p1DaughtersPdgId", 61, -30.5, 30.5 );
+	histos1D_[ "p1DaughtersPdgId" ]->SetXTitle( "p1Collection daughters pdgId" );
+	histos1D_[ "p2DaughtersPdgId" ] = fileService->make< TH1D >( "p2DaughtersPdgId", "p2DaughtersPdgId", 60, -30, 30 );
+	histos1D_[ "p2DaughtersPdgId" ]->SetXTitle( "p2Collection daughters pdgId" );
+	histos1D_[ "p3DaughtersPdgId" ] = fileService->make< TH1D >( "p3DaughtersPdgId", "p3DaughtersPdgId", 60, -30, 30 );
+	histos1D_[ "p3DaughtersPdgId" ]->SetXTitle( "p3Collection daughters pdgId" );
+
+	histos1D_[ "p1DaughtersAK8DeltaR" ] = fileService->make< TH1D >( "p1DaughtersAK8DeltaR", "p1DaughtersAK8DeltaR", 150, 0., 1.5 );
+	histos1D_[ "p1DaughtersAK8DeltaR" ]->SetXTitle( "#Delta R( parton, parton)" );
+	histos1D_[ "p1AK8DeltaR" ] = fileService->make< TH1D >( "p1AK8DeltaR", "p1AK8DeltaR", 50, 0., 5. );
+	histos1D_[ "p1AK8DeltaR" ]->SetXTitle( "min #Delta R( jet, parton)" );
+	histos1D_[ "p1DaughtersAK4DeltaR" ] = fileService->make< TH1D >( "p1DaughtersAK4DeltaR", "p1DaughtersAK4DeltaR", 150, 0., 1.5 );
+	histos1D_[ "p1DaughtersAK4DeltaR" ]->SetXTitle( "#Delta R( parton, parton)" );
+	histos1D_[ "p1AK4DeltaR" ] = fileService->make< TH1D >( "p1AK4DeltaR", "p1AK4DeltaR", 50, 0., 5. );
+	histos1D_[ "p1AK4DeltaR" ]->SetXTitle( "min #Delta R( jet, parton)" );
+
 	histos1D_[ "p2DaughtersDeltaR" ] = fileService->make< TH1D >( "p2DaughtersDeltaR", "p2DaughtersDeltaR", 150, 0., 1.5 );
 	histos1D_[ "p2DaughtersDeltaR" ]->SetXTitle( "#Delta R( parton, parton)" );
-	histos1D_[ "p1DeltaR" ] = fileService->make< TH1D >( "p1DeltaR", "p1DeltaR", 50, 0., 5. );
-	histos1D_[ "p1DeltaR" ]->SetXTitle( "min #Delta R( jet, parton)" );
 	histos1D_[ "p1JetMass" ] = fileService->make< TH1D >( "p1JetMass", "p1JetMass", 120, 0., 1200. );
 	histos1D_[ "p1JetMass" ]->SetXTitle( "Mass Jet matched [GeV]" );
 
