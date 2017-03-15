@@ -605,94 +605,15 @@ void RUNResolvedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup)
 			histos1D_[ "METHT_cut4Jets" ]->Fill( MET/HT, totalWeight );
 
 			if( ( numJets == 4 ) && ( HT > cutAK4HT ) && ( JETS[3].p4.Pt() > cutAK4jetPt ) ){
-				
+
 				myJet j1, j2, j3, j4;
-				int tmpMin = - 999;
-				bool maxdR1234 = 0, maxdR1324 = 0, maxdR1423 = 0;
-
-				if ( massPairing ) {
-
-					TLorentzVector j12, j34, j13, j24, j14, j23;
-					vector<double> tmpmassPair;
-
-					j12 = JETS[0].p4 + JETS[1].p4;
-					j34 = JETS[2].p4 + JETS[3].p4;
-					double massPair1234 = TMath::Abs( j12.M() - j34.M() )/ (j12.M() + j34.M());
-					tmpmassPair.push_back( massPair1234 );
-
-					j13 = JETS[0].p4 + JETS[2].p4;
-					j24 = JETS[1].p4 + JETS[3].p4;
-					double massPair1324 = TMath::Abs( j13.M() - j24.M() )/ (j13.M() + j24.M());
-					tmpmassPair.push_back( massPair1324 );
-
-					j14 = JETS[0].p4 + JETS[3].p4;
-					j23 = JETS[1].p4 + JETS[2].p4;
-					double massPair1423 = TMath::Abs( j14.M() - j23.M() )/ (j14.M() + j23.M());
-					tmpmassPair.push_back( massPair1423 );
-					
-					tmpMin = min_element(tmpmassPair.begin(), tmpmassPair.end()) - tmpmassPair.begin();
-
-				} else {
-				
-					vector<double> tmpDijetR;
-					double dR12 = JETS[0].p4.DeltaR( JETS[1].p4 );
-					double dR34 = JETS[2].p4.DeltaR( JETS[3].p4 );
-					maxdR1234 = (dR12 > dR34);
-					double deltaR1234 = abs( dR12 - 0.8 )  + abs( dR34 - 0.8 );
-					tmpDijetR.push_back( deltaR1234 );
-
-					double dR13 = JETS[0].p4.DeltaR( JETS[2].p4 );
-					double dR24 = JETS[1].p4.DeltaR( JETS[3].p4 );
-					maxdR1324 = (dR13 > dR24);
-					double deltaR1324 = abs( dR13 - 0.8 )  + abs( dR24 - 0.8 );
-					tmpDijetR.push_back( deltaR1324 );
-
-					double dR14 = JETS[0].p4.DeltaR( JETS[3].p4 );
-					double dR23 = JETS[1].p4.DeltaR( JETS[2].p4 );
-					maxdR1423 = (dR14 > dR23);
-					double deltaR1423 = abs( dR14 - 0.8 )  + abs( dR23 - 0.8 );
-					tmpDijetR.push_back( deltaR1423 );
-
-					tmpMin = min_element(tmpDijetR.begin(), tmpDijetR.end()) - tmpDijetR.begin();
-				}
-
-				if( tmpMin == 0 ){
-					if ( maxdR1234 ){
-						j1 = JETS[0];
-						j2 = JETS[1];
-						j3 = JETS[2];
-						j4 = JETS[3];
-					} else{
-						j1 = JETS[2];
-						j2 = JETS[3];
-						j3 = JETS[0];
-						j4 = JETS[1];
-					}
-				} else if ( tmpMin == 1 ) {
-					if ( maxdR1324 ){
-						j1 = JETS[0];
-						j2 = JETS[2];
-						j3 = JETS[1];
-						j4 = JETS[3];
-					} else {
-						j1 = JETS[1];
-						j2 = JETS[3];
-						j3 = JETS[0];
-						j4 = JETS[2];
-					}
-				} else if ( tmpMin == 2 ) {
-					if ( maxdR1423 ){
-						j1 = JETS[0];
-						j2 = JETS[3];
-						j3 = JETS[1];
-						j4 = JETS[2];
-					} else {
-						j1 = JETS[1];
-						j2 = JETS[2];
-						j3 = JETS[0];
-						j4 = JETS[3];
-					}
-				}
+				vector< myJet > tmpJets;	
+				if (massPairing) tmpJets = pairing( JETS, false ); 	
+				else tmpJets = pairing( JETS, true );
+				j1 = tmpJets[0];
+				j2 = tmpJets[1];
+				j3 = tmpJets[2];
+				j4 = tmpJets[3];
 
 				mass1 = ( j1.p4 + j2.p4 ).M();
 				mass2 = ( j3.p4 + j4.p4 ).M();

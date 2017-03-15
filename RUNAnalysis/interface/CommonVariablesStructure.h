@@ -317,3 +317,96 @@ inline double btagSF( string csvFile, double jetPt, double jetEta, double flavou
 
 	return jetSF;
 }
+
+inline vector< myJet > pairing( vector< myJet > JETS, bool withDeltaR ) {
+
+	vector< myJet > reorderedJETS;
+	if ( JETS.size() > 3 ) {
+		vector<double> tmpDijetR;
+		bool invertOrder = false;
+		double pair1234 = 9999, pair1324 = 9999, pair1423 = 9999;
+		TLorentzVector j12, j34, j13, j24, j14, j23;
+
+		if( withDeltaR ) {
+			double dR12 = JETS[0].p4.DeltaR( JETS[1].p4 );
+			double dR34 = JETS[2].p4.DeltaR( JETS[3].p4 );
+			if ( dR12 < dR34 ) invertOrder = true;
+			pair1234 = abs( dR12 - 0.8 )  + abs( dR34 - 0.8 );
+		} else {
+			j12 = JETS[0].p4 + JETS[1].p4;
+			j34 = JETS[2].p4 + JETS[3].p4;
+			if ( j12.Pt() < j34.Pt() ) invertOrder = true;
+			pair1234 = TMath::Abs( j12.M() - j34.M() )/ (j12.M() + j34.M());
+		}
+		tmpDijetR.push_back( pair1234 );
+
+		if( withDeltaR ) {
+			double dR13 = JETS[0].p4.DeltaR( JETS[2].p4 );
+			double dR24 = JETS[1].p4.DeltaR( JETS[3].p4 );
+			if ( dR13 < dR24 ) invertOrder = true;
+			pair1324 = abs( dR13 - 0.8 )  + abs( dR24 - 0.8 );
+		} else {
+			j13 = JETS[0].p4 + JETS[2].p4;
+			j24 = JETS[1].p4 + JETS[3].p4;
+			if ( j13.Pt() < j24.Pt() ) invertOrder = true;
+			pair1324 = TMath::Abs( j13.M() - j24.M() )/ (j13.M() + j24.M());
+		}
+		tmpDijetR.push_back( pair1324 );
+
+
+		if( withDeltaR ) {
+			double dR14 = JETS[0].p4.DeltaR( JETS[3].p4 );
+			double dR23 = JETS[1].p4.DeltaR( JETS[2].p4 );
+			if ( dR14 < dR23 ) invertOrder = true;
+			pair1423 = abs( dR14 - 0.8 )  + abs( dR23 - 0.8 );
+		} else {
+			j14 = JETS[0].p4 + JETS[3].p4;
+			j23 = JETS[1].p4 + JETS[2].p4;
+			if ( j14.Pt() < j23.Pt() ) invertOrder = true;
+			pair1423 = TMath::Abs( j14.M() - j23.M() )/ (j14.M() + j23.M());
+		}
+		tmpDijetR.push_back( pair1423 );
+
+		int tmpMin = min_element(tmpDijetR.begin(), tmpDijetR.end()) - tmpDijetR.begin();
+		if ( invertOrder ) tmpMin = tmpMin + 10;
+		/*
+		 * Notation:
+		 * Pair 12 34: 0 and 10 
+		 * Pair 13 24: 1 and 11
+		 * Pair 14 23: 2 and 12
+		 */
+		if ( tmpMin == 0 ) {
+			reorderedJETS.push_back( JETS[0] );
+			reorderedJETS.push_back( JETS[1] );
+			reorderedJETS.push_back( JETS[2] );
+			reorderedJETS.push_back( JETS[3] );
+		} else if ( tmpMin == 10 ) {
+			reorderedJETS.push_back( JETS[2] );
+			reorderedJETS.push_back( JETS[3] );
+			reorderedJETS.push_back( JETS[0] );
+			reorderedJETS.push_back( JETS[1] );
+		} else if ( tmpMin == 1 ) {
+			reorderedJETS.push_back( JETS[0] );
+			reorderedJETS.push_back( JETS[2] );
+			reorderedJETS.push_back( JETS[1] );
+			reorderedJETS.push_back( JETS[3] );
+		} else if ( tmpMin == 11 ) {
+			reorderedJETS.push_back( JETS[1] );
+			reorderedJETS.push_back( JETS[3] );
+			reorderedJETS.push_back( JETS[0] );
+			reorderedJETS.push_back( JETS[2] );
+		} else if ( tmpMin == 2 ) {
+			reorderedJETS.push_back( JETS[0] );
+			reorderedJETS.push_back( JETS[3] );
+			reorderedJETS.push_back( JETS[1] );
+			reorderedJETS.push_back( JETS[2] );
+		} else if ( tmpMin == 12 ) {
+			reorderedJETS.push_back( JETS[1] );
+			reorderedJETS.push_back( JETS[2] );
+			reorderedJETS.push_back( JETS[0] );
+			reorderedJETS.push_back( JETS[3] );
+		}
+	} else LogWarning("JETS") << "Number of input jets is lower than 4."; 
+	return reorderedJETS;
+
+}
