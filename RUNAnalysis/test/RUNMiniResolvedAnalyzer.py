@@ -17,10 +17,12 @@ import numpy as np
 from random import randint
 try: 
 	import RUNA.RUNAnalysis.tdrstyle as tdrstyle
+	from RUNA.RUNAnalysis.scaleFactors import * 
 	from RUNA.RUNAnalysis.commonFunctions import *
 except ImportError: 
 	sys.path.append('../python') 
 	import tdrstyle as tdrstyle
+	from scaleFactors import * 
 	from commonFunctions import *
 
 gROOT.SetBatch()
@@ -92,7 +94,9 @@ def myAnalyzer( dictSamples, preselection, cuts, signalName, UNC ):
 	for h in allHistos: allHistos[h].Sumw2()
 
 	################################################################################################## Running the Analysis
-	SF = 'lumiWeight*puWeight'
+	#SF = 'lumiWeight*puWeight'
+	lumiWeight = scaleFactor(signalName)
+	SF = 'puWeight*'+str(lumiWeight)
 	presel = TCut( SF ) *  TCut( preselection )
 	fullSel = TCut( SF ) * TCut( preselection + ' && ' + cuts ) 
 	print '-'*40

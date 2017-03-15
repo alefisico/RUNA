@@ -234,8 +234,8 @@ def makeROCs( textFile, variables, bkgSamples, perVariable, cutsList, printVar, 
 					sigOverSqrtSigBkg[ sigOverSqrtSigBkg == np.inf ] = 0
 					sigOverSqrtSigBkg = np.nan_to_num( sigOverSqrtSigBkg )
 				#sigOverSqrtSigBkg = np.sqrt( 2*( (totalSig+totalBkg)*np.log( 1 + np.divide( totalSig, totalBkg ) ) - totalSig ) )
-				#SOB = TGraphErrors( len(totalSig), ( (dictVariablesNum[ var[0]+'_QCD'+args.qcd+'All_ROC' ][2])/5. if 'deltaEta' in var[0] else (dictVariablesNum[ var[0]+'_QCD'+args.qcd+'All_ROC' ][2]) ), sigOverSqrtSigBkg, array( 'd', [0]*len(sigOverSqrtSigBkg)), totalErrSigOverSqrtSigBkg ) 
-				SOB = TGraph( len(totalSig), (dictVariablesNum[ var[0]+'_QCD'+args.qcd+'All_ROC' ][2])/var[7], sigOverSqrtSigBkg ) 
+				SOB = TGraphErrors( len(totalSig), ( (dictVariablesNum[ var[0]+'_QCD'+args.qcd+'All_ROC' ][2])/5. if 'deltaEta' in var[0] else (dictVariablesNum[ var[0]+'_QCD'+args.qcd+'All_ROC' ][2]) ), sigOverSqrtSigBkg, array( 'd', [0]*len(sigOverSqrtSigBkg)), totalErrSigOverSqrtSigBkg ) 
+				#SOB = TGraph( len(totalSig), (dictVariablesNum[ var[0]+'_QCD'+args.qcd+'All_ROC' ][2])/var[7], sigOverSqrtSigBkg ) 
 				dictNumVar[ var[0] ] = SOB 
 				#if returnSOB in var[0]: return SOB
 				#else: continue
@@ -257,9 +257,9 @@ def plotROC( name, sample, dictROC, numCuts, varOrbkg, SOB, diffMasses=False ):
 		dictROC = OrderedDict()
 		tmpName = name.replace( 'SOB_', '' )
 
-		for masses in [80, 90, 100, 110, 120, 130, 140, 150, 170, 180, 190, 210, 220, 230, 240, 300 ]: 
-		 	SOB = makeROCs( 'ROCfiles/ROC'+args.boosted+'Values_QCD'+args.qcd+'_RPVSt'+str(masses)+'_'+args.version+args.grooming+'.txt', [ [tmpName] ], '', True, '', '', returnSOB=tmpName)
-			dictROC[ 'M_{#tilde{t}} = '+str(masses)+' GeV' ] = SOB
+		#for masses in [80, 90, 100, 110, 120, 130, 140, 150, 170, 180, 190, 210, 220, 230, 240, 300 ]: 
+		for masses in [ 240, 300, 350, 450, 500, 550, 600 ]: 
+			dictROC[ 'M_{#tilde{t}} = '+str(masses)+' GeV' ] = makeROCs( 'ROCfiles/ROC'+args.boosted+'Values_QCD'+args.qcd+'_'+args.decay+str(masses)+'_'+args.version+args.grooming+'.txt', [ [tmpName] ], '', True, '', '', returnSOB=tmpName)
 	
 	f1 = TF1("f1","x",0,1)
 	f1.SetLineColor(1)
@@ -326,6 +326,80 @@ def plotSigOverBkg( name, sample, dictNum, numCuts ):
 	SOB.GetYaxis().SetTitleOffset(0.95)
 	#legend.Draw()
 	can.SaveAs('Plots/'+name+'_'+args.boosted+str(args.mass)+'_QCD'+args.qcd+'_SOB_cut'+str(numCuts)+'_'+args.version+args.grooming+'.'+args.ext)
+	del can
+
+def calcOptimizeDelta( BkgSamples, SigSamples, nameInRoot, massList ):
+	"""docstring for calcOptimizeDelta"""
+
+	QCDHisto = BkgSamples.Get( nameInRoot+'_QCD'+args.qcd+'All' )
+	QCDHisto.Scale( 36000 )
+
+	signalHistos = OrderedDict()
+	SOsqrtSB = []
+	SOsqrtSBError = []
+	for xmass in massList: 
+		NAME = 'RPVStopStopToJets_'+args.decay+'_M-'+str( xmass )
+		signalInputFile = TFile( SigSamples.replace( str(args.mass), str(xmass) ) )
+		signalHistos[ xmass ] = signalInputFile.Get( nameInRoot+'_'+NAME )
+		signalHistos[ xmass ].Scale( 36000 )
+		minMass = signalHistos[ xmass ].GetXaxis().FindBin( xmass-50 )
+		maxMass = signalHistos[ xmass ].GetXaxis().FindBin( xmass+50 )
+		bkgError = Double(0)
+		bkgIntegral = QCDHisto.IntegralAndError( minMass, maxMass, bkgError )
+		sigError = Double(0)
+		sigIntegral = signalHistos[ xmass ].IntegralAndError( minMass, maxMass, sigError )
+
+		sqrtSigBkg = sigIntegral / TMath.Sqrt( bkgIntegral + sigIntegral )
+		sigBkgErr = TMath.Sqrt( (bkgError*bkgError) + (sigError*sigError) ) / (2*TMath.Sqrt( bkgIntegral + sigIntegral )) 
+		totalErrSOsqrtSB = TMath.Sqrt( TMath.Power( (sigError/sigIntegral), 2 ) + TMath.Power( (sigBkgErr/TMath.Sqrt( bkgIntegral + sigIntegral )), 2) )
+		SOsqrtSB.append( sqrtSigBkg )
+		SOsqrtSBError.append( totalErrSOsqrtSB )
+
+	graphSOsqrtSB = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', SOsqrtSB ), array('d', [0]*len(massList) ), array('d', SOsqrtSBError) )
+	return graphSOsqrtSB
+	
+def optimizeDelta( BkgSamples, SigSamples, massList ):
+	"""docstring for optimizeDelta"""
+
+	graphs = OrderedDict()
+	graphs[ 'Nominal' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta', massList )
+	graphs[ '+ 1CSVL' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta_1CSVv2L', massList )
+	graphs[ '+ 2CSVL' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta_2CSVv2L', massList )
+	graphs[ '+ 1CSVM' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta_1CSVv2M', massList )
+	graphs[ '+ 2CSVM' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta_2CSVv2M', massList )
+	graphs[ '+ 1CSVT' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta_1CSVv2T', massList )
+	graphs[ '+ 2CSVT' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta_2CSVv2T', massList )
+	'''
+	graphs[ 'delta150' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta150', massList )
+	graphs[ 'delta250' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta250', massList )
+	graphs[ 'delta300' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta300', massList )
+	graphs[ '+ 1QGL' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta_1qgl', massList )
+	graphs[ '+ 2QGL' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta_2qgl', massList )
+	graphs[ '+ 4QGL' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta_4qgl', massList )
+	'''
+
+	can = TCanvas('c1', 'c1',  10, 10, 1000, 750 )
+	can.SetGrid()
+
+	legend=TLegend(0.15,0.15,0.45,0.45)
+	legend.SetFillStyle(0)
+	legend.SetTextSize(0.03)
+	dummy=1
+	multiGraph = TMultiGraph()
+	for g in graphs:
+		graphs[g].SetLineWidth( 2 )
+		graphs[g].SetMarkerStyle(4)
+		graphs[g].SetLineColor(dummy)
+		legend.AddEntry( graphs[g], g, 'pl' )
+		multiGraph.Add( graphs[g] )
+		dummy+=1
+
+	multiGraph.Draw("ALP")
+	multiGraph.GetYaxis().SetTitleOffset(0.95)
+	multiGraph.GetXaxis().SetTitle('Average dijet mass [GeV]')
+	multiGraph.GetYaxis().SetTitle('S/#sqrt{S+B}')
+	legend.Draw()
+	can.SaveAs('Plots/massAve_delta_Btag_DeltaOptimization'+args.version+'.'+args.ext)
 	del can
 
 #----------------------------------------------------------------------
@@ -571,12 +645,12 @@ if __name__ == '__main__':
 		#[ 'Resolved', 'jetsQGL[1]', 50, 0., 1., False, 0., 0., 5, 1 ],
 		#[ 'Resolved', 'jetsQGL[2]', 50, 0., 1., False, 0., 0., 5, 1 ],
 		#[ 'Resolved', 'jetsQGL[3]', 50, 0., 1., False, 0., 0., 5, 1 ],
-		[ 'Resolved', 'deltaEta', 50, 0., 5., True, 1.0, 0., 5, 1 ],
-		[ 'Resolved', 'massAsym', 20, 0., 1., True, 0.1, 0., 1, 2 ],
+		[ 'Resolved', 'deltaEta', 50, 0., 5., True, 0, 0., 5, 1 ],
+		[ 'Resolved', 'massAsym', 20, 0., 1., True, 0., 0., 1, 2 ],
 		#[ 'Resolved', 'cosThetaStar1', 20, 0., 1., True, 0., 0., 1, 3 ],
 		#[ 'Resolved', 'cosThetaStar2', 20, 0., 1., True, 0., 0., 1, 4 ],
-		[ 'Resolved', 'delta1', 50, 0, 400,  False, 0, 0., 500, 5 ],
-		[ 'Resolved', 'delta2', 50, 0, 400, False, 0, 0., 500, 6 ],
+		[ 'Resolved', 'delta1', 50, 0, 300,  False, 0, 0., 500, 5 ],
+		[ 'Resolved', 'delta2', 50, 0, 300, False, 0, 0., 500, 6 ],
 		#[ 'Resolved', 'xi1', 20, 0., 1., True, 0, 0.6 ],
 		#[ 'Resolved', 'xi2', 20, 0., 1., True , 0, 0.6],
 		[ 'Boosted', "prunedMassAsym", 20, 0., 1., True, 0., 0.2, 1, 1 ],
@@ -610,7 +684,13 @@ if __name__ == '__main__':
 			makeROCs( 'ROCfiles/ROC'+args.boosted+'Values_QCD'+args.qcd+'_'+args.decay+str(args.mass)+'_cut'+str(len(cuts))+'_'+args.version+args.grooming+'.txt', variables, bkgSamples, True if 'var' in args.typeROC else False, cuts, args.quantity )
 
 	elif 'tmp' in args.process: 	
-		plotROC( 'SOB_jet1Tau21', '', '', '', True, True, diffMasses=True )
+		#plotROC( 'SOB_jet1Tau21', '', '', '', True, True, diffMasses=True )
+		plotROC( 'SOB_massAsym', '', '', '', True, True, diffMasses=True )
+
+	elif 'delta' in args.process:
+		optimizeDelta( TFile( folder+'/RUNMiniResolvedAnalysis_QCD'+args.qcd+'All_Moriond17_80X_V2p3_'+args.version+'.root' ),
+			folder+'/RUNMiniResolvedAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p3_'+args.version+'.root',
+			( [ 240, 350, 450, 550, 650, 750, 850, 950] if '312' in args.decay else [280, 500, 600, 700] ) ) 
 
 	elif 'TMVA' in args.process:
 		variables = [ x[1] for x in var if ( args.boosted in x[0] ) ]
