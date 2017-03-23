@@ -410,3 +410,43 @@ inline vector< myJet > pairing( vector< myJet > JETS, bool withDeltaR ) {
 	return reorderedJETS;
 
 }
+
+inline vector< myJet > pairingMinChi( vector< myJet > JETS, double sigma ) {
+
+	vector< myJet > reorderedJETS;
+	vector< int > indices;
+	double minChi2 = 9999;
+	int bestInd[4] = { -1, -1, -1, -1};
+	if( JETS.size() > 3 ) {
+		for (unsigned int a = 0; a < JETS.size(); a++) {
+			for (unsigned int b = 1; b < JETS.size(); b++) {
+				for (unsigned int c = 2; c < JETS.size(); c++) {
+					for (unsigned int d = 3; d < JETS.size(); d++) {
+						if( (a!=b) && (a!=c) && (a!=d) && (b!=c) && (b!=d) && (c!=d) && (a<b) && (c<d) ) {
+							//cout << a << " " << b << " " << c << " " << d << endl; 
+							double dijet1Mass = ( JETS[a].p4 + JETS[b].p4 ).M();	
+							double dijet2Mass = ( JETS[c].p4 + JETS[d].p4 ).M();	
+							double tmpChi2 = TMath::Power( (dijet1Mass - dijet2Mass ), 2 ) / TMath::Power( sigma, 2 );
+							//LogWarning("calc chi2") << a << b << c << d << " " << dijet1Mass << " " << dijet2Mass << " " << tmpChi2;
+							if( tmpChi2 < minChi2 ){
+								minChi2 = tmpChi2;
+								bestInd[0] = a;
+								bestInd[1] = b;
+								bestInd[2] = c;
+								bestInd[3] = d;
+								//LogWarning("min chi2") << a << b << c << d << " " << dijet1Mass << " " << dijet2Mass << " " << minChi2;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	//LogWarning("index") << bestInd[0] << " " << bestInd[1] << " " << bestInd[2] << " " << bestInd[3];
+	reorderedJETS.push_back( JETS[ bestInd[0] ] );
+	reorderedJETS.push_back( JETS[ bestInd[1] ] );
+	reorderedJETS.push_back( JETS[ bestInd[2] ] );
+	reorderedJETS.push_back( JETS[ bestInd[3] ] );
+
+	return reorderedJETS;
+}

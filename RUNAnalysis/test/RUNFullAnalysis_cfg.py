@@ -76,7 +76,8 @@ else:
 			#'/store/user/jsomalwa/B2GAnaFW_80X_V2p1/RPVStopStopToJets_UDD312_M-100_TuneCUETP8M1_13TeV-madgraph-pythia8/RunIISpring16MiniAODv2/RPVStopStopToJets_UDD312_M-100_TuneCUETP8M1_13TeV-madgraph-pythia8/RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1/161018_211211/0000/B2GEDMNtuple_1.root',
 			#'/store/user/algomez/RPVStopStopToJets_UDD323_M-120_TuneCUETP8M1_13TeV-madgraph-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4/170131_140142/0000/B2GEDMNtuple_5.root',
 			#'/store/group/phys_b2g/B2GAnaFW_80X_V2p3/JetHT/Run2016C/JetHT/Run2016C-23Sep2016-v1_B2GAnaFW_80X_V2p3/161216_220503/0000/B2GEDMNtuple_10.root',
-			'/store/group/phys_b2g/B2GAnaFW_80X_V2p4/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/RunIISummer16MiniAODv2/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4/161222_110143/0000/B2GEDMNtuple_736.root',
+			'/store/user/jsomalwa/B2GAnaFW_80X_V2p1/RPVStopStopToJets_UDD312_M-300_TuneCUETP8M1_13TeV-madgraph-pythia8/RunIISpring16MiniAODv2/RPVStopStopToJets_UDD312_M-300_TuneCUETP8M1_13TeV-madgraph-pythia8/RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1/161018_211709/0000/B2GEDMNtuple_3.root',
+			#'/store/group/phys_b2g/B2GAnaFW_80X_V2p4/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/RunIISummer16MiniAODv2/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4/161222_110143/0000/B2GEDMNtuple_736.root',
 
 
 	    )
@@ -114,12 +115,13 @@ process.ResolvedAnalysisPlots = cms.EDAnalyzer('RUNResolvedAnalysis',
 		btagCSVFile		= cms.string( options.CSVFile  ),
 		isData			= cms.bool( isData ),
 		LHEcont			= cms.bool( True if 'QCD_Pt' in NAME else False ), ## logic is oposite
-		massPairing		= cms.bool( False ),
+		pairingMethod		= cms.string( "deltaR" ),
 		mkTree			= cms.bool( True ),
 )
 
 #process.ResolvedAnalysisPlotsScouting = process.ResolvedAnalysisPlots.clone( cutAK4jetPt = cms.double( 50.0 ), cutAK4HT = cms.double( 450 ), mkTree = cms.bool( True ) )
-process.ResolvedAnalysisPlotsMassPairing = process.ResolvedAnalysisPlots.clone( massPairing = cms.bool( True ), mkTree = cms.bool( False ) )
+process.ResolvedAnalysisPlotsMassPairing = process.ResolvedAnalysisPlots.clone( pairingMethod = cms.string( "mass" ), mkTree = cms.bool( False ) )
+process.ResolvedAnalysisPlotsChi2Pairing = process.ResolvedAnalysisPlots.clone( pairingMethod = cms.string( "chi2" ), mkTree = cms.bool( False ) )
 
 process.ResolvedAnalysisPlotsJESUp = process.ResolvedAnalysisPlots.clone( systematics = cms.string( 'JESUp' ), mkTree = cms.bool( False ) )
 process.ResolvedAnalysisPlotsJESDown = process.ResolvedAnalysisPlots.clone( systematics = cms.string( 'JESDown' ), mkTree = cms.bool( False ) )
@@ -226,6 +228,7 @@ if 'Resolved' in options.version:
 	outputNAME = 'ResolvedAnalysis_'
 	process.p += process.ResolvedAnalysisPlots
 	process.p += process.ResolvedAnalysisPlotsMassPairing
+	process.p += process.ResolvedAnalysisPlotsChi2Pairing
 	if options.systematics:
 		process.p += process.ResolvedAnalysisPlotsJESUp
 		process.p += process.ResolvedAnalysisPlotsJESDown
@@ -250,6 +253,7 @@ else:
 	process.p += process.ResolvedAnalysisPlots
 	#process.p += process.ResolvedAnalysisPlotsScouting
 	process.p += process.ResolvedAnalysisPlotsMassPairing
+	process.p += process.ResolvedAnalysisPlotsChi2Pairing
 	process.p += process.BoostedAnalysisPlots
 	#process.p += process.BoostedAnalysisPlotsSortInMass
 	#process.p += process.BoostedAnalysisPlotsSortInTau21

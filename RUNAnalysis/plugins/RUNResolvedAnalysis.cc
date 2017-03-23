@@ -80,7 +80,7 @@ class RUNResolvedAnalysis : public EDAnalyzer {
 		bool isData;
 		bool LHEcont;
 		bool mkTree;
-		bool massPairing;
+		TString pairingMethod;
 		string dataPUFile;
 		string jecVersion;
 		string btagCSVFile;
@@ -240,7 +240,7 @@ RUNResolvedAnalysis::RUNResolvedAnalysis(const ParameterSet& iConfig):
 	isData 		= iConfig.getParameter<bool>("isData");
 	LHEcont		= iConfig.getParameter<bool>("LHEcont");
 	mkTree 		= iConfig.getParameter<bool>("mkTree");
-	massPairing	= iConfig.getParameter<bool>("massPairing");
+	pairingMethod	= iConfig.getParameter<string>("pairingMethod");
 	dataPUFile 	= iConfig.getParameter<string>("dataPUFile");
 	jecVersion 	= iConfig.getParameter<string>("jecVersion");
 	btagCSVFile 	= iConfig.getParameter<string>("btagCSVFile");
@@ -604,12 +604,19 @@ void RUNResolvedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup)
 			histos1D_[ "MET_cut4Jets" ]->Fill( MET, totalWeight );
 			histos1D_[ "METHT_cut4Jets" ]->Fill( MET/HT, totalWeight );
 
-			if( ( numJets == 4 ) && ( HT > cutAK4HT ) && ( JETS[3].p4.Pt() > cutAK4jetPt ) ){
+
+			if( ( HT > cutAK4HT ) && ( JETS[3].p4.Pt() > cutAK4jetPt ) ){
 
 				myJet j1, j2, j3, j4;
 				vector< myJet > tmpJets;	
-				if (massPairing) tmpJets = pairing( JETS, false ); 	
-				else tmpJets = pairing( JETS, true );
+				bool massPairing = false;
+				if ( pairingMethod.Contains("chi2") ) tmpJets = pairingMinChi( JETS, 50 );  
+				else if ( pairingMethod.Contains( "mass" ) ) {
+				       tmpJets = pairing( JETS, false ); 	
+				       massPairing = true;
+				} else {
+					tmpJets = pairing( JETS, true );
+				}
 				j1 = tmpJets[0];
 				j2 = tmpJets[1];
 				j3 = tmpJets[2];
@@ -857,7 +864,7 @@ void RUNResolvedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup)
 				}
 			}
 
-			/*if ( numJets > 4 ){
+			if ( numJets > 4 ){
 				for (unsigned int ijet = 4; ijet < JETS.size(); ijet++) {
 					jetsPt->push_back( JETS[ ijet ].p4.Pt() );
 					jetsEta->push_back( JETS[ ijet ].p4.Eta() );
@@ -865,7 +872,7 @@ void RUNResolvedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup)
 					jetsE->push_back( JETS[ ijet ].p4.E() );
 					jetsQGL->push_back( JETS[ ijet ].qgl );
 				}
-			}*/
+			}
 		}
 	}
 	JETS.clear();
@@ -1185,7 +1192,7 @@ void RUNResolvedAnalysis::fillDescriptions(edm::ConfigurationDescriptions & desc
 	desc.add<bool>("isData", false);
 	desc.add<bool>("LHEcont", false);
 	desc.add<bool>("mkTree", false);
-	desc.add<bool>("massPairing", false);
+	desc.add<string>("pairingMethod", "deltaR");
 	desc.add<double>("scale", 1);
 	desc.add<string>("dataPUFile", "supportFiles/PileupData2015D_JSON_10-23-2015.root");
 	desc.add<string>("jecVersion", "supportFiles/Summer15_25nsV6");
