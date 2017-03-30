@@ -143,8 +143,10 @@ def myAnalyzer( dictSamples, listCuts, signalName, UNC ):
 
 	################################################################################################## Running the Analysis
 	print '-'*40
-	SF = TCut('lumiWeight * puWeight') # * '+str(args.lumi))
-	preselection = TCut('HT>900') + SF 
+	lumiWeight = scaleFactor(signalName)
+	SF = 'puWeight*'+str(lumiWeight)
+	#SF = TCut('lumiWeight * puWeight') # * '+str(args.lumi))
+	preselection = TCut('HT>900') + TCut( SF )
 	selection = '' 
 	for var in listCuts: selection = selection+'('+var[0]+'<'+str(var[1])+')'
 	selection = selection.replace(')(',') && (')
