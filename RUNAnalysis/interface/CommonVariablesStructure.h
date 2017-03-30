@@ -415,7 +415,7 @@ inline vector< myJet > pairingMinChi( vector< myJet > JETS, double sigma ) {
 
 	vector< myJet > reorderedJETS;
 	vector< int > indices;
-	double minChi2 = 9999;
+	double minChi2 = 99999999999999999;
 	int bestInd[4] = { -1, -1, -1, -1};
 	if( JETS.size() > 3 ) {
 		for (unsigned int a = 0; a < JETS.size(); a++) {

@@ -86,6 +86,8 @@ def labelAxis(name, histo, Grom ):
 	elif 'jet2PrunedMass' in name: histo.GetXaxis().SetTitle( '2nd Leading Pruned Jet Mass [GeV]' )
 	elif 'jet2FilteredMass' in name: histo.GetXaxis().SetTitle( '2nd Leading Filtered Jet Mass [GeV]' )
 	elif 'jet2SoftDropMass' in name: histo.GetXaxis().SetTitle( '2nd Leading Soft Drop Jet Mass [GeV]' )
+	elif 'jet1Rho' in name: histo.GetXaxis().SetTitle( 'Leading Jet #rho [GeV]' )
+	elif 'jet2Rho' in name: histo.GetXaxis().SetTitle( '2nd Leading Jet #rho [GeV]' )
 	elif 'prunedMassAsym' in name: histo.GetXaxis().SetTitle( 'M_{Asym}' )
 	elif 'massAsym' in name: histo.GetXaxis().SetTitle( 'M_{Asym}' )
 	elif ('jet1CosThetaStar' in name) or ('cosThetaStar1' in name ): histo.GetXaxis().SetTitle( 'cos(#theta *)_{1}' )

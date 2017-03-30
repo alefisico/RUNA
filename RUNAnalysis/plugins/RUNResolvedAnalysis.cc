@@ -610,7 +610,7 @@ void RUNResolvedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup)
 				myJet j1, j2, j3, j4;
 				vector< myJet > tmpJets;	
 				bool massPairing = false;
-				if ( pairingMethod.Contains("chi2") ) tmpJets = pairingMinChi( JETS, 50 );  
+				if ( pairingMethod.Contains("chi2") ) tmpJets = pairingMinChi( JETS, 30 );  
 				else if ( pairingMethod.Contains( "mass" ) ) {
 				       tmpJets = pairing( JETS, false ); 	
 				       massPairing = true;
