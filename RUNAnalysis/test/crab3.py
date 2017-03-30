@@ -17,6 +17,7 @@ config.General.workArea = 'crab_projects'
 config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = 'RUNFullAnalysis_cfg.py'
 #config.JobType.psetName = 'RUNBoostedResolutionCalc_cfg.py'
+#config.JobType.psetName = 'RUNResolvedResolutionCalc_cfg.py'
 #config.JobType.allowUndistributedCMSSW = True
 
 config.Data.inputDataset = ''
@@ -28,6 +29,7 @@ config.Data.publication = False
 #config.Site.storageSite = 'T3_US_FNALLPC'
 config.Site.storageSite = 'T3_US_Rutgers'
 config.Data.outLFNDirBase = '/store/user/algomez/myArea/EOS/B2GAnaFW_80X_V2p3/'
+#config.Data.outLFNDirBase = '/store/user/algomez/myArea/EOS/ResolvedCalc/'
 
 def submit(config):
 	try:
@@ -132,11 +134,11 @@ if __name__ == '__main__':
 	#Samples[ 'WWJets' ] = [ '/WWTo4Q_13TeV-powheg/algomez-RunIISpring16MiniAODv2-PUSpring16_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1_B2GAnaFW_80X_V2p1-edbed0685401a5848e7d61871b3a63d8/USER', 10, 'Spring16_25nsV10' ]
 	#Samples[ 'ZZJets' ] = [ '/ZZTo4Q_13TeV_amcatnloFXFX_madspin_pythia8/algomez-RunIISpring16MiniAODv2-PUSpring16_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1_B2GAnaFW_80X_V2p1-edbed0685401a5848e7d61871b3a63d8/USER', 100, 'Spring16_25nsV10' ]
 	
-	Samples[ 'RPV80' ] = [ '/RPVStopStopToJets_UDD312_M-80_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1-3435c96292394b4f7f0ff1725e305a15/USER', 10, 'Spring16_23Sep2016V2' ]
-	Samples[ 'RPV100' ] = [ '/RPVStopStopToJets_UDD312_M-100_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1-3435c96292394b4f7f0ff1725e305a15/USER', 10, 'Spring16_23Sep2016V2' ]
-	Samples[ 'RPV120' ] = [ '/RPVStopStopToJets_UDD312_M-120_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1-3435c96292394b4f7f0ff1725e305a15/USER', 10, 'Spring16_23Sep2016V2' ]
-	Samples[ 'RPV140' ] = [ '/RPVStopStopToJets_UDD312_M-140_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1-3435c96292394b4f7f0ff1725e305a15/USER', 10, 'Spring16_23Sep2016V2' ]
-	Samples[ 'RPV180' ] = [ '/RPVStopStopToJets_UDD312_M-180_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1-3435c96292394b4f7f0ff1725e305a15/USER', 10, 'Spring16_23Sep2016V2' ]
+#	Samples[ 'RPV80' ] = [ '/RPVStopStopToJets_UDD312_M-80_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1-3435c96292394b4f7f0ff1725e305a15/USER', 10, 'Spring16_23Sep2016V2' ]
+#	Samples[ 'RPV100' ] = [ '/RPVStopStopToJets_UDD312_M-100_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1-3435c96292394b4f7f0ff1725e305a15/USER', 10, 'Spring16_23Sep2016V2' ]
+#	Samples[ 'RPV120' ] = [ '/RPVStopStopToJets_UDD312_M-120_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1-3435c96292394b4f7f0ff1725e305a15/USER', 10, 'Spring16_23Sep2016V2' ]
+#	Samples[ 'RPV140' ] = [ '/RPVStopStopToJets_UDD312_M-140_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1-3435c96292394b4f7f0ff1725e305a15/USER', 10, 'Spring16_23Sep2016V2' ]
+#	Samples[ 'RPV180' ] = [ '/RPVStopStopToJets_UDD312_M-180_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1-3435c96292394b4f7f0ff1725e305a15/USER', 10, 'Spring16_23Sep2016V2' ]
 	Samples[ 'RPV240' ] = [ '/RPVStopStopToJets_UDD312_M-240_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1-3435c96292394b4f7f0ff1725e305a15/USER', 10, 'Spring16_23Sep2016V2' ]
 	Samples[ 'RPV300' ] = [ '/RPVStopStopToJets_UDD312_M-300_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1-3435c96292394b4f7f0ff1725e305a15/USER', 10, 'Spring16_23Sep2016V2' ]
 	Samples[ 'RPV350' ] = [ '/RPVStopStopToJets_UDD312_M-350_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1-3435c96292394b4f7f0ff1725e305a15/USER', 10, 'Spring16_23Sep2016V2' ]
@@ -149,10 +151,15 @@ if __name__ == '__main__':
 	Samples[ 'RPV700' ] = [ '/RPVStopStopToJets_UDD312_M-700_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1-3435c96292394b4f7f0ff1725e305a15/USER', 10, 'Spring16_23Sep2016V2' ]
 	Samples[ 'RPV750' ] = [ '/RPVStopStopToJets_UDD312_M-750_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1-3435c96292394b4f7f0ff1725e305a15/USER', 10, 'Spring16_23Sep2016V2' ]
 	Samples[ 'RPV800' ] = [ '/RPVStopStopToJets_UDD312_M-800_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1-3435c96292394b4f7f0ff1725e305a15/USER', 10, 'Spring16_23Sep2016V2' ]
+	Samples[ 'RPV850' ] = [ '/RPVStopStopToJets_UDD312_M-850_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2_B2GAnaFW_80X_V2p4-bfea8033ab2d179bbb8e0faf6e2dc0cf/USER', 10, 'Spring16_23Sep2016V2' ]
 	Samples[ 'RPV900' ] = [ '/RPVStopStopToJets_UDD312_M-900_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1-3435c96292394b4f7f0ff1725e305a15/USER', 10, 'Spring16_23Sep2016V2' ]
+	Samples[ 'RPV950' ] = [ '/RPVStopStopToJets_UDD312_M-950_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2_B2GAnaFW_80X_V2p4-bfea8033ab2d179bbb8e0faf6e2dc0cf/USER', 10, 'Spring16_23Sep2016V2' ]
+	Samples[ 'RPV1000' ] = [ '/RPVStopStopToJets_UDD312_M-1000_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2_B2GAnaFW_80X_V2p4-bfea8033ab2d179bbb8e0faf6e2dc0cf/USER', 10, 'Spring16_23Sep2016V2' ]
 	Samples[ 'RPV1100' ] = [ '/RPVStopStopToJets_UDD312_M-1100_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1-3435c96292394b4f7f0ff1725e305a15/USER', 10, 'Spring16_23Sep2016V2' ]
 	Samples[ 'RPV1200' ] = [ '/RPVStopStopToJets_UDD312_M-1200_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1-3435c96292394b4f7f0ff1725e305a15/USER', 10, 'Spring16_23Sep2016V2' ]
 	Samples[ 'RPV1300' ] = [ '/RPVStopStopToJets_UDD312_M-1300_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1-3435c96292394b4f7f0ff1725e305a15/USER', 10, 'Spring16_23Sep2016V2' ]
+	Samples[ 'RPV1400' ] = [ '/RPVStopStopToJets_UDD312_M-1400_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2_B2GAnaFW_80X_V2p4-bfea8033ab2d179bbb8e0faf6e2dc0cf/USER', 10, 'Spring16_23Sep2016V2' ]
+	Samples[ 'RPV1500' ] = [ '/RPVStopStopToJets_UDD312_M-1500_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2_B2GAnaFW_80X_V2p4-bfea8033ab2d179bbb8e0faf6e2dc0cf/USER', 10, 'Spring16_23Sep2016V2' ]
 
 	Samples[ 'RPV323120' ] = [ '/RPVStopStopToJets_UDD323_M-120_TuneCUETP8M1_13TeV-madgraph-pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-6b29e1707fe76ab19c1ba543e7f6f24b/USER', 10, 'Spring16_23Sep2016V2' ]
 	Samples[ 'RPV323180' ] = [ '/RPVStopStopToJets_UDD323_M-180_TuneCUETP8M1_13TeV-madgraph-pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-6b29e1707fe76ab19c1ba543e7f6f24b/USER', 10, 'Spring16_23Sep2016V2' ]
@@ -192,19 +199,19 @@ if __name__ == '__main__':
 		config.Data.inputDataset = dataset
 		config.Data.unitsPerJob = processingSamples[sam][1]
 		if 'JetHT' in dataset: 
-
 			procName = dataset.split('/')[1]+dataset.split('/')[2].replace( dataset.split('/')[2].split('-')[0], '').split('_')[0]+processingSamples[sam][3]+'_'+args.version
 			config.Data.lumiMask = '/afs/cern.ch/work/a/algomez/RPVStops/CMSSW_8_0_20/src/RUNA/RUNAnalysis/test/supportFiles/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON'+processingSamples[sam][3]+'.txt'
-			#config.Data.lumiMask = 'crab_projects/crab_JetHT-Run2016F-23Sep2016-v1_F1_v06/results/notFinishedLumis.json'
-			config.JobType.pyCfgParams = [ 'PROC='+procName, 'jecVersion='+jecVersion ] 
+			#config.Data.lumiMask = 'crab_projects/crab_JetHT-Run2016G-23Sep2016-v1_v06p1/results/notFinishedLumis.json'
+			config.JobType.pyCfgParams = [ 'PROC='+procName, 'jecVersion='+jecVersion, 'version=Resolved' ] 
 
 		else:
-			procName = dataset.split('/')[1].split('_TuneCUETP8M1')[0]+args.version
-			config.JobType.pyCfgParams = ( [ 'PROC='+procName, 'systematics='+('1' if 'RPV' in sam else '0'), 'jecVersion='+jecVersion ] )
+			procName = dataset.split('/')[1].split('_TuneCUETP8M1')[0]
+			config.JobType.pyCfgParams = ( [ 'PROC='+procName, 'systematics='+('1' if 'RPV' in sam else '0'), 'jecVersion='+jecVersion, 'version=Resolved' ] )
+			#config.JobType.pyCfgParams = ( [ 'PROC='+procName, 'jecVersion='+jecVersion ] )
 			#config.Data.lumiMask = 'crab_projects/crab_QCD_Pt_1800to2400v06/results/notFinishedLumis.json'
 
 		config.JobType.inputFiles =  supportFiles
-		config.General.requestName = procName+'_'+args.version
+		config.General.requestName = procName+args.version
 		print config
 		print '|--- Submmiting sample: ', procName
 		p = Process(target=submit, args=(config,))
