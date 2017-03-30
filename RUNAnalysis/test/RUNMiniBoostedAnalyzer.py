@@ -676,7 +676,7 @@ if __name__ == '__main__':
 	allSamples[ 'JetHT_Run2016G'] = folder+'/RUNAnalysis_JetHT_Run2016G_80X_V2p3_'+args.version+'.root'
 	allSamples[ 'JetHT_Run2016H'] = folder+'/RUNAnalysis_JetHT_Run2016H_80X_V2p3_'+args.version+'.root'
 	allSamples[ 'RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) ] = folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+args.mass+'_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'TTJets' ] = folder+'/RUNAnalysis_TT_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'TT' ] = folder+'/RUNAnalysis_TT_80X_V2p3_'+args.version+'.root'
     	allSamples[ 'ZJetsToQQ' ] = folder+'/RUNAnalysis_ZJetsToQQ_80X_V2p3_'+args.version+'.root'
     	allSamples[ 'WJetsToQQ' ] = folder+'/RUNAnalysis_WJetsToQQ_80X_V2p3_'+args.version+'.root'
 	allSamples[ 'Dibosons' ] = folder+'/RUNAnalysis_Dibosons_80X_V2p3_'+args.version+'.root'
