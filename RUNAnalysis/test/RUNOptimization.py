@@ -53,13 +53,14 @@ def calcROCs( BkgSamples, SigSamples, treename, varList, window, cutsList ):
 			allHistos[ var[0]+"_"+bkgSample+"_BkgROC"] = TH1F( var[0]+"_"+bkgSample+"_BkgROC", var[0]+"_"+bkgSample+"_BkgROC; "+var[0], var[1], var[2], var[3] )
 			allHistos[ var[0]+"_"+bkgSample+"_SigROC"] = TH1F( var[0]+"_"+bkgSample+"_SigROC", var[0]+"_"+bkgSample+"_SigROC; "+var[0], var[1], var[2], var[3] )
 
-	massAve = 'prunedMassAve' if 'Boosted' in args.boosted else 'avgMass'
-	if 'Resolved' in args.boosted: preselection = '* (jetsPt[0]>50) * (jetsPt[1]>50) *(jetsPt[2]>50) *(jetsPt[3]>50) * (HT>500)' 
-	else: preselection = ''
-	cuts = '('+massAve+'>'+str(args.mass-window)+') * ('+massAve+'<'+str(args.mass+window)+') '+preselection 
-	SF = 'lumiWeight * puWeight * '+str(args.lumi)
+	massAve = 'prunedMassAve' if 'Boosted' in args.boosted else 'massAve'
+	SF = TCut( 'lumiWeight * puWeight * '+str(args.lumi) )
+	if 'Resolved' in args.boosted: preselection = TCut( '(jetsPt[0]>80) && (jetsPt[1]>80) && (jetsPt[2]>80) && (jetsPt[3]>80) && (HT>900)')
+	else: preselection = TCut('')
+	cuts = SF * preselection * TCut('('+massAve+'>'+str(args.mass-window)+') && ('+massAve+'<'+str(args.mass+window)+') ' )
 	if len(cutsList) > 0:
-		for cutVar in cutsList: cuts += ' && '+cutVar[0]+('<' if cutVar[4] else '>' )+str(cutVar[5])
+		#for cutVar in cutsList: cuts += ' && '+cutVar[0]+('<' if cutVar[4] else '>' )+str(cutVar[5])
+		for cutVar in cutsList: cuts = cuts * TCut( cutVar[0]+('<' if cutVar[4] else '>' )+str(cutVar[5]) )
 	print '-'*40
 	print '---- Cuts applied: ', cuts
 
@@ -157,7 +158,7 @@ def calcROCs( BkgSamples, SigSamples, treename, varList, window, cutsList ):
 
 			allROCs[ var[0]+"_"+bkgSample+"_ROC" ] = [ BkgROCValues, SigROCValues, SigROCBins, SigROCLowEdge, BkgNumValues, SigNumValues, BkgErrValues, SigErrValues ]
 
-	outputTextFile = 'ROCfiles/ROC'+args.boosted+'Values_QCD'+args.qcd+'_'+str(args.mass)+'_cut'+str(len(cutsList))+'_'+args.version+args.grooming+'.txt'
+	outputTextFile = 'ROCfiles/ROC'+args.boosted+'Values_QCD'+args.qcd+'_'+args.decay+str(args.mass)+'_cut'+str(len(cutsList))+'_'+args.version+args.grooming+'.txt'
 	print '--- Creating ', outputTextFile 
 	print >> open(outputTextFile, 'w+'), allROCs
 	outputFile.Write()
@@ -233,8 +234,8 @@ def makeROCs( textFile, variables, bkgSamples, perVariable, cutsList, printVar, 
 					sigOverSqrtSigBkg[ sigOverSqrtSigBkg == np.inf ] = 0
 					sigOverSqrtSigBkg = np.nan_to_num( sigOverSqrtSigBkg )
 				#sigOverSqrtSigBkg = np.sqrt( 2*( (totalSig+totalBkg)*np.log( 1 + np.divide( totalSig, totalBkg ) ) - totalSig ) )
-				#SOB = TGraphErrors( len(totalSig), ( (dictVariablesNum[ var[0]+'_QCD'+args.qcd+'All_ROC' ][2])/5. if 'deltaEta' in var[0] else (dictVariablesNum[ var[0]+'_QCD'+args.qcd+'All_ROC' ][2]) ), sigOverSqrtSigBkg, array( 'd', [0]*len(sigOverSqrtSigBkg)), totalErrSigOverSqrtSigBkg ) 
-				SOB = TGraph( len(totalSig), (dictVariablesNum[ var[0]+'_QCD'+args.qcd+'All_ROC' ][2])/var[7], sigOverSqrtSigBkg ) 
+				SOB = TGraphErrors( len(totalSig), ( (dictVariablesNum[ var[0]+'_QCD'+args.qcd+'All_ROC' ][2])/5. if 'deltaEta' in var[0] else (dictVariablesNum[ var[0]+'_QCD'+args.qcd+'All_ROC' ][2]) ), sigOverSqrtSigBkg, array( 'd', [0]*len(sigOverSqrtSigBkg)), totalErrSigOverSqrtSigBkg ) 
+				#SOB = TGraph( len(totalSig), (dictVariablesNum[ var[0]+'_QCD'+args.qcd+'All_ROC' ][2])/var[7], sigOverSqrtSigBkg ) 
 				dictNumVar[ var[0] ] = SOB 
 				#if returnSOB in var[0]: return SOB
 				#else: continue
@@ -256,9 +257,9 @@ def plotROC( name, sample, dictROC, numCuts, varOrbkg, SOB, diffMasses=False ):
 		dictROC = OrderedDict()
 		tmpName = name.replace( 'SOB_', '' )
 
-		for masses in [80, 90, 100, 110, 120, 130, 140, 150, 170, 180, 190, 210, 220, 230, 240, 300 ]: 
-		 	SOB = makeROCs( 'ROCfiles/ROC'+args.boosted+'Values_QCD'+args.qcd+'_RPVSt'+str(masses)+'_'+args.version+args.grooming+'.txt', [ [tmpName] ], '', True, '', '', returnSOB=tmpName)
-			dictROC[ 'M_{#tilde{t}} = '+str(masses)+' GeV' ] = SOB
+		#for masses in [80, 90, 100, 110, 120, 130, 140, 150, 170, 180, 190, 210, 220, 230, 240, 300 ]: 
+		for masses in [ 240, 300, 350, 450, 500, 550, 600 ]: 
+			dictROC[ 'M_{#tilde{t}} = '+str(masses)+' GeV' ] = makeROCs( 'ROCfiles/ROC'+args.boosted+'Values_QCD'+args.qcd+'_'+args.decay+str(masses)+'_'+args.version+args.grooming+'.txt', [ [tmpName] ], '', True, '', '', returnSOB=tmpName)
 	
 	f1 = TF1("f1","x",0,1)
 	f1.SetLineColor(1)
@@ -269,8 +270,8 @@ def plotROC( name, sample, dictROC, numCuts, varOrbkg, SOB, diffMasses=False ):
 	
 	PT = TText(0.6, 0.05, sample )
 	multiGraph = TMultiGraph()
-	legend=TLegend(0.65,0.15,0.90,0.45)
-	#legend=TLegend(0.80,0.50,0.90,0.87)
+	#legend=TLegend(0.65,0.15,0.90,0.45)
+	legend=TLegend(0.70,0.70,0.90,0.87)
 	legend.SetFillStyle(0)
 	legend.SetTextSize(0.03)
 	dummy=1
@@ -293,8 +294,8 @@ def plotROC( name, sample, dictROC, numCuts, varOrbkg, SOB, diffMasses=False ):
 	if SOB:
 		if diffMasses: multiGraph.GetXaxis().SetTitle( 'Leading jet #tau_{21}' )
 		else: multiGraph.GetXaxis().SetTitle( 'A.U.' )
-		#multiGraph.GetYaxis().SetTitle('S/#sqrt{S+B}')
-		multiGraph.GetYaxis().SetTitle('S/#sqrt{B}')
+		multiGraph.GetYaxis().SetTitle('S/#sqrt{S+B}')
+		#multiGraph.GetYaxis().SetTitle('S/#sqrt{B}')
 		#multiGraph.GetYaxis().SetTitle('#sqrt{2*((s+b)ln(s/b)-s)}')
 	else:
 		multiGraph.GetXaxis().SetRangeUser(-0.05,1.05)
@@ -305,7 +306,7 @@ def plotROC( name, sample, dictROC, numCuts, varOrbkg, SOB, diffMasses=False ):
 	multiGraph.GetYaxis().SetTitleOffset(0.95)
 	legend.Draw()
 	if diffMasses: can.SaveAs('Plots/'+name+'_'+args.boosted+'_QCD'+args.qcd+'_ROC_cut'+str(numCuts)+'_'+args.version+args.grooming+'.'+args.ext)
-	else: can.SaveAs('Plots/'+name+'_'+args.boosted+str(args.mass)+'_QCD'+args.qcd+'_ROC_cut'+str(numCuts)+'_'+args.version+args.grooming+'.'+args.ext)
+	else: can.SaveAs('Plots/'+name+'_'+args.boosted+args.decay+'_M'+str(args.mass)+'_QCD'+args.qcd+'_ROC_cut'+str(numCuts)+'_'+args.version+args.grooming+'.'+args.ext)
 	del can
 
 def plotSigOverBkg( name, sample, dictNum, numCuts ):
@@ -325,6 +326,80 @@ def plotSigOverBkg( name, sample, dictNum, numCuts ):
 	SOB.GetYaxis().SetTitleOffset(0.95)
 	#legend.Draw()
 	can.SaveAs('Plots/'+name+'_'+args.boosted+str(args.mass)+'_QCD'+args.qcd+'_SOB_cut'+str(numCuts)+'_'+args.version+args.grooming+'.'+args.ext)
+	del can
+
+def calcOptimizeDelta( BkgSamples, SigSamples, nameInRoot, massList ):
+	"""docstring for calcOptimizeDelta"""
+
+	QCDHisto = BkgSamples.Get( nameInRoot+'_QCD'+args.qcd+'All' )
+	QCDHisto.Scale( 36000 )
+
+	signalHistos = OrderedDict()
+	SOsqrtSB = []
+	SOsqrtSBError = []
+	for xmass in massList: 
+		NAME = 'RPVStopStopToJets_'+args.decay+'_M-'+str( xmass )
+		signalInputFile = TFile( SigSamples.replace( str(args.mass), str(xmass) ) )
+		signalHistos[ xmass ] = signalInputFile.Get( nameInRoot+'_'+NAME )
+		signalHistos[ xmass ].Scale( 36000 )
+		minMass = signalHistos[ xmass ].GetXaxis().FindBin( xmass-50 )
+		maxMass = signalHistos[ xmass ].GetXaxis().FindBin( xmass+50 )
+		bkgError = Double(0)
+		bkgIntegral = QCDHisto.IntegralAndError( minMass, maxMass, bkgError )
+		sigError = Double(0)
+		sigIntegral = signalHistos[ xmass ].IntegralAndError( minMass, maxMass, sigError )
+
+		sqrtSigBkg = sigIntegral / TMath.Sqrt( bkgIntegral + sigIntegral )
+		sigBkgErr = TMath.Sqrt( (bkgError*bkgError) + (sigError*sigError) ) / (2*TMath.Sqrt( bkgIntegral + sigIntegral )) 
+		totalErrSOsqrtSB = TMath.Sqrt( TMath.Power( (sigError/sigIntegral), 2 ) + TMath.Power( (sigBkgErr/TMath.Sqrt( bkgIntegral + sigIntegral )), 2) )
+		SOsqrtSB.append( sqrtSigBkg )
+		SOsqrtSBError.append( totalErrSOsqrtSB )
+
+	graphSOsqrtSB = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', SOsqrtSB ), array('d', [0]*len(massList) ), array('d', SOsqrtSBError) )
+	return graphSOsqrtSB
+	
+def optimizeDelta( BkgSamples, SigSamples, massList ):
+	"""docstring for optimizeDelta"""
+
+	graphs = OrderedDict()
+	graphs[ 'Nominal' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta', massList )
+	graphs[ '+ 1CSVL' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta_1CSVv2L', massList )
+	graphs[ '+ 2CSVL' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta_2CSVv2L', massList )
+	graphs[ '+ 1CSVM' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta_1CSVv2M', massList )
+	graphs[ '+ 2CSVM' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta_2CSVv2M', massList )
+	graphs[ '+ 1CSVT' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta_1CSVv2T', massList )
+	graphs[ '+ 2CSVT' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta_2CSVv2T', massList )
+	'''
+	graphs[ 'delta150' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta150', massList )
+	graphs[ 'delta250' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta250', massList )
+	graphs[ 'delta300' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta300', massList )
+	graphs[ '+ 1QGL' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta_1qgl', massList )
+	graphs[ '+ 2QGL' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta_2qgl', massList )
+	graphs[ '+ 4QGL' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta_4qgl', massList )
+	'''
+
+	can = TCanvas('c1', 'c1',  10, 10, 1000, 750 )
+	can.SetGrid()
+
+	legend=TLegend(0.15,0.15,0.45,0.45)
+	legend.SetFillStyle(0)
+	legend.SetTextSize(0.03)
+	dummy=1
+	multiGraph = TMultiGraph()
+	for g in graphs:
+		graphs[g].SetLineWidth( 2 )
+		graphs[g].SetMarkerStyle(4)
+		graphs[g].SetLineColor(dummy)
+		legend.AddEntry( graphs[g], g, 'pl' )
+		multiGraph.Add( graphs[g] )
+		dummy+=1
+
+	multiGraph.Draw("ALP")
+	multiGraph.GetYaxis().SetTitleOffset(0.95)
+	multiGraph.GetXaxis().SetTitle('Average dijet mass [GeV]')
+	multiGraph.GetYaxis().SetTitle('S/#sqrt{S+B}')
+	legend.Draw()
+	can.SaveAs('Plots/massAve_delta_Btag_DeltaOptimization'+args.version+'.'+args.ext)
 	del can
 
 #----------------------------------------------------------------------
@@ -536,6 +611,7 @@ if __name__ == '__main__':
 	parser.add_argument( '-B', '--batchSys', action='store',  dest='batchSys', type=bool, default=False, help='BatchSys: False (lxplus), True hexfarm.' )
 	parser.add_argument( '-v', '--version', action='store', default='v01', help='Version: v01, v02.' )
 	parser.add_argument( '-q', '--qcd', action='store', default='HT', dest='qcd', help='Type of QCD binning, example: HT.' )
+	parser.add_argument( '-d', '--decay', action='store', default='UDD312', dest='decay', help='Decay, example: UDD312, UDD323.' )
 
 	try:
 		args = parser.parse_args()
@@ -547,20 +623,20 @@ if __name__ == '__main__':
 	else: folder = 'Rootfiles/'
 
 	bkgSamples = OrderedDict()
-	bkgSamples[ 'QCD'+args.qcd+'All' ] = [ folder+'/RUNAnalysis_QCD'+args.qcd+'All_80X_V2p1_'+args.version+'.root', kBlue-4 ]
+	bkgSamples[ 'QCD'+args.qcd+'All' ] = [ folder+'/RUNAnalysis_QCD'+args.qcd+'All_80X_V2p3_'+args.version+'.root', kBlue-4 ]
 	if 'Boosted' in args.boosted:
-		bkgSamples[ 'TTJets' ] = [ folder+'/RUNAnalysis_TTJets_80X_V2p1_'+args.version+'.root', kGreen+2 ]
-		bkgSamples[ 'WJetsToQQ' ] = [ folder+'/RUNAnalysis_WJetsToQQ_80X_V2p1_'+args.version+'.root', 38 ]
-		bkgSamples[ 'ZJetsToQQ' ] = [ folder+'/RUNAnalysis_ZJetsToQQ_80X_V2p1_'+args.version+'.root', kOrange ]
-		bkgSamples[ 'Dibosons' ] = [ folder+'/RUNAnalysis_Dibosons_80X_V2p1_'+args.version+'.root', kMagenta+2 ]
-		#bkgSamples[ 'WWTo4Q' ] = [ folder+'/RUNAnalysis_WWTo4Q_80X_V2p1_'+args.version+'.root', kMagenta+2 ]
-		#bkgSamples[ 'ZZTo4Q' ] = [ folder+'/RUNAnalysis_ZZTo4Q_80X_V2p1_'+args.version+'.root', kOrange+2 ]
-		#bkgSamples[ 'WZ' ] = [ folder+'/RUNAnalysis_WZ_80X_V2p1_'+args.version+'.root', kCyan ]
+		bkgSamples[ 'TTJets' ] = [ folder+'/RUNAnalysis_TTJets_80X_V2p3_'+args.version+'.root', kGreen+2 ]
+		bkgSamples[ 'WJetsToQQ' ] = [ folder+'/RUNAnalysis_WJetsToQQ_80X_V2p3_'+args.version+'.root', 38 ]
+		bkgSamples[ 'ZJetsToQQ' ] = [ folder+'/RUNAnalysis_ZJetsToQQ_80X_V2p3_'+args.version+'.root', kOrange ]
+		bkgSamples[ 'Dibosons' ] = [ folder+'/RUNAnalysis_Dibosons_80X_V2p3_'+args.version+'.root', kMagenta+2 ]
+		#bkgSamples[ 'WWTo4Q' ] = [ folder+'/RUNAnalysis_WWTo4Q_80X_V2p3_'+args.version+'.root', kMagenta+2 ]
+		#bkgSamples[ 'ZZTo4Q' ] = [ folder+'/RUNAnalysis_ZZTo4Q_80X_V2p3_'+args.version+'.root', kOrange+2 ]
+		#bkgSamples[ 'WZ' ] = [ folder+'/RUNAnalysis_WZ_80X_V2p3_'+args.version+'.root', kCyan ]
 
 	sigSamples = {}
-	sigSamples[ args.mass ] = folder+'/RUNAnalysis_RPVStopStopToJets_UDD312_M-'+str(args.mass)+'_80X_V2p1_'+args.version+'.root'
+	sigSamples[ args.mass ] = folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_80X_V2p3_'+args.version+'.root'
 
-	SigSample = folder+'/RUNAnalysis_RPVStopStopToJets_UDD312_M-'+str(args.mass)+'-madgraph_RunIISpring15MiniAODv2-74X_Asympt25ns_v09_v03.root'
+	SigSample = folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'-madgraph_RunIISpring15MiniAODv2-74X_Asympt25ns_v09_v03.root'
 	treename = "ResolvedAnalysisPlots/RUNATree" if ( 'Resolved' in args.boosted ) else 'BoostedAnalysisPlots'+args.grooming+'/RUNATree'
 
 	var = [
@@ -570,11 +646,11 @@ if __name__ == '__main__':
 		#[ 'Resolved', 'jetsQGL[2]', 50, 0., 1., False, 0., 0., 5, 1 ],
 		#[ 'Resolved', 'jetsQGL[3]', 50, 0., 1., False, 0., 0., 5, 1 ],
 		[ 'Resolved', 'deltaEta', 50, 0., 5., True, 0, 0., 5, 1 ],
-		[ 'Resolved', 'massAsym', 20, 0., 1., True, 0.1, 0., 1, 2 ],
-		[ 'Resolved', 'cosThetaStar1', 20, 0., 1., True, 0., 0., 1, 3 ],
-		[ 'Resolved', 'cosThetaStar2', 20, 0., 1., True, 0., 0., 1, 4 ],
-		[ 'Resolved', 'delta1', 50, 0, 500,  False, 200, 0., 500, 5 ],
-		[ 'Resolved', 'delta2', 50, 0, 500, False, 200, 0., 500, 6 ],
+		[ 'Resolved', 'massAsym', 20, 0., 1., True, 0., 0., 1, 2 ],
+		#[ 'Resolved', 'cosThetaStar1', 20, 0., 1., True, 0., 0., 1, 3 ],
+		#[ 'Resolved', 'cosThetaStar2', 20, 0., 1., True, 0., 0., 1, 4 ],
+		[ 'Resolved', 'delta1', 50, 0, 300,  False, 0, 0., 500, 5 ],
+		[ 'Resolved', 'delta2', 50, 0, 300, False, 0, 0., 500, 6 ],
 		#[ 'Resolved', 'xi1', 20, 0., 1., True, 0, 0.6 ],
 		#[ 'Resolved', 'xi2', 20, 0., 1., True , 0, 0.6],
 		[ 'Boosted', "prunedMassAsym", 20, 0., 1., True, 0., 0.2, 1, 1 ],
@@ -595,18 +671,26 @@ if __name__ == '__main__':
 	if 'calcROC' in args.process: 
 		variables = [ x[1:] for x in var if ( args.boosted in x[0] ) ]
 		cuts = [ x[1:] for x in var if ( ( args.boosted in x[0] ) and ( x[6]!=x[3] ) ) ]
-		p0 = Process( target=calcROCs, args=( bkgSamples, sigSamples, treename, variables, ( 30 if 'Resolved' in args.boosted else 20 ), cuts ) )
+		p0 = Process( target=calcROCs, args=( bkgSamples, sigSamples, treename, variables, ( 50 if 'Resolved' in args.boosted else 20 ), cuts ) )
 		p0.start()
 		p0.join()
 	
 	elif 'plotROC' in args.process: 
 		variables = [ x[1:] for x in var if ( ( args.boosted in x[0] ) and ( x[6]==x[3] ) ) ]
 		cuts = [ x[1:] for x in var if ( ( args.boosted in x[0] ) and ( x[6]!=x[3] ) ) ]
-		if args.printValue: 	makeROCs( 'ROCfiles/ROC'+args.boosted+'Values_QCD'+args.qcd+'_'+str(args.mass)+'_cut'+str(len(cuts)-1)+'_'+args.version+args.grooming+'.txt', cuts, bkgSamples, True if 'var' in args.typeROC else False, cuts, args.quantity )
-		else: makeROCs( 'ROCfiles/ROC'+args.boosted+'Values_QCD'+args.qcd+'_'+str(args.mass)+'_cut'+str(len(cuts))+'_'+args.version+args.grooming+'.txt', variables, bkgSamples, True if 'var' in args.typeROC else False, cuts, args.quantity )
+		if args.printValue: 
+			makeROCs( 'ROCfiles/ROC'+args.boosted+'Values_QCD'+args.qcd+'_'+args.decay+str(args.mass)+'_cut'+str(len(cuts)-1)+'_'+args.version+args.grooming+'.txt', cuts, bkgSamples, True if 'var' in args.typeROC else False, cuts, args.quantity )
+		else: 
+			makeROCs( 'ROCfiles/ROC'+args.boosted+'Values_QCD'+args.qcd+'_'+args.decay+str(args.mass)+'_cut'+str(len(cuts))+'_'+args.version+args.grooming+'.txt', variables, bkgSamples, True if 'var' in args.typeROC else False, cuts, args.quantity )
 
 	elif 'tmp' in args.process: 	
-		plotROC( 'SOB_jet1Tau21', '', '', '', True, True, diffMasses=True )
+		#plotROC( 'SOB_jet1Tau21', '', '', '', True, True, diffMasses=True )
+		plotROC( 'SOB_massAsym', '', '', '', True, True, diffMasses=True )
+
+	elif 'delta' in args.process:
+		optimizeDelta( TFile( folder+'/RUNMiniResolvedAnalysis_QCD'+args.qcd+'All_Moriond17_80X_V2p3_'+args.version+'.root' ),
+			folder+'/RUNMiniResolvedAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p3_'+args.version+'.root',
+			( [ 240, 350, 450, 550, 650, 750, 850, 950] if '312' in args.decay else [280, 500, 600, 700] ) ) 
 
 	elif 'TMVA' in args.process:
 		variables = [ x[1] for x in var if ( args.boosted in x[0] ) ]
