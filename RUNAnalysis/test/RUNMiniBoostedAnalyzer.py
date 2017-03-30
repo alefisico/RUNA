@@ -38,7 +38,10 @@ def myAnalyzer( fileSample, listCuts, signalName, UNC ):
 	listOfOptions = [ [ j,k] for j in range(len(listCuts)-1) for k in range(1, len(listCuts) ) if k > j ]
 
 	print '--- Sample ', signalName
+	sf = scaleFactor(signalName)
 	if 'JetHT' in signalName: signalName = 'JetHT_Run2016'
+	elif 'QCD_HT' in signalName: signalName = 'QCDHTAll'
+	elif 'QCD_Pt' in signalName: signalName = 'QCDPtAll'
 	'''
 	allHistos[ "cutFlow_"+signalName ] = TH1F( "cutflow_"+signalName, "cutflow_"+signalName, len(listCuts), 0., len(listCuts) )
 	allHistos[ "cutFlow_Scaled_"+signalName ] = TH1F( "cutflow_scaled_"+signalName, "cutflow_scaled_"+signalName, len(listCuts), 0., len(listCuts) )
@@ -144,7 +147,7 @@ def myAnalyzer( fileSample, listCuts, signalName, UNC ):
 
 	################################################################################################## Running the Analysis
 	print '-'*40
-	lumiWeight = ( 1 if 'JetHT' in signalName else scaleFactor(signalName) )
+	lumiWeight = ( 1 if 'JetHT' in signalName else sf  )
 	SF = 'puWeight*'+str(lumiWeight)
 	#SF = TCut('lumiWeight * puWeight') # * '+str(args.lumi))
 	preselection = TCut('HT>900') + TCut( SF )
@@ -674,6 +677,22 @@ if __name__ == '__main__':
 	#allSamples[ 'ZZTo4Q' ] = folder+'/RUNAnalysis_ZZTo4Q_80X_V2p3_'+args.version+'.root'
 	#allSamples[ 'WZ' ] = folder+'/RUNAnalysis_WZ_80X_V2p3_'+args.version+'.root'
 	allSamples[ 'QCD'+args.qcd+'All' ] = folder+'/RUNAnalysis_QCD'+args.qcd+'All_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'QCD_HT300to500' ] = folder+'/RUNAnalysis_QCDHT300to500_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'QCD_HT500to700' ] = folder+'/RUNAnalysis_QCDHT500to700_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'QCD_HT700to1000' ] = folder+'/RUNAnalysis_QCDHT700to1000_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'QCD_HT1000to1500' ] = folder+'/RUNAnalysis_QCDHT1000to1500_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'QCD_HT1500to2000' ] = folder+'/RUNAnalysis_QCDHT1500to2000_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'QCD_HT2000toInf' ] = folder+'/RUNAnalysis_QCDHT2000toInf_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'QCD_Pt_170to300' ] = folder+'/RUNAnalysis_QCDPt170to300_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'QCD_Pt_300to470' ] = folder+'/RUNAnalysis_QCDPt300to470_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'QCD_Pt_470to600' ] = folder+'/RUNAnalysis_QCDPt470to600_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'QCD_Pt_600to800' ] = folder+'/RUNAnalysis_QCDPt600to800_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'QCD_Pt_800to1000' ] = folder+'/RUNAnalysis_QCDPt800to1000_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'QCD_Pt_1000to1400' ] = folder+'/RUNAnalysis_QCDPt1000to1400_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'QCD_Pt_1400to1800' ] = folder+'/RUNAnalysis_QCDPt1400to1800_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'QCD_Pt_1800to2400' ] = folder+'/RUNAnalysis_QCDPt1800to2400_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'QCD_Pt_2400to3200' ] = folder+'/RUNAnalysis_QCDPt2400to3200_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'QCD_Pt_3200toInf' ] = folder+'/RUNAnalysis_QCDPt3200toInf_80X_V2p3_'+args.version+'.root'
 
 	if 'pruned' in args.grooming: cuts = [ [ 'jet1Tau21', 0.45 ], [ 'jet2Tau21', 0.45 ], [ 'prunedMassAsym', 0.10 ], [ 'deltaEtaDijet', 1.5 ] ]
 	else: cuts = [ [ 'jet1Tau21', 0.45 ], [ 'jet2Tau21', 0.45 ], [ 'prunedMassAsym', 0.10 ], [ 'deltaEtaDijet', 1. ] ]
