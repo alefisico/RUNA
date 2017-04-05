@@ -46,9 +46,8 @@ jetMassHTlabX = 0.85
 def plotResolutionCalculator( inFileSample, Groom, name, xmin, xmax, rebinX, labX, labY, log):
 	"""docstring for plot"""
 
-	massList = [ 80, 90, 100, 110, 120, 130, 140, 150, 170, 180, 190, 210, 220, 230, 240, 300 ] #, 350 ] 
-	#massList = [ 90, 100, 110, 130, 150, 170, 190 ] 
-	#massList = [ 90, 100, 110, 120, 130, 140, 150 ] 
+	if 'Boosted' in args.boosted: massList = [ 80, 90, 100, 110, 120, 130, 140, 150, 170, 180, 190, 210, 220, 230, 240, 300 ] #, 350 ] 
+	else: massList = [ 240, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 900, 1100, 1200, 1300 ]
 	resolArray = []
 	resolErrArray = []
 	tmpArray = []
@@ -66,9 +65,9 @@ def plotResolutionCalculator( inFileSample, Groom, name, xmin, xmax, rebinX, lab
 		print 'Processing.......', outputFileName
 
 		histos = {}
-		histos[ 'massAve' ] = massAveFile.Get( 'BoostedAnalysisPlots/'+name )
+		histos[ 'massAve' ] = massAveFile.Get( args.boosted+'AnalysisPlots/'+name )
 		scale = scaleFactor( 'RPVStopStopToJets_UDD312_M-'+str(xmass) ) 
-		histos[ 'massAve' ].Scale( 1/scale )
+		#histos[ 'massAve' ].Scale( 1/scale )
 
 		#if rebinX > 1:  histos[ 'massAve' ].Rebin( rebinX )
 		histos[ 'massAve' ].Rebin( 5 )
@@ -81,8 +80,8 @@ def plotResolutionCalculator( inFileSample, Groom, name, xmin, xmax, rebinX, lab
 		for i in range(0,3): histos[ 'massAve' ].Fit(gausNom, 'MIR', '', int(xmass)-massWindow, int(xmass)+massWindow )
 
 		meanGaus = gausNom.GetParameter( 1 )
-		resol = gausNom.GetParameter( 2 ) 
-		resolError = gausNom.GetParError( 2 ) 
+		resol = gausNom.GetParameter( 2 ) / xmass
+		resolError = gausNom.GetParError( 2 ) /xmass 
 		#resol = 2.355 * gausNom.GetParameter( 2 ) / meanGaus 
 		#resolError = 2.355 * gausNom.GetParError( 2 ) 
 		#resol = gausNom.GetParameter( 2 )# / meanGaus 
@@ -147,7 +146,8 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-p', '--proc', action='store', default='1D', help='Process to draw, example: 1D, 2D, MC.' )
 	parser.add_argument('-d', '--decay', action='store', default='UDD312', dest='decay', help='Decay, example: UDD312, UDD323.' )
-	parser.add_argument('-v', '--version', action='store', default='Boosted', help='Boosted or non version, example: Boosted' )
+	parser.add_argument('-b', '--boosted', action='store', default='Boosted', help='Boosted or non boosted, example: Boosted' )
+	parser.add_argument('-v', '--version', action='store', default='v00', help='Version: v01, v02.' )
 	parser.add_argument('-g', '--grom', action='store', default='pruned', dest='grooming', help='Grooming Algorithm, example: Pruned, Filtered.' )
 	parser.add_argument('-m', '--mass', action='store', default='100', help='Mass of Stop, example: 100' )
 	parser.add_argument('-C', '--cut', action='store', default='_cutMassAsym', help='cut, example: cutDEta' )
@@ -170,4 +170,5 @@ if __name__ == '__main__':
 	CMS_lumi.lumi_13TeV = '' #str( round((args.lumi/1000.),2) )+" fb^{-1}"
 	CMS_lumi.extraText = "Simulation Preliminary"
 	
-	plotResolutionCalculator( 'Rootfiles/RUNResolutionCalc_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_RunIIFall15MiniAODv2_v76x_v2p1.root', 'pruned', 'massAve_cutHT', '', '', 1, '', '', False )
+	#plotResolutionCalculator( 'Rootfiles/RUNResolutionCalc_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_RunIIFall15MiniAODv2_v76x_v2p1.root', 'pruned', 'massAve_cutHT', '', '', 1, '', '', False )
+	plotResolutionCalculator( 'Rootfiles/RUNResolvedCalc_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_80X_V2p3_v01.root', 'pruned', 'massAve_cutBestPair', '', '', 1, '', '', False )
