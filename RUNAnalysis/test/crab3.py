@@ -163,7 +163,7 @@ if __name__ == '__main__':
 		config.Data.inputDataset = dataset
 		config.Data.unitsPerJob = processingSamples[sam][1]
 		if 'JetHT' in dataset: 
-			procName = dataset.split('/')[1]+dataset.split('/')[2].replace( dataset.split('/')[2].split('-')[0], '').split('_')[0]+processingSamples[sam][3]+'_'+args.version
+			procName = dataset.split('/')[1]+dataset.split('/')[2].replace( dataset.split('/')[2].split('-')[0], '').split('_')[0]+processingSamples[sam][3]
 			config.Data.lumiMask = '/afs/cern.ch/work/a/algomez/RPVStops/CMSSW_8_0_20/src/RUNA/RUNAnalysis/test/supportFiles/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON'+processingSamples[sam][3]+'.txt'
 			#config.Data.lumiMask = 'crab_projects/crab_JetHT-Run2016G-23Sep2016-v1_v06p1/results/notFinishedLumis.json'
 			config.JobType.pyCfgParams = [ 'PROC='+procName, 'jecVersion='+jecVersion ] 

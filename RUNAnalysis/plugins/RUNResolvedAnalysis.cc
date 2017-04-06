@@ -706,7 +706,7 @@ void RUNResolvedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup)
 						jetsE->push_back( JETS[ ijet ].p4.E() );
 						jetsQGL->push_back( JETS[ ijet ].qgl );
 						jetsCSVv2->push_back( JETS[ ijet ].btagCSVv2 );
-						jetsCSVv2SF->push_back( vectorBtagSF[ijet-4] );
+						if ( !isData ) jetsCSVv2SF->push_back( vectorBtagSF[ijet-4] );
 						jetsCMVAv2->push_back( JETS[ ijet ].btagCMVAv2 );
 					}
 
