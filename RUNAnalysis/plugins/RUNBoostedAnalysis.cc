@@ -109,8 +109,8 @@ class RUNBoostedAnalysis : public EDAnalyzer {
 		unsigned int lumi = 0, run=0;
 		float AK4HT = 0, HT = 0, trimmedMass = -999, 
 		      puWeight = -999, genWeight = -999, lumiWeight = -999, pdfWeight = -999, MET = -999,
-		      jet1Pt = -999, jet1Eta = -999, jet1Phi = -999, jet1E = -999, jet1btagCSVv2 = -9999, jet1btagCMVAv2 = -9999, jet1btagDoubleB = -9999,
-		      jet2Pt = -999, jet2Eta = -999, jet2Phi = -999, jet2E = -999, jet2btagCSVv2 = -9999, jet2btagCMVAv2 = -9999, jet2btagDoubleB = -9999,
+		      jet1Pt = -999, jet1Eta = -999, jet1Phi = -999, jet1E = -999, jet1M = -999, jet1btagCSVv2 = -9999, jet1btagCMVAv2 = -9999, jet1btagDoubleB = -9999,
+		      jet2Pt = -999, jet2Eta = -999, jet2Phi = -999, jet2E = -999, jet2M = -999, jet2btagCSVv2 = -9999, jet2btagCMVAv2 = -9999, jet2btagDoubleB = -9999,
 		      jet1btagCSVv2SF = 1, jet2btagCSVv2SF = 1, jet1btagCMVAv2SF = 1, jet2btagCMVAv2SF = 1,
 		      subjet11Pt = -999, subjet11Eta = -999, subjet11Phi = -999, subjet11E = -999, subjet11btagCSVv2 = -9999, subjet11btagCMVAv2 = -9999, 
 		      subjet12Pt = -999, subjet12Eta = -999, subjet12Phi = -999, subjet12E = -999, subjet12btagCSVv2 = -9999, subjet12btagCMVAv2 = -9999, 
@@ -1068,12 +1068,14 @@ void RUNBoostedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup) 
 					jet1Eta 	= JETS[0].p4.Eta();
 					jet1Phi 	= JETS[0].p4.Phi();
 					jet1E 		= JETS[0].p4.E();
+					jet1M 		= JETS[0].p4.M();
 					jet1PrunedMass	= JETS[0].prunedMass;
 					jet1SoftDropMass	= JETS[0].softDropMass;
 					jet2Pt 		= JETS[1].p4.Pt();
 					jet2Eta 	= JETS[1].p4.Eta();
 					jet2Phi 	= JETS[1].p4.Phi();
 					jet2E 		= JETS[1].p4.E();
+					jet2M 		= JETS[1].p4.M();
 					jet2PrunedMass	= JETS[1].prunedMass;
 					jet2SoftDropMass	= JETS[1].softDropMass;
 					subjet11Pt	= JETS[0].subjet0.Pt();
@@ -1261,6 +1263,7 @@ void RUNBoostedAnalysis::beginJob() {
 		RUNAtree->Branch( "jet1Eta", &jet1Eta, "jet1Eta/F" );
 		RUNAtree->Branch( "jet1Phi", &jet1Phi, "jet1Phi/F" );
 		RUNAtree->Branch( "jet1E", &jet1E, "jet1E/F" );
+		RUNAtree->Branch( "jet1M", &jet1M, "jet1M/F" );
 		RUNAtree->Branch( "jet1PrunedMass", &jet1PrunedMass, "jet1PrunedMass/F" );
 		RUNAtree->Branch( "jet1SoftDropMass", &jet1SoftDropMass, "jet1SoftDropMass/F" );
 		RUNAtree->Branch( "jet1btagCSVv2", &jet1btagCSVv2, "jet1btagCSVv2/F" );
@@ -1272,6 +1275,7 @@ void RUNBoostedAnalysis::beginJob() {
 		RUNAtree->Branch( "jet2Eta", &jet2Eta, "jet2Eta/F" );
 		RUNAtree->Branch( "jet2Phi", &jet2Phi, "jet2Phi/F" );
 		RUNAtree->Branch( "jet2E", &jet2E, "jet2E/F" );
+		RUNAtree->Branch( "jet2M", &jet2M, "jet2M/F" );
 		RUNAtree->Branch( "jet2PrunedMass", &jet2PrunedMass, "jet2PrunedMass/F" );
 		RUNAtree->Branch( "jet2SoftDropMass", &jet2SoftDropMass, "jet2SoftDropMass/F" );
 		RUNAtree->Branch( "jet2btagCSVv2", &jet2btagCSVv2, "jet2btagCSVv2/F" );

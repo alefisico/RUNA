@@ -147,13 +147,13 @@ def myAnalyzer( fileSample, listCuts, signalName, UNC ):
 
 	################################################################################################## Running the Analysis
 	print '-'*40
-	lumiWeight = ( 1 if 'JetHT' in signalName else sf  )
-	SF = 'puWeight*'+str(lumiWeight)
-	#SF = TCut('lumiWeight * puWeight') # * '+str(args.lumi))
-	preselection = TCut('HT>900') + TCut( SF )
+	#lumiWeight = ( 1 if 'JetHT' in signalName else sf  )
+	#SF = 'puWeight*'+str(lumiWeight)
+	SF = TCut('lumiWeight * puWeight') # * '+str(args.lumi))
+	preselection = TCut('HT>900') * TCut( SF )
 	selection = '' 
 	for var in listCuts: selection = selection+'('+var[0]+'<'+str(var[1])+')'
-	selection = selection.replace(')(',') && (')
+	selection = selection.replace(')(',') * (')
 	print '---- Cuts applied: ', selection, preselection + TCut( selection )
 
 	ABCDRegions = {}
@@ -177,6 +177,12 @@ def myAnalyzer( fileSample, listCuts, signalName, UNC ):
 	if 'JetHT' in signalName: SF = 1
 
 	### Preselection
+	getHistoFromTree( fileSample, treeName,
+			'HT', 
+			preselection,
+			allHistos[ 'HT_preSel_'+signalName ], 
+			( 0.05 if 'JetHT' in signalName else 1 ) ) 
+	'''
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAve', 
 			preselection, 
@@ -217,12 +223,6 @@ def myAnalyzer( fileSample, listCuts, signalName, UNC ):
 			'numPV', 
 			preselection+TCut( '(numPV>24)' ), 
 			allHistos[ 'NPV_preSel_highNPV_'+signalName ], 
-			( 0.05 if 'JetHT' in signalName else 1 ) ) 
-
-	getHistoFromTree( fileSample, treeName,
-			'HT', 
-			preselection,
-			allHistos[ 'HT_preSel_'+signalName ], 
 			( 0.05 if 'JetHT' in signalName else 1 ) ) 
 
 	getHistoFromTree( fileSample, treeName,
@@ -349,6 +349,7 @@ def myAnalyzer( fileSample, listCuts, signalName, UNC ):
 				selABCD, 
 				allHistos[ 'prunedMassAsymVsdeltaEtaDijet_'+signalName+'_btag'+region ],
 				( 0.05 if 'JetHT' in signalName else 1 ) ) 
+	'''
 
 
 #	for sample in dictSamples:

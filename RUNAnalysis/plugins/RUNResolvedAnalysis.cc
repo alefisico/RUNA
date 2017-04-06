@@ -107,6 +107,7 @@ class RUNResolvedAnalysis : public EDAnalyzer {
 		vector<float> *jetsCMVAv2 = new std::vector<float>();
 		vector<float> *muonsPt = new std::vector<float>();
 		vector<float> *elesPt  = new std::vector<float>();
+		vector<float> *listChi2 = new std::vector<float>();
 		ULong64_t event = 0;
 		int numJets = 0, numPV = 0, numEle = 0, numMuon = 0;
 		unsigned int lumi = 0, run=0;
@@ -610,7 +611,7 @@ void RUNResolvedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup)
 				myJet j1, j2, j3, j4;
 				vector< myJet > tmpJets;	
 				bool massPairing = false;
-				if ( pairingMethod.Contains("chi2") ) tmpJets = pairingMinChi( JETS, 30 );  
+				if ( pairingMethod.Contains("chi2") ) tmpJets = pairingMinChi( JETS, listChi2 );  
 				else if ( pairingMethod.Contains( "mass" ) ) {
 				       tmpJets = pairing( JETS, false ); 	
 				       massPairing = true;
@@ -639,6 +640,7 @@ void RUNResolvedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup)
 
 				/// btag scale factors
 				double j1btagSF = 1, j2btagSF = 1, j3btagSF = 1, j4btagSF = 1;
+				vector<double> vectorBtagSF;
 				if ( !isData ) {
 					string sysType;
 					if ( systematics.Contains("BtagUp") ) sysType = "up";
@@ -651,6 +653,11 @@ void RUNResolvedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup)
 					j2btagSF = btagSF ( btagCSVFile, j2.p4.Pt(), j2.p4.Eta(), j2.hadronFlavour, sysType, measurementType );
 					j3btagSF = btagSF ( btagCSVFile, j3.p4.Pt(), j3.p4.Eta(), j3.hadronFlavour, sysType, measurementType );
 					j4btagSF = btagSF ( btagCSVFile, j4.p4.Pt(), j4.p4.Eta(), j4.hadronFlavour, sysType, measurementType );
+					for (unsigned int ijet = 4; ijet < tmpJets.size(); ijet++) {
+						double tmpBtagSF = -1;
+						tmpBtagSF = btagSF ( btagCSVFile, tmpJets[ijet].p4.Pt(), tmpJets[ijet].p4.Eta(), tmpJets[ijet].hadronFlavour, sysType, measurementType );
+						vectorBtagSF.push_back( tmpBtagSF );
+					}
 				}
 				///////////////////////////////////////////
 				
@@ -691,6 +698,17 @@ void RUNResolvedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup)
 					jet2Pt = JETS[1].p4.Pt();
 					jet3Pt = JETS[2].p4.Pt();
 					jet4Pt = JETS[3].p4.Pt();
+					
+					for (unsigned int ijet = 4; ijet < JETS.size(); ijet++) {
+						jetsPt->push_back( JETS[ ijet ].p4.Pt() );
+						jetsEta->push_back( JETS[ ijet ].p4.Eta() );
+						jetsPhi->push_back( JETS[ ijet ].p4.Phi() );
+						jetsE->push_back( JETS[ ijet ].p4.E() );
+						jetsQGL->push_back( JETS[ ijet ].qgl );
+						jetsCSVv2->push_back( JETS[ ijet ].btagCSVv2 );
+						jetsCSVv2SF->push_back( vectorBtagSF[ijet-4] );
+						jetsCMVAv2->push_back( JETS[ ijet ].btagCMVAv2 );
+					}
 
 					RUNAtree->Fill();
 				}
@@ -861,16 +879,6 @@ void RUNResolvedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup)
 							}
 						}
 					}
-				}
-			}
-
-			if ( numJets > 4 ){
-				for (unsigned int ijet = 4; ijet < JETS.size(); ijet++) {
-					jetsPt->push_back( JETS[ ijet ].p4.Pt() );
-					jetsEta->push_back( JETS[ ijet ].p4.Eta() );
-					jetsPhi->push_back( JETS[ ijet ].p4.Phi() );
-					jetsE->push_back( JETS[ ijet ].p4.E() );
-					jetsQGL->push_back( JETS[ ijet ].qgl );
 				}
 			}
 		}
@@ -1177,6 +1185,7 @@ void RUNResolvedAnalysis::clearVariables() {
 	jetsCSVv2->clear();
 	jetsCSVv2SF->clear();
 	jetsCMVAv2->clear();
+	listChi2->clear();
 
 }
 

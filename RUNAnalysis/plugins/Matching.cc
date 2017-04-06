@@ -42,6 +42,7 @@
 #include "DataFormats/Math/interface/deltaR.h"
 
 #include "TH1D.h"
+#include <TH2D.h>
 #include <TLorentzVector.h>
 //
 // class declaration
@@ -84,6 +85,7 @@ class Matching : public edm::EDAnalyzer {
 		int noBoostedNoResolved = 0;
 		int none = 0;
 		std::map< std::string, TH1D* > histos1D_;
+		std::map< std::string, TH2D* > histos2D_;
 		//std::map< std::size_t , reco::Candidate > decayStory_;
 };
 
@@ -190,6 +192,7 @@ reco::CandidateCollection checkDaughters( reco::Candidate & p1, reco::CandidateC
 		const reco::Candidate * finalMother = fp.mother();
 		if( isAncestor( p1, finalMother ) ) daughters.push_back( fp ); // LogWarning("Particle found 1") << jp1->pdgId() << " " << fp.pdgId(); }
 	}
+
 	return daughters;
 }
 
@@ -279,6 +282,14 @@ Matching::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 		tmpParent.daughters = daughtersCollection;
 		parents1.push_back( tmpParent );
 	}
+
+	// Simple HT calculation
+	double AK8HT =0, AK4HT=0;
+	bool cutAK8HT = false, cutAK4HT = false;
+	for( unsigned int j=0; j<AK8jets->size(); j++ ) AK8HT += (*AK8jets)[j].pt();
+	if (AK8HT > 900 ) cutAK8HT = true; 
+	for( unsigned int j=0; j<AK4jets->size(); j++ ) AK4HT += (*AK4jets)[j].pt();
+	if (AK4HT > 900 ) cutAK4HT = true; 
 	
 	double numBoosted = 0;
 	double numResolved = 0;
@@ -301,6 +312,33 @@ Matching::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 		for( auto & dau : parent.daughters ){
 			histos1D_[ "p1DaughtersPdgId" ]->Fill( dau.pdgId() );
 		}
+		
+		if ( parent.daughters.size() == 2 ) {
+			double dau1Pt = parent.daughters[0].pt();
+			double dau2Pt = parent.daughters[1].pt();
+			if ( dau1Pt > dau2Pt ) {
+				histos1D_[ "p1Daughters1Pt" ]->Fill( dau1Pt );
+				histos1D_[ "p1Daughters1Eta" ]->Fill( parent.daughters[0].eta() );
+				histos1D_[ "p1Daughters2Pt" ]->Fill( dau2Pt );
+				histos1D_[ "p1Daughters2Eta" ]->Fill( parent.daughters[1].eta() );
+				histos2D_[ "p1Daughters2DPt" ]->Fill( dau1Pt, dau2Pt );
+			} else {
+				histos1D_[ "p1Daughters1Pt" ]->Fill( dau2Pt );
+				histos1D_[ "p1Daughters1Eta" ]->Fill( parent.daughters[1].eta() );
+				histos1D_[ "p1Daughters2Pt" ]->Fill( dau1Pt );
+				histos1D_[ "p1Daughters2Eta" ]->Fill( parent.daughters[0].eta() );
+				histos2D_[ "p1Daughters2DPt" ]->Fill( dau2Pt, dau1Pt );
+			}
+
+			TLorentzVector tmpStop, tmpDau1, tmpDau2;
+			tmpDau1.SetPtEtaPhiE( parent.daughters[0].pt(), parent.daughters[0].eta(), parent.daughters[0].phi(), parent.daughters[0].energy() ); 
+			tmpDau2.SetPtEtaPhiE( parent.daughters[1].pt(), parent.daughters[1].eta(), parent.daughters[1].phi(), parent.daughters[1].energy() ); 
+			tmpStop = tmpDau1 + tmpDau2;
+			histos1D_[ "p1Daughters12Pt" ]->Fill( tmpStop.Pt() );
+			histos1D_[ "p1Daughters12Eta" ]->Fill( tmpStop.Eta() );
+
+		}
+
 	}
 	//LogWarning("count") << numBoosted << " " << numResolved;
 
@@ -310,6 +348,10 @@ Matching::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 		for( auto & parent : parents1 ){
 			histos1D_[ "jet1ak8Mass_TwoBoostedFourResolved" ]->Fill( parent.AK8matchedJets[0].mass() );
 			histos1D_[ "jet1ak8MPt_TwoBoostedFourResolved" ]->Fill( parent.AK8matchedJets[0].pt() );
+			if ( cutAK8HT ) {
+				histos1D_[ "jet1ak8Mass_cutAK8HT_TwoBoostedFourResolved" ]->Fill( parent.AK8matchedJets[0].mass() );
+				histos1D_[ "jet1ak8MPt_cutAK8HT_TwoBoostedFourResolved" ]->Fill( parent.AK8matchedJets[0].pt() );
+			}
 
 			TLorentzVector tmpJ1, tmpJ2, tmpDijet;
 			tmpJ1.SetPtEtaPhiE( parent.AK4matchedJets[0].pt(), parent.AK4matchedJets[0].eta(), parent.AK4matchedJets[0].phi(), parent.AK4matchedJets[0].energy());
@@ -317,6 +359,10 @@ Matching::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 			tmpDijet = tmpJ1 + tmpJ2;
 			histos1D_[ "jetSysak4Mass_TwoBoostedFourResolved" ]->Fill( tmpDijet.M() );
 			histos1D_[ "jetSysak4MPt_TwoBoostedFourResolved" ]->Fill( tmpDijet.Pt() );
+			if ( cutAK4HT ) {
+				histos1D_[ "jetSysak4Mass_cutAK4HT_TwoBoostedFourResolved" ]->Fill( tmpDijet.M() );
+				histos1D_[ "jetSysak4MPt_cutAK4HT_TwoBoostedFourResolved" ]->Fill( tmpDijet.Pt() );
+			}
 		}
 
 	} else if ( numBoosted == 2 ) {
@@ -334,6 +380,11 @@ Matching::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 			histos1D_[ "jet1ak8Mass_TwoBoosted" ]->Fill( parent.AK8matchedJets[0].mass() );
 			histos1D_[ "jet1ak8MPt_TwoBoosted" ]->Fill( parent.AK8matchedJets[0].pt() );
 
+			if ( cutAK8HT ) {
+				histos1D_[ "jet1ak8Mass_cutAK8HT_TwoBoosted" ]->Fill( parent.AK8matchedJets[0].mass() );
+				histos1D_[ "jet1ak8MPt_cutAK8HT_TwoBoosted" ]->Fill( parent.AK8matchedJets[0].pt() );
+			}
+
 		}
 
 	} else if ( numResolved == 4 ) {
@@ -347,11 +398,16 @@ Matching::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 			tmpDijet = tmpJ1 + tmpJ2;
 			histos1D_[ "jetSysak4Mass_FourResolved" ]->Fill( tmpDijet.M() );
 			histos1D_[ "jetSysak4MPt_FourResolved" ]->Fill( tmpDijet.Pt() );
+
+			if ( cutAK4HT ) {
+				histos1D_[ "jetSysak4Mass_cutAK4HT_FourResolved" ]->Fill( tmpDijet.M() );
+				histos1D_[ "jetSysak4MPt_cutAK4HT_FourResolved" ]->Fill( tmpDijet.Pt() );
+			}
 		}
 	
 	} else if ( ( numBoosted==1 ) && ( numResolved == 0 ) ) {
 		oneBoostedNoResolved+=1;
-		LogWarning("One boosted No Resolved") << iEvent.id().run() << ":" << iEvent.luminosityBlock() << ":" << iEvent.id().event();
+		//LogWarning("One boosted No Resolved") << iEvent.id().run() << ":" << iEvent.luminosityBlock() << ":" << iEvent.id().event();
 		histos1D_[ "numBoostedJets_OneBoostedNoResolved" ]->Fill( AK8jets->size() );
 		if( AK8jets->size() > 0 ) histos1D_[ "jet1ak8Pt_OneBoostedNoResolved" ]->Fill( (*AK8jets)[0].pt() );
 		if( AK8jets->size() > 1 ) histos1D_[ "jet2ak8Pt_OneBoostedNoResolved" ]->Fill( (*AK8jets)[1].pt() );
@@ -363,7 +419,7 @@ Matching::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	} else if ( ( numBoosted==1 ) && ( numResolved == 2 ) ) {
 		oneBoostedP1+=1;
-		LogWarning("One boosted One Resolved") << iEvent.id().run() << ":" << iEvent.luminosityBlock() << ":" << iEvent.id().event();
+		//LogWarning("One boosted One Resolved") << iEvent.id().run() << ":" << iEvent.luminosityBlock() << ":" << iEvent.id().event();
 		histos1D_[ "numBoostedJets_OneBoostedTwoResolved" ]->Fill( AK8jets->size() );
 		if( AK8jets->size() > 0 ) histos1D_[ "jet1ak8Pt_OneBoostedTwoResolved" ]->Fill( (*AK8jets)[0].pt() );
 		if( AK8jets->size() > 1 ) histos1D_[ "jet2ak8Pt_OneBoostedTwoResolved" ]->Fill( (*AK8jets)[1].pt() );
@@ -373,9 +429,32 @@ Matching::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 		if( AK4jets->size() > 2 ) histos1D_[ "jet3ak4Pt_OneBoostedTwoResolved" ]->Fill( (*AK4jets)[2].pt() );
 		if( AK4jets->size() > 3 ) histos1D_[ "jet4ak4Pt_OneBoostedTwoResolved" ]->Fill( (*AK4jets)[3].pt() );
 
+		for( auto & parent : parents1 ){
+			double dau1Pt = parent.daughters[0].pt();
+			double dau2Pt = parent.daughters[1].pt();
+			if ( dau1Pt > dau2Pt ) {
+				histos1D_[ "p1Daughters1Pt_oneBoostedTwoResolved" ]->Fill( dau1Pt );
+				histos1D_[ "p1Daughters1Eta_oneBoostedTwoResolved" ]->Fill( parent.daughters[0].eta() );
+				histos1D_[ "p1Daughters2Pt_oneBoostedTwoResolved" ]->Fill( dau2Pt );
+				histos1D_[ "p1Daughters2Eta_oneBoostedTwoResolved" ]->Fill( parent.daughters[1].eta() );
+			} else {
+				histos1D_[ "p1Daughters1Pt_oneBoostedTwoResolved" ]->Fill( dau2Pt );
+				histos1D_[ "p1Daughters1Eta_oneBoostedTwoResolved" ]->Fill( parent.daughters[1].eta() );
+				histos1D_[ "p1Daughters2Pt_oneBoostedTwoResolved" ]->Fill( dau1Pt );
+				histos1D_[ "p1Daughters2Eta_oneBoostedTwoResolved" ]->Fill( parent.daughters[0].eta() );
+			}
+
+			TLorentzVector tmpStop, tmpDau1, tmpDau2;
+			tmpDau1.SetPtEtaPhiE( parent.daughters[0].pt(), parent.daughters[0].eta(), parent.daughters[0].phi(), parent.daughters[0].energy() ); 
+			tmpDau2.SetPtEtaPhiE( parent.daughters[1].pt(), parent.daughters[1].eta(), parent.daughters[1].phi(), parent.daughters[1].energy() ); 
+			tmpStop = tmpDau1 + tmpDau2;
+			histos1D_[ "p1Daughters12Pt_oneBoostedTwoResolved" ]->Fill( tmpStop.Pt() );
+			histos1D_[ "p1Daughters12Eta_oneBoostedTwoResolved" ]->Fill( tmpStop.Eta() );
+		}
+
 	} else if ( ( numBoosted==0 ) && ( numResolved == 2 ) ) { 
 		oneResolvedP1+=1;
-		LogWarning("No boosted One Resolved") << iEvent.id().run() << ":" << iEvent.luminosityBlock() << ":" << iEvent.id().event();
+		//LogWarning("No boosted One Resolved") << iEvent.id().run() << ":" << iEvent.luminosityBlock() << ":" << iEvent.id().event();
 		histos1D_[ "numBoostedJets_noBoostedTwoResolved" ]->Fill( AK8jets->size() );
 		if( AK8jets->size() > 0 ) histos1D_[ "jet1ak8Pt_noBoostedTwoResolved" ]->Fill( (*AK8jets)[0].pt() );
 		if( AK8jets->size() > 1 ) histos1D_[ "jet2ak8Pt_noBoostedTwoResolved" ]->Fill( (*AK8jets)[1].pt() );
@@ -387,7 +466,7 @@ Matching::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	} else if ( ( numBoosted==0 ) && ( numResolved == 0 ) ) { 
 		noBoostedNoResolved+=1;
-		LogWarning("No boosted no Resolved") << iEvent.id().run() << ":" << iEvent.luminosityBlock() << ":" << iEvent.id().event();
+		//LogWarning("No boosted no Resolved") << iEvent.id().run() << ":" << iEvent.luminosityBlock() << ":" << iEvent.id().event();
 		histos1D_[ "numBoostedJets_noBoostedNoResolved" ]->Fill( AK8jets->size() );
 		if( AK8jets->size() > 0 ) histos1D_[ "jet1ak8Pt_noBoostedNoResolved" ]->Fill( (*AK8jets)[0].pt() );
 		if( AK8jets->size() > 1 ) histos1D_[ "jet2ak8Pt_noBoostedNoResolved" ]->Fill( (*AK8jets)[1].pt() );
@@ -396,9 +475,33 @@ Matching::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 		if( AK4jets->size() > 1 ) histos1D_[ "jet2ak4Pt_noBoostedNoResolved" ]->Fill( (*AK4jets)[1].pt() );
 		if( AK4jets->size() > 2 ) histos1D_[ "jet3ak4Pt_noBoostedNoResolved" ]->Fill( (*AK4jets)[2].pt() );
 		if( AK4jets->size() > 3 ) histos1D_[ "jet4ak4Pt_noBoostedNoResolved" ]->Fill( (*AK4jets)[3].pt() );
+
+		for( auto & parent : parents1 ){
+			double dau1Pt = parent.daughters[0].pt();
+			double dau2Pt = parent.daughters[1].pt();
+			if ( dau1Pt > dau2Pt ) {
+				histos1D_[ "p1Daughters1Pt_noBoostedNoResolved" ]->Fill( dau1Pt );
+				histos1D_[ "p1Daughters1Eta_noBoostedNoResolved" ]->Fill( parent.daughters[0].eta() );
+				histos1D_[ "p1Daughters2Pt_noBoostedNoResolved" ]->Fill( dau2Pt );
+				histos1D_[ "p1Daughters2Eta_noBoostedNoResolved" ]->Fill( parent.daughters[1].eta() );
+			} else {
+				histos1D_[ "p1Daughters1Pt_noBoostedNoResolved" ]->Fill( dau2Pt );
+				histos1D_[ "p1Daughters1Eta_noBoostedNoResolved" ]->Fill( parent.daughters[1].eta() );
+				histos1D_[ "p1Daughters2Pt_noBoostedNoResolved" ]->Fill( dau1Pt );
+				histos1D_[ "p1Daughters2Eta_noBoostedNoResolved" ]->Fill( parent.daughters[0].eta() );
+			}
+
+			TLorentzVector tmpStop, tmpDau1, tmpDau2;
+			tmpDau1.SetPtEtaPhiE( parent.daughters[0].pt(), parent.daughters[0].eta(), parent.daughters[0].phi(), parent.daughters[0].energy() ); 
+			tmpDau2.SetPtEtaPhiE( parent.daughters[1].pt(), parent.daughters[1].eta(), parent.daughters[1].phi(), parent.daughters[1].energy() ); 
+			tmpStop = tmpDau1 + tmpDau2;
+			histos1D_[ "p1Daughters12Pt_noBoostedNoResolved" ]->Fill( tmpStop.Pt() );
+			histos1D_[ "p1Daughters12Eta_noBoostedNoResolved" ]->Fill( tmpStop.Eta() );
+		}
+
 	} else {
 		none+=1;
-		LogWarning("None") << iEvent.id().run() << ":" << iEvent.luminosityBlock() << ":" << iEvent.id().event();
+		//LogWarning("None") << iEvent.id().run() << ":" << iEvent.luminosityBlock() << ":" << iEvent.id().event();
 	}
 
 
@@ -424,6 +527,21 @@ void Matching::beginJob() {
 	histos1D_[ "p3DaughtersPdgId" ] = fileService->make< TH1D >( "p3DaughtersPdgId", "p3DaughtersPdgId", 60, -30, 30 );
 	histos1D_[ "p3DaughtersPdgId" ]->SetXTitle( "p3Collection daughters pdgId" );
 
+	histos1D_[ "p1Daughters1Pt" ] = fileService->make< TH1D >( "p1Daughters1Pt", "p1Daughters1Pt", 1000, 0, 1000 );
+	histos1D_[ "p1Daughters1Pt" ]->SetXTitle( "p1Collection daughters 1 Pt" );
+	histos1D_[ "p1Daughters2Pt" ] = fileService->make< TH1D >( "p1Daughters2Pt", "p1Daughters2Pt", 1000, 0, 1000 );
+	histos1D_[ "p1Daughters2Pt" ]->SetXTitle( "p1Collection daughters 2 Pt" );
+	histos1D_[ "p1Daughters12Pt" ] = fileService->make< TH1D >( "p1Daughters12Pt", "p1Daughters12Pt", 1000, 0, 1000 );
+	histos1D_[ "p1Daughters12Pt" ]->SetXTitle( "p1Collection daughters 12 Pt" );
+	histos1D_[ "p1Daughters1Eta" ] = fileService->make< TH1D >( "p1Daughters1Eta", "p1Daughters1Eta", 40, -5, 5 );
+	histos1D_[ "p1Daughters1Eta" ]->SetXTitle( "p1Collection daughters 1 Eta" );
+	histos1D_[ "p1Daughters2Eta" ] = fileService->make< TH1D >( "p1Daughters2Eta", "p1Daughters2Eta", 40, -5, 5 );
+	histos1D_[ "p1Daughters2Eta" ]->SetXTitle( "p1Collection daughters 2 Eta" );
+	histos1D_[ "p1Daughters12Eta" ] = fileService->make< TH1D >( "p1Daughters12Eta", "p1Daughters12Eta", 40, -5, 5 );
+	histos1D_[ "p1Daughters12Eta" ]->SetXTitle( "p1Collection daughters 12 Eta" );
+	histos2D_[ "p1Daughters2DPt" ] = fileService->make< TH2D >( "p1Daughters2DPt", "p1Daughters2DPt", 1000, 0, 1000, 1000, 0, 1000 );
+
+
 	histos1D_[ "p1AK8DeltaR" ] = fileService->make< TH1D >( "p1AK8DeltaR", "p1AK8DeltaR", 150, 0., 1.5 );
 	histos1D_[ "p1AK8DeltaR" ]->SetXTitle( "#Delta R( jet, parton)" );
 	histos1D_[ "minP1AK8DeltaR" ] = fileService->make< TH1D >( "minP1AK8DeltaR", "minP1AK8DeltaR", 50, 0., 5. );
@@ -441,15 +559,32 @@ void Matching::beginJob() {
 	histos1D_[ "jetSysak4Mass_TwoBoostedFourResolved" ]->SetXTitle( "2 boosted matched Mass DiJetSys [GeV]" );
 	histos1D_[ "jetSysak4MPt_TwoBoostedFourResolved" ] = fileService->make< TH1D >( "jetSysak4MPt_TwoBoostedFourResolved", "jetSysak4MPt_TwoBoostedFourResolved", 1200, 0., 1200. );
 	histos1D_[ "jetSysak4MPt_TwoBoostedFourResolved" ]->SetXTitle( "2 boosted matched Pt DiJetSys [GeV]" );
+	histos1D_[ "jet1ak8Mass_cutAK8HT_TwoBoostedFourResolved" ] = fileService->make< TH1D >( "jet1ak8Mass_cutAK8HT_TwoBoostedFourResolved", "jet1ak8Mass_cutAK8HT_TwoBoostedFourResolved", 1200, 0., 1200. );
+	histos1D_[ "jet1ak8Mass_cutAK8HT_TwoBoostedFourResolved" ]->SetXTitle( "2 boosted matched Mass Jet [GeV]" );
+	histos1D_[ "jet1ak8MPt_cutAK8HT_TwoBoostedFourResolved" ] = fileService->make< TH1D >( "jet1ak8MPt_cutAK8HT_TwoBoostedFourResolved", "jet1ak8MPt_cutAK8HT_TwoBoostedFourResolved", 1200, 0., 1200. );
+	histos1D_[ "jet1ak8MPt_cutAK8HT_TwoBoostedFourResolved" ]->SetXTitle( "2 boosted matched Pt Jet [GeV]" );
+	histos1D_[ "jetSysak4Mass_cutAK4HT_TwoBoostedFourResolved" ] = fileService->make< TH1D >( "jetSysak4Mass_cutAK4HT_TwoBoostedFourResolved", "jetSysak4Mass_cutAK4HT_TwoBoostedFourResolved", 1200, 0., 1200. );
+	histos1D_[ "jetSysak4Mass_cutAK4HT_TwoBoostedFourResolved" ]->SetXTitle( "2 boosted matched Mass DiJetSys [GeV]" );
+	histos1D_[ "jetSysak4MPt_cutAK4HT_TwoBoostedFourResolved" ] = fileService->make< TH1D >( "jetSysak4MPt_cutAK4HT_TwoBoostedFourResolved", "jetSysak4MPt_cutAK4HT_TwoBoostedFourResolved", 1200, 0., 1200. );
+	histos1D_[ "jetSysak4MPt_cutAK4HT_TwoBoostedFourResolved" ]->SetXTitle( "2 boosted matched Pt DiJetSys [GeV]" );
 
 	histos1D_[ "jet1ak8Mass_TwoBoosted" ] = fileService->make< TH1D >( "jet1ak8Mass_TwoBoosted", "jet1ak8Mass_TwoBoosted", 1200, 0., 1200. );
 	histos1D_[ "jet1ak8Mass_TwoBoosted" ]->SetXTitle( "2 boosted matched Mass Jet [GeV]" );
 	histos1D_[ "jet1ak8MPt_TwoBoosted" ] = fileService->make< TH1D >( "jet1ak8MPt_TwoBoosted", "jet1ak8MPt_TwoBoosted", 1200, 0., 1200. );
 	histos1D_[ "jet1ak8MPt_TwoBoosted" ]->SetXTitle( "2 boosted matched Pt Jet [GeV]" );
+	histos1D_[ "jet1ak8Mass_cutAK8HT_TwoBoosted" ] = fileService->make< TH1D >( "jet1ak8Mass_cutAK8HT_TwoBoosted", "jet1ak8Mass_cutAK8HT_TwoBoosted", 1200, 0., 1200. );
+	histos1D_[ "jet1ak8Mass_cutAK8HT_TwoBoosted" ]->SetXTitle( "2 boosted matched Mass Jet [GeV]" );
+	histos1D_[ "jet1ak8MPt_cutAK8HT_TwoBoosted" ] = fileService->make< TH1D >( "jet1ak8MPt_cutAK8HT_TwoBoosted", "jet1ak8MPt_cutAK8HT_TwoBoosted", 1200, 0., 1200. );
+	histos1D_[ "jet1ak8MPt_cutAK8HT_TwoBoosted" ]->SetXTitle( "2 boosted matched Pt Jet [GeV]" );
+
 	histos1D_[ "jetSysak4Mass_FourResolved" ] = fileService->make< TH1D >( "jetSysak4Mass_FourResolved", "jetSysak4Mass_FourResolved", 1200, 0., 1200. );
 	histos1D_[ "jetSysak4Mass_FourResolved" ]->SetXTitle( "2 boosted matched Mass DiJetSys [GeV]" );
 	histos1D_[ "jetSysak4MPt_FourResolved" ] = fileService->make< TH1D >( "jetSysak4MPt_FourResolved", "jetSysak4MPt_FourResolved", 1200, 0., 1200. );
 	histos1D_[ "jetSysak4MPt_FourResolved" ]->SetXTitle( "2 boosted matched Pt DiJetSys [GeV]" );
+	histos1D_[ "jetSysak4Mass_cutAK4HT_FourResolved" ] = fileService->make< TH1D >( "jetSysak4Mass_cutAK4HT_FourResolved", "jetSysak4Mass_cutAK4HT_FourResolved", 1200, 0., 1200. );
+	histos1D_[ "jetSysak4Mass_cutAK4HT_FourResolved" ]->SetXTitle( "2 boosted matched Mass DiJetSys [GeV]" );
+	histos1D_[ "jetSysak4MPt_cutAK4HT_FourResolved" ] = fileService->make< TH1D >( "jetSysak4MPt_cutAK4HT_FourResolved", "jetSysak4MPt_cutAK4HT_FourResolved", 1200, 0., 1200. );
+	histos1D_[ "jetSysak4MPt_cutAK4HT_FourResolved" ]->SetXTitle( "2 boosted matched Pt DiJetSys [GeV]" );
 
 	histos1D_[ "numBoostedJets_OneBoostedTwoResolved" ] = fileService->make< TH1D >( "numBoostedJets_OneBoostedTwoResolved", "numBoostedJets_OneBoostedTwoResolved", 10, 0., 10 );
 	histos1D_[ "numBoostedJets_OneBoostedTwoResolved" ]->SetXTitle( "Number of Boosted Jets" );
@@ -468,6 +603,18 @@ void Matching::beginJob() {
 	histos1D_[ "jet3ak4Pt_OneBoostedTwoResolved" ]->SetXTitle( "3 Leading Jet Pt" );
 	histos1D_[ "jet4ak4Pt_OneBoostedTwoResolved" ] = fileService->make< TH1D >( "jet4ak4Pt_OneBoostedTwoResolved", "jet4ak4Pt_OneBoostedTwoResolved", 100, 0., 1000 );
 	histos1D_[ "jet4ak4Pt_OneBoostedTwoResolved" ]->SetXTitle( "4 Leading Jet Pt" );
+	histos1D_[ "p1Daughters1Pt_oneBoostedTwoResolved" ] = fileService->make< TH1D >( "p1Daughters1Pt_oneBoostedTwoResolved", "p1Daughters1Pt_oneBoostedTwoResolved", 1000, 0, 1000 );
+	histos1D_[ "p1Daughters1Pt_oneBoostedTwoResolved" ]->SetXTitle( "p1Collection daughters 1 Pt" );
+	histos1D_[ "p1Daughters2Pt_oneBoostedTwoResolved" ] = fileService->make< TH1D >( "p1Daughters2Pt_oneBoostedTwoResolved", "p1Daughters2Pt_oneBoostedTwoResolved", 1000, 0, 1000 );
+	histos1D_[ "p1Daughters2Pt_oneBoostedTwoResolved" ]->SetXTitle( "p1Collection daughters 2 Pt" );
+	histos1D_[ "p1Daughters12Pt_oneBoostedTwoResolved" ] = fileService->make< TH1D >( "p1Daughters12Pt_oneBoostedTwoResolved", "p1Daughters12Pt_oneBoostedTwoResolved", 1000, 0, 1000 );
+	histos1D_[ "p1Daughters12Pt_oneBoostedTwoResolved" ]->SetXTitle( "p1Collection daughters 12 Pt" );
+	histos1D_[ "p1Daughters1Eta_oneBoostedTwoResolved" ] = fileService->make< TH1D >( "p1Daughters1Eta_oneBoostedTwoResolved", "p1Daughters1Eta_oneBoostedTwoResolved", 40, -5, 5 );
+	histos1D_[ "p1Daughters1Eta_oneBoostedTwoResolved" ]->SetXTitle( "p1Collection daughters 1 Eta" );
+	histos1D_[ "p1Daughters2Eta_oneBoostedTwoResolved" ] = fileService->make< TH1D >( "p1Daughters2Eta_oneBoostedTwoResolved", "p1Daughters2Eta_oneBoostedTwoResolved", 40, -5, 5 );
+	histos1D_[ "p1Daughters2Eta_oneBoostedTwoResolved" ]->SetXTitle( "p1Collection daughters 2 Eta" );
+	histos1D_[ "p1Daughters12Eta_oneBoostedTwoResolved" ] = fileService->make< TH1D >( "p1Daughters12Eta_oneBoostedTwoResolved", "p1Daughters12Eta_oneBoostedTwoResolved", 40, -5, 5 );
+	histos1D_[ "p1Daughters12Eta_oneBoostedTwoResolved" ]->SetXTitle( "p1Collection daughters 12 Eta" );
 
 	histos1D_[ "numBoostedJets_OneBoostedNoResolved" ] = fileService->make< TH1D >( "numBoostedJets_OneBoostedNoResolved", "numBoostedJets_OneBoostedNoResolved", 10, 0., 10 );
 	histos1D_[ "numBoostedJets_OneBoostedNoResolved" ]->SetXTitle( "Number of Boosted Jets" );
@@ -505,6 +652,21 @@ void Matching::beginJob() {
 	histos1D_[ "jet4ak4Pt_noBoostedNoResolved" ] = fileService->make< TH1D >( "jet4ak4Pt_noBoostedNoResolved", "jet4ak4Pt_noBoostedNoResolved", 100, 0., 1000 );
 	histos1D_[ "jet4ak4Pt_noBoostedNoResolved" ]->SetXTitle( "4 Leading Jet Pt" );
 
+	histos1D_[ "p1Daughters1Pt_noBoostedNoResolved" ] = fileService->make< TH1D >( "p1Daughters1Pt_noBoostedNoResolved", "p1Daughters1Pt_noBoostedNoResolved", 1000, 0, 1000 );
+	histos1D_[ "p1Daughters1Pt_noBoostedNoResolved" ]->SetXTitle( "p1Collection daughters 1 Pt" );
+	histos1D_[ "p1Daughters2Pt_noBoostedNoResolved" ] = fileService->make< TH1D >( "p1Daughters2Pt_noBoostedNoResolved", "p1Daughters2Pt_noBoostedNoResolved", 1000, 0, 1000 );
+	histos1D_[ "p1Daughters2Pt_noBoostedNoResolved" ]->SetXTitle( "p1Collection daughters 2 Pt" );
+	histos1D_[ "p1Daughters12Pt_noBoostedNoResolved" ] = fileService->make< TH1D >( "p1Daughters12Pt_noBoostedNoResolved", "p1Daughters12Pt_noBoostedNoResolved", 1000, 0, 1000 );
+	histos1D_[ "p1Daughters12Pt_noBoostedNoResolved" ]->SetXTitle( "p1Collection daughters 12 Pt" );
+	histos1D_[ "p1Daughters1Eta_noBoostedNoResolved" ] = fileService->make< TH1D >( "p1Daughters1Eta_noBoostedNoResolved", "p1Daughters1Eta_noBoostedNoResolved", 40, -5, 5 );
+	histos1D_[ "p1Daughters1Eta_noBoostedNoResolved" ]->SetXTitle( "p1Collection daughters 1 Eta" );
+	histos1D_[ "p1Daughters2Eta_noBoostedNoResolved" ] = fileService->make< TH1D >( "p1Daughters2Eta_noBoostedNoResolved", "p1Daughters2Eta_noBoostedNoResolved", 40, -5, 5 );
+	histos1D_[ "p1Daughters2Eta_noBoostedNoResolved" ]->SetXTitle( "p1Collection daughters 2 Eta" );
+	histos1D_[ "p1Daughters12Eta_noBoostedNoResolved" ] = fileService->make< TH1D >( "p1Daughters12Eta_noBoostedNoResolved", "p1Daughters12Eta_noBoostedNoResolved", 40, -5, 5 );
+	histos1D_[ "p1Daughters12Eta_noBoostedNoResolved" ]->SetXTitle( "p1Collection daughters 12 Eta" );
+
+
+
 	histos1D_[ "numBoostedJets_noBoostedTwoResolved" ] = fileService->make< TH1D >( "numBoostedJets_noBoostedTwoResolved", "numBoostedJets_noBoostedTwoResolved", 10, 0., 10 );
 	histos1D_[ "numBoostedJets_noBoostedTwoResolved" ]->SetXTitle( "Number of Boosted Jets" );
 	histos1D_[ "jet1ak8Pt_noBoostedTwoResolved" ] = fileService->make< TH1D >( "jet1ak8Pt_noBoostedTwoResolved", "jet1ak8Pt_noBoostedTwoResolved", 100, 0., 1000 );
@@ -522,6 +684,10 @@ void Matching::beginJob() {
 	histos1D_[ "jet3ak4Pt_noBoostedTwoResolved" ]->SetXTitle( "3 Leading Jet Pt" );
 	histos1D_[ "jet4ak4Pt_noBoostedTwoResolved" ] = fileService->make< TH1D >( "jet4ak4Pt_noBoostedTwoResolved", "jet4ak4Pt_noBoostedTwoResolved", 100, 0., 1000 );
 	histos1D_[ "jet4ak4Pt_noBoostedTwoResolved" ]->SetXTitle( "4 Leading Jet Pt" );
+
+	///// Sumw2 all the histos
+	for( auto const& histo : histos1D_ ) histos1D_[ histo.first ]->Sumw2();
+	for( auto const& histo : histos2D_ ) histos2D_[ histo.first ]->Sumw2();
 }
 
 // ------------ method called once each job just after ending the event loop  ------------

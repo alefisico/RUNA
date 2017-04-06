@@ -406,12 +406,18 @@ inline vector< myJet > pairing( vector< myJet > JETS, bool withDeltaR ) {
 			reorderedJETS.push_back( JETS[0] );
 			reorderedJETS.push_back( JETS[3] );
 		}
+
+		/// storing the rest of the jets
+		for (unsigned int ijet = 4; ijet < JETS.size(); ijet++) {
+			reorderedJETS.push_back( JETS[ijet] );
+		}
+
 	} else LogWarning("JETS") << "Number of input jets is lower than 4."; 
 	return reorderedJETS;
 
 }
 
-inline vector< myJet > pairingMinChi( vector< myJet > JETS, double sigma ) {
+inline vector< myJet > pairingMinChi( vector< myJet > JETS, vector<float> * vectorChi2 ) {
 
 	vector< myJet > reorderedJETS;
 	vector< int > indices;
@@ -426,8 +432,11 @@ inline vector< myJet > pairingMinChi( vector< myJet > JETS, double sigma ) {
 							//cout << a << " " << b << " " << c << " " << d << endl; 
 							double dijet1Mass = ( JETS[a].p4 + JETS[b].p4 ).M();	
 							double dijet2Mass = ( JETS[c].p4 + JETS[d].p4 ).M();	
-							double tmpChi2 = TMath::Power( (dijet1Mass - dijet2Mass ), 2 ) / TMath::Power( sigma, 2 );
-							//LogWarning("calc chi2") << a << b << c << d << " " << dijet1Mass << " " << dijet2Mass << " " << tmpChi2;
+							double aveMass = (dijet1Mass + dijet2Mass )/2 ;
+							double sigma = 0.0724281 - (4.14372e-05 * aveMass);
+							double tmpChi2 = TMath::Power( (dijet1Mass - dijet2Mass )/aveMass, 2 ) / TMath::Power( sigma, 2 );
+							//LogWarning("calc chi2") << a << b << c << d << " " << dijet1Mass << " " << dijet2Mass << " " << tmpChi2 << " " << sigma  << " " << aveMass;
+							vectorChi2->push_back( tmpChi2 );
 							if( tmpChi2 < minChi2 ){
 								minChi2 = tmpChi2;
 								bestInd[0] = a;
