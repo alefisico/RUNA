@@ -15,7 +15,7 @@ from ROOT import *
 from array import array
 import numpy as np
 from random import randint
-from itertools import permutations 
+from itertools import combinations
 try: 
 	import RUNA.RUNAnalysis.tdrstyle as tdrstyle
 	from RUNA.RUNAnalysis.scaleFactors import * 
@@ -422,102 +422,78 @@ def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 		numJets		= events.numJets
 
 		listOfJets = []
-		if len(events.jetsPt) > 4: print len(events.jetsPt)
 		for j in range( len(events.jetsPt) ):
 			tmpTLV = TLorentzVector()
 			tmpTLV.SetPtEtaPhiE( events.jetsPt[j], events.jetsEta[j], events.jetsPhi[j], events.jetsE[j] )
-			if (j > 3): print j, tmpTLV.M(), events.jetsPt[j], events.jetsEta[j], events.jetsPhi[j], events.jetsE[j] 
 			listOfJets.append( tmpTLV )
 
-		#pairingMinChi( listOfJets, 30 )
-		#for i in listOfJets: print i.Pt(), len(listOfJets)
+		if len(listOfJets) > 3:
+			comb = range(0, len(listOfJets) )
+			possibleCombinations = []
+			if len(comb) == 4 : possibleCombinations = [ [ 0, 1, 2, 3 ], [ 0, 2, 1, 3 ], [ 0, 3, 1, 2 ] ]
+			else:
+				for item in combinations(comb, 4): 
+					possibleCombinations.append( sorted(item) )
+
+			listChi2MinChi, listOfPairsMinChi = chiPairing( listOfJets, possibleCombinations )
+			listChi2DeltaR, listOfPairsDeltaR = deltaRPairing( listOfJets, possibleCombinations, 0.8 )
+			print listChi2MinChi, listOfPairsMinChi
 
 
-def pairingMinChi( listOfJets, sigma ):
+def chiPairing( listOfJets, possibleCombinations ):
 	"""docstring for pairingMinChi"""
 	
 	minChi2 = 9999999999999
 	if ( len(listOfJets) > 3 ):
-		comb = range(0, len(listOfJets) )
-		listOfCombinations = list(permutations(comb, 4))
-		print comb, listOfCombinations
+		bestInd = ''
+		listMinChi2 = []
+		for a in possibleCombinations:
+			dijet1Mass = ( listOfJets[a[0]] + listOfJets[a[1]] ).M()	
+			dijet2Mass = ( listOfJets[a[2]] + listOfJets[a[3]] ).M()	
+			aveMass = (dijet1Mass + dijet2Mass )/2 ;
+			sigma = 0.0724281 - (4.14372e-05 * aveMass);
+			tmpChi2 = TMath.Power( (dijet1Mass - dijet2Mass )/aveMass, 2 ) / TMath.Power( sigma, 2 )
+			#print dijet1Mass, dijet2Mass, tmpChi2
+			if( tmpChi2 < minChi2 ):
+				minChi2 = tmpChi2
+				listMinChi2.append( tmpChi2 )
+				bestInd = a 
+		#print bestInd, minChi2
+		reorderedJETS = [ listOfJets[ bestInd[0] ], listOfJets[ bestInd[1] ], listOfJets[ bestInd[2] ], listOfJets[ bestInd[3] ] ]
+		listMinChi2.sort()
+		return listMinChi2, reorderedJETS
 
-		for a in range( 0, len(listOfJets) ):
-			for b in range( 0, len(listOfJets) ):
-				for c in range( 0, len(listOfJets) ):
-					for d in range( 0, len(listOfJets) ):
-						#if( (a!=b) and (a!=c) and (a!=d) and (b!=c) and (b!=d) and (c!=d) and (a<b) and (b<c) and (a<d) and (c<d) ):
-						if( (a<b) and (a<c) and (a<d) and (b>c) and (b>d) and (c>d) ):
-							print a, b, c, d
-							dijet1Mass = ( listOfJets[a] + listOfJets[b] ).M()	
-							dijet2Mass = ( listOfJets[c] + listOfJets[d] ).M()	
-							tmpChi2 = TMath.Power( (dijet1Mass - dijet2Mass ), 2 ) / TMath.Power( sigma, 2 )
-							#print a, b, c, d, dijet1Mass, dijet2Mass, tmpChi2
-							if( tmpChi2 < minChi2 ):
-								minChi2 = tmpChi2
-								bestInd = [ a, b, c, d ]
-								#print bestInd
-	if ( len(bestInd) == 4 ): reorderedJETS = [ listOfJets[ bestInd[0] ], listOfJets[ bestInd[1] ], listOfJets[ bestInd[2] ], listOfJets[ bestInd[3] ] ]
+	else: return None
 
 
-def assignDijets( tmpj1, tmpj2, tmpj3, tmpj4, minVarPairing ):
-	"""docstring for assignDijets"""
 
-	Pairing = False
-	j1 = TLorentzVector()
-	j2 = TLorentzVector()
-	j3 = TLorentzVector()
-	j4 = TLorentzVector()
-	if( '1234' in minVarPairing ):
-		if ( tmpj1.DeltaR(tmpj2) > ( tmpj3.DeltaR(tmpj4) ) ):
-			j1 = tmpj1
-			j2 = tmpj2
-			j3 = tmpj3
-			j4 = tmpj4
-		else:
-			j1 = tmpj3
-			j2 = tmpj4
-			j3 = tmpj1
-			j4 = tmpj2
-		Pairing = True
-	elif( '1324' in minVarPairing ):
-		if ( tmpj1.DeltaR(tmpj3) > ( tmpj2.DeltaR(tmpj4) ) ):
-			j1 = tmpj1
-			j2 = tmpj3
-			j3 = tmpj2
-			j4 = tmpj4
-		else:
-			j1 = tmpj2
-			j2 = tmpj4
-			j3 = tmpj1
-			j4 = tmpj3
-		Pairing = True
-	elif( '1423' in minVarPairing ):
-		if ( tmpj1.DeltaR(tmpj4) > ( tmpj2.DeltaR(tmpj3) ) ):
-			j1 = tmpj1
-			j2 = tmpj4
-			j3 = tmpj2
-			j4 = tmpj3
-		else:
-			j1 = tmpj2
-			j2 = tmpj3
-			j3 = tmpj1
-			j4 = tmpj4
-		Pairing = True
-
-	return [ Pairing, j1, j2, j3, j4 ]
-
-def DeltaRPairing( j1, j2, j3, j4, offset ):
+def deltaRPairing( listOfJets, possibleCombinations, offset ):
 	"""docstring for DeltaRPairing"""
 
-	mindRDeltaRPairing = {}
-	mindRDeltaRPairing[ '1234' ] = ( abs( j1.DeltaR(j2) - offset ) + abs( j3.DeltaR(j4) - offset ) )
-	mindRDeltaRPairing[ '1324' ] = ( abs( j1.DeltaR(j3) - offset ) + abs( j2.DeltaR(j4) - offset ) )
-	mindRDeltaRPairing[ '1423' ] = ( abs( j1.DeltaR(j4) - offset ) + abs( j2.DeltaR(j3) - offset ) )
-	minDeltaRPairing = min(mindRDeltaRPairing, key=mindRDeltaRPairing.get)
-	DeltaRPairing = assignDijets( j1, j2, j3, j4, minDeltaRPairing  )
+#	mindRDeltaRPairing = {}
+#	mindRDeltaRPairing[ '1234' ] = ( abs( j1.DeltaR(j2) - offset ) + abs( j3.DeltaR(j4) - offset ) )
+#	mindRDeltaRPairing[ '1324' ] = ( abs( j1.DeltaR(j3) - offset ) + abs( j2.DeltaR(j4) - offset ) )
+#	mindRDeltaRPairing[ '1423' ] = ( abs( j1.DeltaR(j4) - offset ) + abs( j2.DeltaR(j3) - offset ) )
+#	minDeltaRPairing = min(mindRDeltaRPairing, key=mindRDeltaRPairing.get)
+#	DeltaRPairing = assignDijets( j1, j2, j3, j4, minDeltaRPairing  )
+#
+#	return [ DeltaRPairing[0], DeltaRPairing[1], DeltaRPairing[2], DeltaRPairing[3], DeltaRPairing[4], mindRDeltaRPairing[ minDeltaRPairing ], minDeltaRPairing ]
+	minDeltaR = 9999999999999
+	if ( len(listOfJets) > 3 ):
+		bestInd = ''
+		listMinDeltaR = []
+		for a in possibleCombinations:
+			tmpDeltaR = abs( listOfJets[a[0]].DeltaR( listOfJets[a[1]] ) - offset ) + abs( listOfJets[a[2]].DeltaR( listOfJets[a[3]] ) - offset )
+			if( tmpDeltaR < minDeltaR ):
+				minDeltaR = tmpDeltaR
+				listMinDeltaR.append( tmpDeltaR )
+				bestInd = a 
+		reorderedJETS = [ listOfJets[ bestInd[0] ], listOfJets[ bestInd[1] ], listOfJets[ bestInd[2] ], listOfJets[ bestInd[3] ] ]
+		listMinDeltaR.sort()
+		return listMinDeltaR, reorderedJETS
 
-	return [ DeltaRPairing[0], DeltaRPairing[1], DeltaRPairing[2], DeltaRPairing[3], DeltaRPairing[4], mindRDeltaRPairing[ minDeltaRPairing ], minDeltaRPairing ]
+	else: return None
+
 
 def MassAsyming( j1, j2, j3, j4 ):
 	"""docstring for MassAsyming"""
@@ -629,8 +605,7 @@ if __name__ == '__main__':
 					p = Process( target=myPlotAnalyzer, args=( dictSamples[sample], preselection, cuts, sample, uncType ) )
 			else: p = Process( target=myPlotAnalyzer, args=( dictSamples[sample], preselection, cuts, sample, '' ) )
 		else:
-			#p = Process( target=myAnalyzer, args=( dictSamples[sample], preselection, cuts, sample, '' ) )
-			p = Process( target=myAnalyzer, args=( 'RUNResolvedAnalysis_QCD_Pt_3200toInf.root', preselection, cuts, sample, '' ) )
+			p = Process( target=myAnalyzer, args=( dictSamples[sample], preselection, cuts, sample, '' ) )
 	p.start()
 	p.join()
 
