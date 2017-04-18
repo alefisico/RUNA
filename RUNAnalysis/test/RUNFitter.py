@@ -706,8 +706,8 @@ def drawBiasTest( listMasses, folderRootfiles ):
 		for t in [ 0, 1, 2, 3]:
 			dictTest[ mass+t ] = TChain( 'tree_fit_sb' )
 			dictTest[ mass+t ].Add( folderRootfiles+'mlfit_RPVStopStopToJets_'+args.decay+'_M-'+str(mass)+'_Resolved_'+args.cut+'_BiasTest_signal'+str(args.signalInj)+'_'+args.version+'_Index0ToIndex'+str(t)+'.root') 
-			dictTestHisto[ mass+t ] = TH1F( 'h'+str(mass)+str(t),  'h'+str(mass)+str(t), 16, -4, 4 )
-			dictTest[ mass+t ].Draw( "(mu-1)/muErr>>h"+str(mass)+str(t))
+			dictTestHisto[ mass+t ] = TH1F( 'h'+str(mass)+str(t),  'h'+str(mass)+str(t), 32, (-4 if (args.signalInj==1) else -1), (4 if (args.signalInj==1) else 7))
+			dictTest[ mass+t ].Draw( "(mu-"+str(args.signalInj)+")/muErr>>h"+str(mass)+str(t))
 			
 			dictTestHisto[ mass+t ].SetMarkerSize(2)
 			dictTestHisto[ mass+t ].SetLineWidth(2)
@@ -717,7 +717,7 @@ def drawBiasTest( listMasses, folderRootfiles ):
 		c = TCanvas("c"+str(mass), "c"+str(mass), 800, 600)
 		c.cd()
 		gStyle.SetOptFit(1)
-		dictTestHisto[ mass ].SetLineColor(kBlue)
+		dictTestHisto[ mass ].SetLineColor(kBlack)
 		dictTestHisto[ mass ].GetFunction("gaus").SetLineColor(1)
 		listMeans.append( dictTestHisto[ mass ].GetFunction("gaus").GetParameter( 1 ) )
 		listMeansErr.append( dictTestHisto[ mass ].GetFunction("gaus").GetParError( 1 ) )
@@ -768,7 +768,7 @@ def drawBiasTest( listMasses, folderRootfiles ):
 		st3.SetY2NDC(.35)
 		st3.SetTextColor(8)
 		c.Modified()
-		c.SaveAs( 'Plots/BiasTest_'+args.decay+'_M-'+str(mass)+'_ResolvedAnalysis_'+args.version+'.'+args.extension )
+		c.SaveAs( 'Plots/BiasTest_'+args.decay+'_M-'+str(mass)+'_signal'+str(args.signalInj)+'_ResolvedAnalysis_'+args.version+'.'+args.extension )
 
 
 
@@ -819,7 +819,7 @@ def drawBiasTest( listMasses, folderRootfiles ):
 	CMS_lumi.CMS_lumi(c, 4, 0)
 
 	#c1.SetLogy()
-	c1.SaveAs( 'Plots/BiasTest_'+args.decay+'_MeanValues_ResolvedAnalysis'+args.version+'.'+args.extension)
+	c1.SaveAs( 'Plots/BiasTest_'+args.decay+'_signal'+str(args.signalInj)+'_MeanValues_ResolvedAnalysis'+args.version+'.'+args.extension)
 
 ##########################################################
 ##########################################################
@@ -1080,6 +1080,7 @@ if __name__ == '__main__':
 	parser.add_argument('-t', '--miniTree', action='store_true', default=False, help='miniTree: if plots coming from miniTree or RUNAnalysis.' )
 	parser.add_argument('-e', '--extension', action='store', default='png', help='Extension of plots.' )
 	parser.add_argument('-C', '--cut', action='store', default='delta', help='cut, example: cutDEta' )
+	parser.add_argument('-F', '--func', action='store', default='P3', help='Function, example: P3, P4, P5' )
 
 	try:
 		args = parser.parse_args()
@@ -1094,17 +1095,17 @@ if __name__ == '__main__':
 	rebinX = 20 
 	if ( args.mass > 0 ): listMass = [ args.mass ]
 	else: 
-		if '312' in args.decay: listMass = [ 240, 300, 350 ] + range( 450, 1000, 50 ) + range( 1000, 1600, 100 ) 
+		if '312' in args.decay: listMass = [ 240, 300, 350 ] + range( 450, 850, 50 ) + [ 950, 1000, 1100 ] # + range( 1000, 1600, 100 ) 
 		else: listMass = [ 240, 280, 300, 350 ] + range( 450, 900, 50 ) + [950, 1000, 1100, 1200, 1300] #+  range( 1100, 1600, 100 )
 
 
 	outputDir = "Plots/"
-	signalFilename = filePrefix+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p3_'+args.version+'.root'
+	signalFilename = filePrefix+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p4_'+args.version+'.root'
 	signalFile =  TFile.Open(signalFilename)
-	bkgFile = TFile.Open(filePrefix+'_QCD'+args.qcd+'All_Moriond17_80X_V2p3_'+args.version+'.root')
-	#bkgFile2 = TFile.Open(filePrefix+'_QCDHTAll_Moriond17_80X_V2p3_'+args.version+'.root')
-	bkgFile3 = TFile.Open(filePrefix+'_QCDHerwigAll_Moriond17_80X_V2p3_'+args.version+'.root')
-	dataFile = TFile.Open(filePrefix+'_JetHT_Run2016_80X_V2p3_'+args.version+'.root')
+	bkgFile = TFile.Open(filePrefix+'_QCD'+args.qcd+'All_Moriond17_80X_V2p4_'+args.version+'.root')
+	#bkgFile2 = TFile.Open(filePrefix+'_QCDHTAll_Moriond17_80X_V2p4_'+args.version+'.root')
+	#bkgFile3 = TFile.Open(filePrefix+'_QCDHerwigAll_Moriond17_80X_V2p4_'+args.version+'.root')
+	dataFile = TFile.Open(filePrefix+'_JetHT_Run2016_80X_V2p4_'+args.version+'.root')
 	
 
 	###### Input parameters
@@ -1121,7 +1122,7 @@ if __name__ == '__main__':
 			'(pow(1-@0/13000,@1)/pow(@0/13000,@2+@3*log(@0/13000)+@4*pow(log(@0/13000),2))' ]
 
 	fitFunctions['P4'] = [ TF1("P4", "[0]*TMath::Power(1-(x/13000.0),[1])/(TMath::Power(x/13000.0,[2]+([3]*TMath::Log(x/13000.))))",0,2000), 
-			[ 0, 100, 2, 0.1], 
+			[ 0, 100, 2, 1], 
 			'pow(1-@0/13000,@1)/pow(@0/13000,@2+@3*log(@0/13000))' ]
 
 	fitFunctions['P3'] = [ TF1("P3", "[0]* TMath::Power(1-(x/13000.0),[1]) / (TMath::Power(x/13000.0,[2]))",0,2000), 
@@ -1142,7 +1143,7 @@ if __name__ == '__main__':
 
 	fitFunctions['atlas'] = [ 
 			TF1("atlas", "[0]* TMath::Power((1-TMath::Power(x/13000.0,0.33)),[1]) / TMath::Power(x/13000.0,[2])",0,2000), 
-			[ ], 
+			[ 1000, 100, 1 ], 
 			'(pow(1-pow(@0/13000,0.33),@1)/pow(@0/13000,@2))' ]
 
 	fitFunctions['P1'] = [ TF1("P1", "[0] / (TMath::Power(x/13000.0,[1]))",0,2000), [ 0] ]
@@ -1161,10 +1162,7 @@ if __name__ == '__main__':
 			'', #bkgFile3, 
 			hist, 
 			scale, 
-			#[fitFunctions['dijet']], 
-			#[fitFunctions['atlas']], 
-			[fitFunctions['P3']], 
-			#[fitFunctions['expoPoli']],
+			[fitFunctions[args.func]], 
 			minFit, maxFit, rebinX, True ))
 
 	elif 'RPV' in args.process:
