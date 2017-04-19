@@ -400,11 +400,16 @@ def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 	allHistos[ "massAsym_cutBestPair_"+sample ] = TH1F( "massAsym_cutBestPair_"+sample, "massAsym_cutBestPair_"+sample, 20, 0., 1 )
 	allHistos[ "deltaEta_cutBestPair_"+sample ] = TH1F( "deltaEta_cutBestPair_"+sample, "deltaEta_cutBestPair_"+sample, 50, 0., 5 )
 	allHistos[ 'deltavsMassAve_cutBestPair_'+sample ] = TH2F( 'deltavsMassAve_cutBestPair_'+sample, 'deltavsMassAve_cutBestPair_'+sample, 1000, 0., 1000, 1000, 0., 1000. )
-	allHistos[ "minChi2_"+sample ] = TH1F( "minChi2_"+sample, "minChi2_"+sample, 1000, 0., 1000 )
-	allHistos[ "secondMinChi2_"+sample ] = TH1F( "secondMinChi2_"+sample, "secondMinChi2_"+sample, 1000, 0., 1000 )
-	allHistos[ "minVsSecondMinChi2_"+sample ] = TH2F( "minVsSecondMinChi2_"+sample, "minVsSecondMinChi2_"+sample, 1000, 0., 1000, 1000, 0., 1000 )
-	allHistos[ "massAveVsMinChi2_"+sample ] = TH2F( "massAveVsMinChi2_"+sample, "massAveVsMinChi2_"+sample, 3000, 0., 3000, 1000, 0., 1000 )
+	allHistos[ "minChi2_"+sample ] = TH1F( "minChi2_"+sample, "minChi2_"+sample, 50, 0., 5 )
+	allHistos[ "secondMinChi2_"+sample ] = TH1F( "secondMinChi2_"+sample, "secondMinChi2_"+sample, 50, 0., 5 )
+	allHistos[ "minVsSecondMinChi2_"+sample ] = TH2F( "minVsSecondMinChi2_"+sample, "minVsSecondMinChi2_"+sample, 50, 0., 5, 50, 0., 5 )
+	allHistos[ "massAveVsMinChi2_"+sample ] = TH2F( "massAveVsMinChi2_"+sample, "massAveVsMinChi2_"+sample, 3000, 0., 3000, 50, 0., 5 )
 	allHistos[ "massAve_minChi_cutBestPair_"+sample ] = TH1F( "massAve_minChi_cutBestPair_"+sample, "massAve_minChi_cutBestPair_"+sample, 3000, 0., 3000 )
+	allHistos[ "oldMinChi2_"+sample ] = TH1F( "oldMinChi2_"+sample, "oldMinChi2_"+sample, 50, 0., 5 )
+	allHistos[ "secondOldMinChi2_"+sample ] = TH1F( "secondOldMinChi2_"+sample, "secondOldMinChi2_"+sample, 50, 0., 5 )
+	allHistos[ "oldMinVsSecondMinChi2_"+sample ] = TH2F( "oldMinVsSecondMinChi2_"+sample, "oldMinVsSecondMinChi2_"+sample, 50, 0., 5, 50, 0., 5 )
+	allHistos[ "massAveVsOldMinChi2_"+sample ] = TH2F( "massAveVsOldMinChi2_"+sample, "massAveVsOldMinChi2_"+sample, 3000, 0., 3000, 50, 0., 5 )
+	allHistos[ "massAve_oldMinChi_cutBestPair_"+sample ] = TH1F( "massAve_oldMinChi_cutBestPair_"+sample, "massAve_oldMinChi_cutBestPair_"+sample, 3000, 0., 3000 )
 	allHistos[ "minDeltaR_"+sample ] = TH1F( "minDeltaR_"+sample, "minDeltaR_"+sample, 50, 0., 5 )
 	allHistos[ "secondMinDeltaR_"+sample ] = TH1F( "secondMinDeltaR_"+sample, "secondMinDeltaR_"+sample, 50, 0., 5 )
 	allHistos[ "minVsSecondMinDeltaR_"+sample ] = TH2F( "minVsSecondMinDeltaR_"+sample, "minVsSecondMinDeltaR_"+sample, 50, 0., 5, 50, 0., 5 )
@@ -415,7 +420,7 @@ def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 	allHistos[ "minVsSecondMinMassAsym_"+sample ] = TH2F( "minVsSecondMinMassAsym_"+sample, "minVsSecondMinMassAsym_"+sample, 20, 0., 1, 20, 0., 1 )
 	allHistos[ "massAveVsMinMassAsym_"+sample ] = TH2F( "massAveVsMinMassAsym_"+sample, "massAveVsMinMassAsym_"+sample, 3000, 0., 3000, 20, 0., 1 )
 	allHistos[ "massAve_MassAsym_cutBestPair_"+sample ] = TH1F( "massAve_MassAsym_cutBestPair_"+sample, "massAve_MassAsym_cutBestPair_"+sample, 3000, 0., 3000 )
-	allHistos[ "minChi2vsminDeltaR_"+sample ] = TH2F( "minChi2vsminDeltaR_"+sample, "minChi2vsminDeltaR_"+sample, 1000, 0., 1000, 50, 0., 5 )
+	allHistos[ "minChi2vsminDeltaR_"+sample ] = TH2F( "minChi2vsminDeltaR_"+sample, "minChi2vsminDeltaR_"+sample, 50, 0., 5, 50, 0., 5 )
 
 	for h in allHistos: allHistos[h].Sumw2()
 
@@ -436,7 +441,7 @@ def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 		fraction = 10.*i/(1.*numEntries)
 		if TMath.FloorNint(fraction) > d: print str(10*TMath.FloorNint(fraction))+'%' 
 		d = TMath.FloorNint(fraction)
-		#if ( i > 100000 ): break
+		if ( i > 100000 ): break
 
 		Run		= events.run
 		Lumi    	= events.lumi
@@ -463,6 +468,7 @@ def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 					possibleCombinations.append( sorted(item) )
 
 			listMinChi, listOfPairsMinChi = bestPairing( listOfJets, possibleCombinations, method='minChi2' )
+			listOldMinChi, listOfPairsOldMinChi = bestPairing( listOfJets, possibleCombinations, method='minChi2', offset=10 ) ## offset is dummy
 			listDeltaR, listOfPairsDeltaR = bestPairing( listOfJets, possibleCombinations, method='deltaR', offset=0.8 )
 			listMassAsym, listOfPairsMassAsym = bestPairing( listOfJets, possibleCombinations, method='mass' )
 
@@ -476,6 +482,16 @@ def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 				allHistos[ 'minVsSecondMinChi2_'+sample ].Fill( listMinChi[0], listMinChi[1] )
 
 			allHistos[ "minChi2vsminDeltaR_"+sample ].Fill( listMinChi[0], listDeltaR[0] )
+
+			############ Old Min Chi2
+			varOldMinChi = dijetVar( listOfPairsOldMinChi ) 
+			allHistos[ 'oldMinChi2_'+sample ].Fill( listOldMinChi[0] )
+			allHistos[ 'massAveVsOldMinChi2_'+sample ].Fill( varOldMinChi[0], listOldMinChi[0] )
+			allHistos[ "massAve_oldMinChi_cutBestPair_"+sample ].Fill( varOldMinChi[0] )
+			if len(listOldMinChi)>1: 
+				allHistos[ 'secondOldMinChi2_'+sample ].Fill( listOldMinChi[1] )
+				allHistos[ 'oldMinVsSecondMinChi2_'+sample ].Fill( listOldMinChi[0], listOldMinChi[1] )
+
 
 			############ Delta R
 			varDeltaR = dijetVar( listOfPairsDeltaR ) 
@@ -514,8 +530,9 @@ def bestPairing( listOfJets, possibleCombinations, method='', offset=0.8 ):
 				dijet1Mass = ( listOfJets[a[0]] + listOfJets[a[1]] ).M()	
 				dijet2Mass = ( listOfJets[a[2]] + listOfJets[a[3]] ).M()	
 				aveMass = (dijet1Mass + dijet2Mass )/2 ;
-				sigma = 0.0724281 - (4.14372e-05 * aveMass);
-				tmpMin = TMath.Power( (dijet1Mass - dijet2Mass )/aveMass, 2 ) / TMath.Power( sigma, 2 )
+				sigma = ( (0.0724281 - (4.14372e-05 * aveMass) ) if (offset < 1) else 30 )
+				tmpMin = TMath.Power( (dijet1Mass - dijet2Mass ), 2 ) / TMath.Power( sigma, 2 ) 
+				#print tmpMin, TMath.Power( (dijet1Mass - dijet2Mass ), 2 ) , TMath.Power( sigma, 2 )
 				#print dijet1Mass, dijet2Mass, tmpChi2
 			elif 'deltaR' in method:
 				tmpMin = abs( listOfJets[a[0]].DeltaR( listOfJets[a[1]] ) - offset ) + abs( listOfJets[a[2]].DeltaR( listOfJets[a[3]] ) - offset )
@@ -529,12 +546,13 @@ def bestPairing( listOfJets, possibleCombinations, method='', offset=0.8 ):
 				sys.exit(0)
 
 			if( tmpMin < bestMin ):
+				#print 'TMPMIN', tmpMin
 				bestMin = tmpMin
 				listMin.append( tmpMin )
 				bestInd = a 
-		#print bestInd, minChi2
 		reorderedJETS = [ listOfJets[ bestInd[0] ], listOfJets[ bestInd[1] ], listOfJets[ bestInd[2] ], listOfJets[ bestInd[3] ] ]
 		listMin.sort()
+		#print bestInd, listMin[0]
 		return listMin, reorderedJETS
 
 	else: return None
