@@ -27,7 +27,7 @@ gROOT.SetBatch()
 ######################################
 def myAnalyzer( fileSample, listCuts, signalName, UNC ):
 
-	outputFileName = 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_'+signalName+UNC+'_'+( '' if 'JetHT' in signalName else '80X_')+'V2p3_'+args.version+'p1.root' 
+	outputFileName = 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_'+signalName+UNC+'_'+( '' if 'JetHT' in signalName else '80X_')+'V2p4_'+args.version+'p1.root' 
 	outputFile = TFile( outputFileName, 'RECREATE' )
 
 
@@ -151,26 +151,26 @@ def myAnalyzer( fileSample, listCuts, signalName, UNC ):
 	#SF = 'puWeight*'+str(lumiWeight)
 	SF = TCut('lumiWeight * puWeight') # * '+str(args.lumi))
 	preselection = TCut('HT>900') * TCut( SF )
-	selection = '' 
-	for var in listCuts: selection = selection+'('+var[0]+'<'+str(var[1])+')'
-	selection = selection.replace(')(',') * (')
-	print '---- Cuts applied: ', selection, preselection + TCut( selection )
+	stringSel = '' 
+	for var in listCuts: stringSel = stringSel+'('+var[0]+'<'+str(var[1])+')'
+	stringSel = stringSel.replace(')(',') * (')
+	print '---- Cuts applied: ', stringSel, preselection * TCut( stringSel )
 
 	ABCDRegions = {}
-	ABCDRegions[ '_A' ] = TCut( selection )
-	ABCDRegions[ '_B' ] = TCut( selection.replace('deltaEtaDijet<', 'deltaEtaDijet>') )
-	ABCDRegions[ '_C' ] = TCut( selection.replace('prunedMassAsym<', 'prunedMassAsym>') )
-	ABCDRegions[ '_D' ] = TCut( selection.replace('prunedMassAsym<', 'prunedMassAsym>').replace('deltaEtaDijet<', 'deltaEtaDijet>') )
+	ABCDRegions[ '_A' ] = TCut( stringSel )
+	ABCDRegions[ '_B' ] = TCut( stringSel.replace('deltaEtaDijet<', 'deltaEtaDijet>') )
+	ABCDRegions[ '_C' ] = TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>') )
+	ABCDRegions[ '_D' ] = TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>').replace('deltaEtaDijet<', 'deltaEtaDijet>') )
 
-	btagSelection = selection + '&& (jet1btagCSVv2 > 0.8) && (jet2btagCSVv2 > 0.8)'
+	btagSelection = stringSel + '&& (jet1btagCSVv2 > 0.8) && (jet2btagCSVv2 > 0.8)'
 	ABCDRegionsBtag = {}
 	ABCDRegionsBtag[ '_A' ] = TCut( btagSelection )
 	ABCDRegionsBtag[ '_B' ] = TCut( btagSelection.replace('deltaEtaDijet<', 'deltaEtaDijet>') )
 	ABCDRegionsBtag[ '_C' ] = TCut( btagSelection.replace('prunedMassAsym<', 'prunedMassAsym>') )
 	ABCDRegionsBtag[ '_D' ] = TCut( btagSelection.replace('prunedMassAsym<', 'prunedMassAsym>').replace('deltaEtaDijet<', 'deltaEtaDijet>') )
 
-	sel = preselection + TCut( selection )
-	btagSel = sel + TCut( btagSelection )
+	sel = preselection * TCut( stringSel )
+	btagSel = sel * TCut( btagSelection )
 
 	treeName = 'BoostedAnalysisPlots'+('Puppi' if 'Puppi' in args.grooming else '')+'/RUNATree'
 
@@ -182,7 +182,7 @@ def myAnalyzer( fileSample, listCuts, signalName, UNC ):
 			preselection,
 			allHistos[ 'HT_preSel_'+signalName ], 
 			( 0.05 if 'JetHT' in signalName else 1 ) ) 
-	'''
+	
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAve', 
 			preselection, 
@@ -296,23 +296,23 @@ def myAnalyzer( fileSample, listCuts, signalName, UNC ):
 	### n-1 selection
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAsym', 
-			preselection + TCut( selection.replace('&& (prunedMassAsym<0.1)','') ), 
+			preselection + TCut( stringSel.replace('&& (prunedMassAsym<0.1)','') ), 
 			allHistos[ 'prunedMassAsym_n-1_'+signalName ], 
 			( 0.05 if 'JetHT' in signalName else 1 ) ) 
 
 	getHistoFromTree( fileSample, treeName,
 			'deltaEtaDijet', 
-			preselection + TCut( selection.replace(('&& (deltaEtaDijet<1.5)' if 'pruned' in args.grooming else '&& (deltaEtaDijet<1.0)' ),'') ), 
+			preselection + TCut( stringSel.replace(('&& (deltaEtaDijet<1.5)' if 'pruned' in args.grooming else '&& (deltaEtaDijet<1.0)' ),'') ), 
 			allHistos[ 'deltaEtaDijet_n-1_'+signalName ], 
 			( 0.05 if 'JetHT' in signalName else 1 ) ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet1Tau21', 
-			preselection + TCut( selection.replace('&& (jet1Tau21<0.45)','') ), 
+			preselection + TCut( stringSel.replace('&& (jet1Tau21<0.45)','') ), 
 			allHistos[ 'jet1Tau21_n-1_'+signalName ], 
 			( 0.05 if 'JetHT' in signalName else 1 ) ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet2Tau21', 
-			preselection + TCut( selection.replace('&& (jet2Tau21<0.45)','') ), 
+			preselection + TCut( stringSel.replace('&& (jet2Tau21<0.45)','') ), 
 			allHistos[ 'jet2Tau21_n-1_'+signalName ], 
 			( 0.05 if 'JetHT' in signalName else 1 ) ) 
 
@@ -349,7 +349,6 @@ def myAnalyzer( fileSample, listCuts, signalName, UNC ):
 				selABCD, 
 				allHistos[ 'prunedMassAsymVsdeltaEtaDijet_'+signalName+'_btag'+region ],
 				( 0.05 if 'JetHT' in signalName else 1 ) ) 
-	'''
 
 
 #	for sample in dictSamples:
@@ -662,41 +661,25 @@ if __name__ == '__main__':
 	else: folder = 'Rootfiles/'
 
 	allSamples = {}
-	allSamples[ 'JetHT_Run2016B'] = folder+'/RUNAnalysis_JetHT_Run2016B_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'JetHT_Run2016C'] = folder+'/RUNAnalysis_JetHT_Run2016C_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'JetHT_Run2016D'] = folder+'/RUNAnalysis_JetHT_Run2016D_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'JetHT_Run2016E'] = folder+'/RUNAnalysis_JetHT_Run2016E_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'JetHT_Run2016F'] = folder+'/RUNAnalysis_JetHT_Run2016F_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'JetHT_Run2016G'] = folder+'/RUNAnalysis_JetHT_Run2016G_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'JetHT_Run2016H'] = folder+'/RUNAnalysis_JetHT_Run2016H_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) ] = folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+args.mass+'_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'TT' ] = folder+'/RUNAnalysis_TT_80X_V2p3_'+args.version+'.root'
-    	allSamples[ 'ZJetsToQQ' ] = folder+'/RUNAnalysis_ZJetsToQQ_80X_V2p3_'+args.version+'.root'
-    	allSamples[ 'WJetsToQQ' ] = folder+'/RUNAnalysis_WJetsToQQ_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'Dibosons' ] = folder+'/RUNAnalysis_Dibosons_80X_V2p3_'+args.version+'.root'
-	#allSamples[ 'WWTo4Q' ] = folder+'/RUNAnalysis_WWTo4Q_80X_V2p3_'+args.version+'.root'
-	#allSamples[ 'ZZTo4Q' ] = folder+'/RUNAnalysis_ZZTo4Q_80X_V2p3_'+args.version+'.root'
-	#allSamples[ 'WZ' ] = folder+'/RUNAnalysis_WZ_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'QCD'+args.qcd+'All' ] = folder+'/RUNAnalysis_QCD'+args.qcd+'All_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'QCD_HT300to500' ] = folder+'/RUNAnalysis_QCDHT300to500_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'QCD_HT500to700' ] = folder+'/RUNAnalysis_QCDHT500to700_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'QCD_HT700to1000' ] = folder+'/RUNAnalysis_QCDHT700to1000_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'QCD_HT1000to1500' ] = folder+'/RUNAnalysis_QCDHT1000to1500_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'QCD_HT1500to2000' ] = folder+'/RUNAnalysis_QCDHT1500to2000_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'QCD_HT2000toInf' ] = folder+'/RUNAnalysis_QCDHT2000toInf_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'QCD_Pt_170to300' ] = folder+'/RUNAnalysis_QCDPt170to300_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'QCD_Pt_300to470' ] = folder+'/RUNAnalysis_QCDPt300to470_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'QCD_Pt_470to600' ] = folder+'/RUNAnalysis_QCDPt470to600_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'QCD_Pt_600to800' ] = folder+'/RUNAnalysis_QCDPt600to800_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'QCD_Pt_800to1000' ] = folder+'/RUNAnalysis_QCDPt800to1000_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'QCD_Pt_1000to1400' ] = folder+'/RUNAnalysis_QCDPt1000to1400_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'QCD_Pt_1400to1800' ] = folder+'/RUNAnalysis_QCDPt1400to1800_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'QCD_Pt_1800to2400' ] = folder+'/RUNAnalysis_QCDPt1800to2400_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'QCD_Pt_2400to3200' ] = folder+'/RUNAnalysis_QCDPt2400to3200_80X_V2p3_'+args.version+'.root'
-	allSamples[ 'QCD_Pt_3200toInf' ] = folder+'/RUNAnalysis_QCDPt3200toInf_80X_V2p3_'+args.version+'.root'
+	allSamples[ 'JetHT_Run2016B'] = folder+'/RUNAnalysis_JetHT_Run2016B_80X_V2p4_'+args.version+'.root'
+	allSamples[ 'JetHT_Run2016C'] = folder+'/RUNAnalysis_JetHT_Run2016C_80X_V2p4_'+args.version+'.root'
+	allSamples[ 'JetHT_Run2016D'] = folder+'/RUNAnalysis_JetHT_Run2016D_80X_V2p4_'+args.version+'.root'
+	allSamples[ 'JetHT_Run2016E'] = folder+'/RUNAnalysis_JetHT_Run2016E_80X_V2p4_'+args.version+'.root'
+	allSamples[ 'JetHT_Run2016F'] = folder+'/RUNAnalysis_JetHT_Run2016F_80X_V2p4_'+args.version+'.root'
+	allSamples[ 'JetHT_Run2016G'] = folder+'/RUNAnalysis_JetHT_Run2016G_80X_V2p4_'+args.version+'.root'
+	allSamples[ 'JetHT_Run2016H'] = folder+'/RUNAnalysis_JetHT_Run2016H_80X_V2p4_'+args.version+'.root'
+	allSamples[ 'RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) ] = folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+args.mass+'_80X_V2p4_'+args.version+'.root'
+	allSamples[ 'TT' ] = folder+'/RUNAnalysis_TT_80X_V2p4_'+args.version+'.root'
+    	allSamples[ 'ZJetsToQQ' ] = folder+'/RUNAnalysis_ZJetsToQQ_80X_V2p4_'+args.version+'.root'
+    	allSamples[ 'WJetsToQQ' ] = folder+'/RUNAnalysis_WJetsToQQ_80X_V2p4_'+args.version+'.root'
+	allSamples[ 'Dibosons' ] = folder+'/RUNAnalysis_Dibosons_80X_V2p4_'+args.version+'.root'
+	#allSamples[ 'WWTo4Q' ] = folder+'/RUNAnalysis_WWTo4Q_80X_V2p4_'+args.version+'.root'
+	#allSamples[ 'ZZTo4Q' ] = folder+'/RUNAnalysis_ZZTo4Q_80X_V2p4_'+args.version+'.root'
+	#allSamples[ 'WZ' ] = folder+'/RUNAnalysis_WZ_80X_V2p4_'+args.version+'.root'
+	allSamples[ 'QCD'+args.qcd+'All' ] = folder+'/RUNAnalysis_QCD'+args.qcd+'All_80X_V2p4_'+args.version+'.root'
 
-	if 'pruned' in args.grooming: cuts = [ [ 'jet1Tau21', 0.45 ], [ 'jet2Tau21', 0.45 ], [ 'prunedMassAsym', 0.10 ], [ 'deltaEtaDijet', 1.5 ] ]
-	else: cuts = [ [ 'jet1Tau21', 0.45 ], [ 'jet2Tau21', 0.45 ], [ 'prunedMassAsym', 0.10 ], [ 'deltaEtaDijet', 1. ] ]
+	if 'pruned' in args.grooming: cuts = selection['CHSpruned'] 
+	else: cuts = selection['PUPPIsoftDrop']
 		
 	if 'RPV' in args.samples: args.samples = 'RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)
 	dictSamples = OrderedDict()

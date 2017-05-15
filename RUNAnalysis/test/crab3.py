@@ -91,7 +91,7 @@ if __name__ == '__main__':
 
 	############### Moriond17 samples
 	Samples[ 'TTJets' ] = [ '/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 100, 'Summer16_23Sep2016V4' ]
-	Samples[ 'WJets' ] = [ '/WJetsToQQ_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 10, 'Summer16_23Sep2016V4' ]
+	Samples[ 'WJetsToQQ' ] = [ '/WJetsToQQ_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 10, 'Summer16_23Sep2016V4' ]
 	#Samples[ 'ZJets' ] = [ '', 10, 'Summer16_23Sep2016V4' ]
 	Samples[ 'WZ' ] = [ '/WZ_TuneCUETP8M1_13TeV-pythia8/vorobiev-B2GAnaFW_Spring16MiniAODv2_Moriond17_v80x_ext1_v2p4-bfea8033ab2d179bbb8e0faf6e2dc0cf/USER', 10, 'Summer16_23Sep2016V4' ]
 	Samples[ 'WWJets' ] = [ '/WWTo4Q_13TeV-powheg/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 50, 'Summer16_23Sep2016V4' ]

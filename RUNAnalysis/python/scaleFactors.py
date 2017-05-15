@@ -24,10 +24,10 @@ dictXS = {
 		# QCD powheg
 		'15to7000' : 1667000000,
 		#### TTJets
-		'TT' : 831.76,  # 502.2
+		'TT_TuneCUETP8M2T4_13TeV-powheg-pythia8' : 831.76,  # 502.2
 		#### W
-		'WJetsToQQ' : 95.14,
-		'WWTo4Q' : 51.723,
+		'WJetsToQQ_HT-600ToInf' : 95.14,
+		'WWTo4Q_13TeV-powheg' : 51.723,
 		#### Z
 		'ZJetsToQQ' : 5.67,
 		'ZZTo4Q' : 6.842,
@@ -155,13 +155,13 @@ dictEvents = {
 		#### QCD powheg
 		'15to7000' :  	[ 8754164., 	9765576],
 
-		'TT' 	: [  77229341., 	187626200. ],
+		'TT_TuneCUETP8M2T4_13TeV-powheg-pythia8' 	: [  77229341., 	187626200. ],
 #		'TTJets_HT-600to800' :	[  	5119009. 	 ],
 #		'TTJets_HT-800to1200' :	[  	3510897. 	 ],
 #		'TTJets_HT-1200to2500' :	[  	1014678. 	 ],
 #		'TTJets_HT-2500toInf' :	[  	507842. 	 ],
-		'WJetsToQQ' : 	[ 1026587., 	1025005 ],
-		'WWTo4Q' : 	[ 1998400., 	1813904 ],
+		'WJetsToQQ_HT-600ToInf' : 	[ 1026587., 	1025005 ],
+		'WWTo4Q_13TeV-powheg' : 	[ 1998400., 	1813904 ],
 		#'ZJetsToQQ' : 	[ 992590 ],
 		'ZZTo4Q' : 	[ 30454227., 	29948451 ],
 		'WZ' : 	[ 2995828  		],

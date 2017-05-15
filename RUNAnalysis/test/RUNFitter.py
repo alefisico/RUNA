@@ -241,7 +241,7 @@ def FitterCombination( inFileData, inFileBkg, inFileSignal, hist, scale, bkgFunc
 			minX, 
 			maxX, 
 			rebinX, 
-			True )
+			( False if args.bkgAsData else True ) )
 
 	bkgParameters = BkgParameters[0]
 	bkgParErrors = BkgParameters[1]
@@ -258,7 +258,7 @@ def FitterCombination( inFileData, inFileBkg, inFileSignal, hist, scale, bkgFunc
 		print "|----> Fitting Data"
 		DataParameters = rootFitter( inFileData, 
 				hist+('JetHT_Run2016' if args.miniTree else ''), 
-				1, 
+				1,
 				bkgFunction, 
 				minX, 
 				maxX, 
@@ -294,7 +294,7 @@ def FitterCombination( inFileData, inFileBkg, inFileSignal, hist, scale, bkgFunc
 			#legend.AddEntry( qcdHTMCP4, 'Fit to MC QCD madgraph+pythia', 'l' )
 
 	else:
-		hMain, mainP4 = histoFunctionFit( 'QCD'+args.qcd+'All', bkgFunction, bkgParameters, bkgParErrors, bkgpoints, bkgpointsErr, minX, maxX )
+		hMain, mainP4 = histoFunctionFit( 'QCD'+args.qcd+'All', bkgFunction[0][0], bkgParameters, bkgParErrors, bkgpoints, bkgpointsErr, minX, maxX )
 		points = bkgpoints
 		pointsErr = bkgpointsErr
 	
@@ -536,7 +536,7 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		###################################################
 
 		##### creating workspace
-		outputRootFile = '/afs/cern.ch/work/a/algomez/RPVStops/CMSSW_8_0_20/src/RUNA/RUNStatistics/test/Rootfiles/workspace_RPVStopStopToJets_'+args.decay+'_M-'+str(imass)+'_Resolved_'+args.cut+'_'+('BiasTest_' if 'Bias' in args.process else '')+args.version+'.root' 
+		outputRootFile = '/afs/cern.ch/work/a/algomez/RPVStops/CMSSW_8_0_20/src/RUNA/RUNStatistics/test/Rootfiles/workspace_RPVStopStopToJets_'+args.decay+'_M-'+str(imass)+'_Resolved_'+args.cut+'_'+('BiasTest_' if 'Bias' in args.process else '')+('QCD_' if args.bkgAsData else '' )+args.version+'.root' 
 		if 'Bias' in args.process:
 			cat = RooCategory( "pdf_index", "Index of Pdf which is active" )
 			multipdf = RooMultiPdf( "roomultipdf", "All Pdfs", cat, mypdfs )
@@ -572,7 +572,7 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		print '|----> Workspace created:', outputRootFile
 
 		##### write a datacard
-		datacard = open('/afs/cern.ch/work/a/algomez/RPVStops/CMSSW_8_0_20/src/RUNA/RUNStatistics/test/Datacards/datacard_RPVStopStopToJets_'+args.decay+'_M-'+str(imass)+'_Resolved_'+args.cut+'_'+('BiasTest_' if 'Bias' in args.process else '')+args.version+'.txt','w')
+		datacard = open('/afs/cern.ch/work/a/algomez/RPVStops/CMSSW_8_0_20/src/RUNA/RUNStatistics/test/Datacards/datacard_RPVStopStopToJets_'+args.decay+'_M-'+str(imass)+'_Resolved_'+args.cut+'_'+('BiasTest_' if 'Bias' in args.process else '')+('QCD_' if args.bkgAsData else '' )+args.version+'.txt','w')
 		datacard.write('imax 1\n')
 		datacard.write('jmax 1\n')
 		datacard.write('kmax *\n')
@@ -656,14 +656,24 @@ def doftest( RSS1, RSS2, NDF1, NDF2, nPar1, nPar2, nBinsFit):
 def FisherTest( dataFile, hist, bkgFunctions, minX, maxX, rebinX ):
 	"""docstring for FisherTest"""
 
-	fitParameters = rootFitter( dataFile, 
-			hist+('JetHT_Run2016' if args.miniTree else ''), 
-			1, 
-			bkgFunctions,
-			minX, 
-			maxX, 
-			rebinX, 
-			False )
+	if args.bkgAsData:
+		fitParameters = rootFitter( dataFile, 
+				hist+( 'QCD'+args.qcd+'All' if args.miniTree else ''), 
+				scale, 
+				bkgFunctions,
+				minX, 
+				maxX, 
+				rebinX, 
+				False )
+	else:
+		fitParameters = rootFitter( dataFile, 
+				hist+( 'JetHT_Run2016' if args.miniTree else ''), 
+				1, 
+				bkgFunctions,
+				minX, 
+				maxX, 
+				rebinX, 
+				False )
 
 	dictDataAndFunc = OrderedDict()
 	dictPullResChi2NDF = OrderedDict()
@@ -1077,6 +1087,7 @@ if __name__ == '__main__':
 	parser.add_argument('-q', '--qcd', action='store', default='Pt', dest='qcd', help='Type of QCD binning, example: HT.' )
 	parser.add_argument('-l', '--lumi', action='store', type=float, default=1787, help='Luminosity, example: 1.' )
 	parser.add_argument('-f', '--final', action='store_true', default=False, help='Final distributions.' )
+	parser.add_argument('-b', '--bkgAsData', action='store_true', default=False, help='Background as data.' )
 	parser.add_argument('-t', '--miniTree', action='store_true', default=False, help='miniTree: if plots coming from miniTree or RUNAnalysis.' )
 	parser.add_argument('-e', '--extension', action='store', default='png', help='Extension of plots.' )
 	parser.add_argument('-C', '--cut', action='store', default='delta', help='cut, example: cutDEta' )
@@ -1122,7 +1133,7 @@ if __name__ == '__main__':
 			'(pow(1-@0/13000,@1)/pow(@0/13000,@2+@3*log(@0/13000)+@4*pow(log(@0/13000),2))' ]
 
 	fitFunctions['P4'] = [ TF1("P4", "[0]*TMath::Power(1-(x/13000.0),[1])/(TMath::Power(x/13000.0,[2]+([3]*TMath::Log(x/13000.))))",0,2000), 
-			[ 0, 100, 2, 1], 
+			[ 0, 100, 2, 0.1], 
 			'pow(1-@0/13000,@1)/pow(@0/13000,@2+@3*log(@0/13000))' ]
 
 	fitFunctions['P3'] = [ TF1("P3", "[0]* TMath::Power(1-(x/13000.0),[1]) / (TMath::Power(x/13000.0,[2]))",0,2000), 
@@ -1152,25 +1163,22 @@ if __name__ == '__main__':
 	fitFunctions['P4Gaus'] = [ TF1("P4Gaus", "[0]*pow(1-(x/13000.0),[1])/pow(x/13000.0,[2]+([3]*log(x/13000.)))+gaus(4)",0,2000), [] ]
 
 
-	if 'full' in args.process:
-		CMS_lumi.extraText = "Preliminary"
-		p = Process( target=FitterCombination, args=( dataFile, bkgFile, signalFile, hist, scale, [fitFunctions['P4']], minFit, maxFit, rebinX, True ))
-	elif 'Data' in args.process:
-		CMS_lumi.extraText = "Preliminary"
-		p = Process( target=FitterCombination, args=( dataFile, 
+	if 'Data' in args.process:
+		CMS_lumi.extraText = ('Simulation' if args.bkgAsData else '')+"Preliminary"
+		p = Process( target=FitterCombination, args=( ( bkgFile if args.bkgAsData else dataFile ), 
 			bkgFile, 
 			'', #bkgFile3, 
 			hist, 
 			scale, 
 			[fitFunctions[args.func]], 
-			minFit, maxFit, rebinX, True ))
+			minFit, maxFit, rebinX, ( False if args.bkgAsData else True )))
 
 	elif 'RPV' in args.process:
 		process = 'RPVSt'+str(args.mass)+'tojj'
 		p = Process( target=rootFitter, args=( signalFile, hist, scale, [fitFunctions['gaus']], args.mass-50, args.mass+50, rebinX, True, False ) ) 
 
 	elif 'Limit' in args.process:
-		p = Process( target=createCards, args=( dataFile, #bkgFile, 
+		p = Process( target=createCards, args=( ( bkgFile if args.bkgAsData else dataFile ),
 			bkgFile, 
 			signalFilename,
 			listMass,
@@ -1180,7 +1188,7 @@ if __name__ == '__main__':
 			minFit, maxFit, 10 ) )
 
 	elif 'Bias' in args.process:
-		p = Process( target=createCards, args=( dataFile, 
+		p = Process( target=createCards, args=( ( bkgFile if args.bkgAsData else dataFile ), 
 			bkgFile, 
 			signalFilename,
 			listMass,
@@ -1190,7 +1198,7 @@ if __name__ == '__main__':
 			minFit, maxFit, 1 ) )
 
 	elif 'Fisher' in args.process:
-		p = Process( target=FisherTest, args=( dataFile, 
+		p = Process( target=FisherTest, args=( ( bkgFile if args.bkgAsData else dataFile ), 
 			hist, 
 			[ fitFunctions['P2'], fitFunctions['P3'], fitFunctions['P4'], fitFunctions['P5'] ], 
 			minFit, maxFit, 10 ) )

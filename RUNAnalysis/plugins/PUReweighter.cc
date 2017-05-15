@@ -19,7 +19,7 @@ float PUReweighter::getPUWeight(const int trueNInt, std::vector<int> bunchCrossi
 //==============================================================================================
 // Generate weights for given data PU distribution
 // Code adapted from: https://twiki.cern.ch/twiki/bin/viewauth/CMS/PileupReweighting
-// weights for Spring16MC are taken from https://github.com/cms-sw/cmssw/blob/CMSSW_8_0_X/SimGeneral/MixingModule/python/mix_2016_25ns_SpringMC_PUScenarioV1_PoissonOOTPU_cfi.py
+// weights for Moriond17 are taken from https://github.com/cms-sw/cmssw/blob/CMSSW_8_0_X/SimGeneral/MixingModule/python/mix_2016_25ns_Moriond17MC_PoissonOOTPU_cfi.py
 void PUReweighter::generateWeights(const std::string& nameOfDataDistribution) {
 
 	// Get data distribution from file
