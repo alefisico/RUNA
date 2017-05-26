@@ -225,6 +225,7 @@ void RUNResolvedTriggerEfficiency::analyze(const Event& iEvent, const EventSetup
 
 	/// Applying kinematic, trigger and jet ID
 	vector< TLorentzVector > JETS;
+	vector< myJet > myJETS;
 	float HT = 0;
 	for (size_t i = 0; i < jetPt->size(); i++) {
 
@@ -239,6 +240,11 @@ void RUNResolvedTriggerEfficiency::analyze(const Event& iEvent, const EventSetup
 			TLorentzVector tmpJet;
 			tmpJet.SetPtEtaPhiE( (*jetPt)[i], (*jetEta)[i], (*jetPhi)[i], (*jetE)[i] );
 			JETS.push_back( tmpJet );
+
+			myJet tmpMyJet;
+			tmpMyJet.p4 = tmpJet;
+			myJETS.push_back( tmpMyJet );
+
 		}
 	}
 
@@ -246,12 +252,20 @@ void RUNResolvedTriggerEfficiency::analyze(const Event& iEvent, const EventSetup
 	if ( JETS.size() > 3 ) {
 
 		if ( basedTriggerFired ) {
+
+			vector< myJet > myPairedJets;
+			myPairedJets = pairing( myJETS, true );
+			double mass1 = ( myPairedJets[0].p4 + myPairedJets[1].p4 ).M();
+			double mass2 = ( myPairedJets[2].p4 + myPairedJets[3].p4 ).M();
+			double massAve = ( mass1 + mass2 ) / 2;
+
 			histos1D_[ "jet1PtDenom_cut4Jet" ]->Fill( JETS[0].Pt() );
 			histos1D_[ "jet2PtDenom_cut4Jet" ]->Fill( JETS[1].Pt() );
 			histos1D_[ "jet3PtDenom_cut4Jet" ]->Fill( JETS[2].Pt() );
 			histos1D_[ "jet4PtDenom_cut4Jet" ]->Fill( JETS[3].Pt() );
 			histos1D_[ "HTDenom_cut4Jet" ]->Fill( HT  );
 			histos2D_[ "jet4PtHTDenom_cut4Jet" ]->Fill( JETS[3].Pt(), HT );
+			histos1D_[ "massAveDenom_cut4Jet" ]->Fill( massAve );
 
 			if ( ORTriggers ){
 				histos1D_[ "jet1PtPassing_cut4Jet" ]->Fill( JETS[0].Pt() );
@@ -260,6 +274,7 @@ void RUNResolvedTriggerEfficiency::analyze(const Event& iEvent, const EventSetup
 				histos1D_[ "jet4PtPassing_cut4Jet" ]->Fill( JETS[3].Pt() );
 				histos1D_[ "HTPassing_cut4Jet" ]->Fill( HT  );
 				histos2D_[ "jet4PtHTPassing_cut4Jet" ]->Fill( JETS[3].Pt(), HT );
+				histos1D_[ "massAvePassing_cut4Jet" ]->Fill( massAve );
 			}
 
 			if ( JETS[3].Pt() > cutAK4jet4Pt ) {
@@ -287,6 +302,7 @@ void RUNResolvedTriggerEfficiency::analyze(const Event& iEvent, const EventSetup
 				histos1D_[ "jet4PtDenom_cutHT" ]->Fill( JETS[3].Pt() );
 				histos1D_[ "HTDenom_cutHT" ]->Fill( HT  );
 				histos2D_[ "jet4PtHTDenom_cutHT" ]->Fill( JETS[3].Pt(), HT );
+				histos1D_[ "massAveDenom_cutHT" ]->Fill( massAve );
 
 				if ( ORTriggers ){
 					histos1D_[ "jet1PtPassing_cutHT" ]->Fill( JETS[0].Pt() );
@@ -295,7 +311,9 @@ void RUNResolvedTriggerEfficiency::analyze(const Event& iEvent, const EventSetup
 					histos1D_[ "jet4PtPassing_cutHT" ]->Fill( JETS[3].Pt() );
 					histos1D_[ "HTPassing_cutHT" ]->Fill( HT  );
 					histos2D_[ "jet4PtHTPassing_cutHT" ]->Fill( JETS[3].Pt(), HT );
+					histos1D_[ "massAvePassing_cutHT" ]->Fill( massAve );
 				}
+
 			}
 		}
 	}
@@ -331,6 +349,11 @@ void RUNResolvedTriggerEfficiency::beginJob() {
 	histos1D_[ "jet4PtDenom_cut4Jet" ]->Sumw2();
 	histos1D_[ "jet4PtPassing_cut4Jet" ] = fs_->make< TH1D >( "jet4PtPassing_cut4Jet", "jet4PtPassing_cut4Jet", 150, 0., 1500. );
 	histos1D_[ "jet4PtPassing_cut4Jet" ]->Sumw2();
+
+	histos1D_[ "massAveDenom_cut4Jet" ] = fs_->make< TH1D >( "massAveDenom_cut4Jet", "massAveDenom_cut4Jet", 1500, 0., 1500. );
+	histos1D_[ "massAveDenom_cut4Jet" ]->Sumw2();
+	histos1D_[ "massAvePassing_cut4Jet" ] = fs_->make< TH1D >( "massAvePassing_cut4Jet", "massAvePassing_cut4Jet", 1500, 0., 1500. );
+	histos1D_[ "massAvePassing_cut4Jet" ]->Sumw2();
 
 	histos2D_[ "jet4PtHTDenom_cut4Jet" ] = fs_->make< TH2D >( "jet4PtHTDenom_cut4Jet", "HT vs 4th Leading Jet Pt", 150, 0., 1500., 500, 0., 5000.);
 	histos2D_[ "jet4PtHTDenom_cut4Jet" ]->Sumw2();
@@ -400,6 +423,11 @@ void RUNResolvedTriggerEfficiency::beginJob() {
 
 	histos2D_[ "jet4PtHTPassing_cutHT" ] = fs_->make< TH2D >( "jet4PtHTPassing_cutHT", "jet4PtHTPassing_cutHT", 150, 0., 1500., 500, 0., 5000.);
 	histos2D_[ "jet4PtHTPassing_cutHT" ]->Sumw2();
+
+	histos1D_[ "massAveDenom_cutHT" ] = fs_->make< TH1D >( "massAveDenom_cutHT", "massAveDenom_cutHT", 1500, 0., 1500. );
+	histos1D_[ "massAveDenom_cutHT" ]->Sumw2();
+	histos1D_[ "massAvePassing_cutHT" ] = fs_->make< TH1D >( "massAvePassing_cutHT", "massAvePassing_cutHT", 1500, 0., 1500. );
+	histos1D_[ "massAvePassing_cutHT" ]->Sumw2();
 
 
 }

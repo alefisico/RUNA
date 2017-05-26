@@ -313,15 +313,19 @@ void RUNBoostedTriggerEfficiency::analyze(const Event& iEvent, const EventSetup&
 			double corrPrunedMass = (*jetPrunedMass)[i] * massJEC ;
 			double corrSoftDropMass = (*jetSoftDropMass)[i] * massJEC ;
 
+
+			/// Calculating RHO
+			double rhoMass = TMath::Log( ( corrJet.M() * corrJet.M() )/( corrJet.Pt() * corrJet.Pt() ) );
+			double rhoPrunedMass = TMath::Log( ( corrPrunedMass * corrPrunedMass )/( corrJet.Pt() * corrJet.Pt() ) );
+
 			myJet tmpJET;
 			tmpJET.p4 = corrJet; //tmpJet;
-			//tmpJET.trimmedMass = (*jetTrimmedMass)[i] ;
-			//tmpJET.prunedMass = (*jetPrunedMass)[i] ;
-			//tmpJET.softDropMass = (*jetSoftDropMass)[i] ;
 			tmpJET.trimmedMass = corrTrimmedMass;
 			tmpJET.prunedMass = corrPrunedMass;
 			tmpJET.softDropMass = corrSoftDropMass;
 			tmpJET.btagCSVv2 = (*jetCSVv2)[i];
+			tmpJET.tau1 = rhoMass;		// Just for convenience, rho stored in tau1
+			tmpJET.tau2 = rhoPrunedMass;
 			JETS.push_back( tmpJET );
 		}
 	}
@@ -362,9 +366,13 @@ void RUNBoostedTriggerEfficiency::analyze(const Event& iEvent, const EventSetup&
 			histos1D_[ "jet1PrunedMassDenom_cutDijet" ]->Fill( JETS[0].prunedMass  );
 			histos1D_[ "jet1SoftDropMassDenom_cutDijet" ]->Fill( JETS[0].softDropMass  );
 			histos1D_[ "jet1PtDenom_cutDijet" ]->Fill( JETS[0].p4.Pt()   );
+			histos1D_[ "jet1RhoDenom_cutDijet" ]->Fill( JETS[0].tau1 );	// tau1 is rho!!!!!
+			histos1D_[ "jet1RhoPrunedDenom_cutDijet" ]->Fill( JETS[0].tau2 );
 			histos1D_[ "jet2PrunedMassDenom_cutDijet" ]->Fill( JETS[1].prunedMass  );
 			histos1D_[ "jet2SoftDropMassDenom_cutDijet" ]->Fill( JETS[1].softDropMass  );
 			histos1D_[ "jet2PtDenom_cutDijet" ]->Fill( JETS[1].p4.Pt() );
+			histos1D_[ "jet2RhoDenom_cutDijet" ]->Fill( JETS[1].tau1 );
+			histos1D_[ "jet2RhoPrunedDenom_cutDijet" ]->Fill( JETS[1].tau2 );
 
 			histos2D_[ "jet1PrunedMassHTDenom_cutDijet" ]->Fill( JETS[0].prunedMass, HT );
 			histos2D_[ "jet1PrunedMassjet1PtDenom_cutDijet" ]->Fill( JETS[0].prunedMass, JETS[0].p4.Pt() );
@@ -390,9 +398,13 @@ void RUNBoostedTriggerEfficiency::analyze(const Event& iEvent, const EventSetup&
 				histos1D_[ "jet1PrunedMassPassing_cutDijet" ]->Fill( JETS[0].prunedMass  );
 				histos1D_[ "jet1SoftDropMassPassing_cutDijet" ]->Fill( JETS[0].softDropMass  );
 				histos1D_[ "jet1PtPassing_cutDijet" ]->Fill( JETS[0].p4.Pt()   );
+				histos1D_[ "jet1RhoPassing_cutDijet" ]->Fill( JETS[0].tau1 );	// tau1 is rho!!!!!
+				histos1D_[ "jet1RhoPrunedPassing_cutDijet" ]->Fill( JETS[0].tau2 );
 				histos1D_[ "jet2PrunedMassPassing_cutDijet" ]->Fill( JETS[1].prunedMass  );
 				histos1D_[ "jet2SoftDropMassPassing_cutDijet" ]->Fill( JETS[1].softDropMass  );
 				histos1D_[ "jet2PtPassing_cutDijet" ]->Fill( JETS[1].p4.Pt() );
+				histos1D_[ "jet2RhoPassing_cutDijet" ]->Fill( JETS[1].tau1 );
+				histos1D_[ "jet2RhoPrunedPassing_cutDijet" ]->Fill( JETS[1].tau2 );
 
 				histos2D_[ "jet1PrunedMassHTPassing_cutDijet" ]->Fill( JETS[0].prunedMass, HT );
 				histos2D_[ "jet1PrunedMassjet1PtPassing_cutDijet" ]->Fill( JETS[0].prunedMass, JETS[0].p4.Pt() );
@@ -419,9 +431,13 @@ void RUNBoostedTriggerEfficiency::analyze(const Event& iEvent, const EventSetup&
 				histos1D_[ "jet1PrunedMassDenom_cutHT" ]->Fill( JETS[0].prunedMass  );
 				histos1D_[ "jet1SoftDropMassDenom_cutHT" ]->Fill( JETS[0].softDropMass  );
 				histos1D_[ "jet1PtDenom_cutHT" ]->Fill( JETS[0].p4.Pt()   );
+				histos1D_[ "jet1RhoDenom_cutHT" ]->Fill( JETS[0].tau1 );	// tau1 is rho!!!!!
+				histos1D_[ "jet1RhoPrunedDenom_cutHT" ]->Fill( JETS[0].tau2 );
 				histos1D_[ "jet2PrunedMassDenom_cutHT" ]->Fill( JETS[1].prunedMass  );
 				histos1D_[ "jet2SoftDropMassDenom_cutHT" ]->Fill( JETS[1].softDropMass  );
 				histos1D_[ "jet2PtDenom_cutHT" ]->Fill( JETS[1].p4.Pt() );
+				histos1D_[ "jet2RhoDenom_cutHT" ]->Fill( JETS[1].tau1 );
+				histos1D_[ "jet2RhoPrunedDenom_cutHT" ]->Fill( JETS[1].tau2 );
 
 				histos2D_[ "jet1PrunedMassHTDenom_cutHT" ]->Fill( JETS[0].prunedMass, HT );
 				histos2D_[ "jet1PrunedMassjet1PtDenom_cutHT" ]->Fill( JETS[0].prunedMass, JETS[0].p4.Pt() );
@@ -447,9 +463,13 @@ void RUNBoostedTriggerEfficiency::analyze(const Event& iEvent, const EventSetup&
 					histos1D_[ "jet1PrunedMassPassing_cutHT" ]->Fill( JETS[0].prunedMass  );
 					histos1D_[ "jet1SoftDropMassPassing_cutHT" ]->Fill( JETS[0].softDropMass  );
 					histos1D_[ "jet1PtPassing_cutHT" ]->Fill( JETS[0].p4.Pt()   );
+					histos1D_[ "jet1RhoPassing_cutHT" ]->Fill( JETS[0].tau1 );	// tau1 is rho!!!!!
+					histos1D_[ "jet1RhoPrunedPassing_cutHT" ]->Fill( JETS[0].tau2 );
 					histos1D_[ "jet2PrunedMassPassing_cutHT" ]->Fill( JETS[1].prunedMass  );
 					histos1D_[ "jet2SoftDropMassPassing_cutHT" ]->Fill( JETS[1].softDropMass  );
 					histos1D_[ "jet2PtPassing_cutHT" ]->Fill( JETS[1].p4.Pt() );
+					histos1D_[ "jet2RhoPassing_cutHT" ]->Fill( JETS[1].tau1 );
+					histos1D_[ "jet2RhoPrunedPassing_cutHT" ]->Fill( JETS[1].tau2 );
 
 					histos2D_[ "jet1PrunedMassHTPassing_cutHT" ]->Fill( JETS[0].prunedMass, HT );
 					histos2D_[ "jet1PrunedMassjet1PtPassing_cutHT" ]->Fill( JETS[0].prunedMass, JETS[0].p4.Pt() );
@@ -692,12 +712,20 @@ void RUNBoostedTriggerEfficiency::beginJob() {
 	histos1D_[ "jet1SoftDropMassDenom_cutDijet" ]->Sumw2();
 	histos1D_[ "jet1PtDenom_cutDijet" ] = fs_->make< TH1D >( "jet1PtDenom_cutDijet", "jet1PtDenom_cutDijet", 150, 0., 1500. );
 	histos1D_[ "jet1PtDenom_cutDijet" ]->Sumw2();
+	histos1D_[ "jet1RhoDenom_cutDijet" ] = fs_->make< TH1D >( "jet1RhoDenom_cutDijet", "jet1RhoDenom_cutDijet", 40, -10., 10. );
+	histos1D_[ "jet1RhoDenom_cutDijet" ]->Sumw2();
+	histos1D_[ "jet1RhoPrunedDenom_cutDijet" ] = fs_->make< TH1D >( "jet1RhoPrunedDenom_cutDijet", "jet1RhoPrunedDenom_cutDijet", 40, -10., 10. );
+	histos1D_[ "jet1RhoPrunedDenom_cutDijet" ]->Sumw2();
 	histos1D_[ "jet2PrunedMassDenom_cutDijet" ] = fs_->make< TH1D >( "jet2PrunedMassDenom_cutDijet", "jet2PrunedMassDenom_cutDijet", 60, 0., 600. );
 	histos1D_[ "jet2PrunedMassDenom_cutDijet" ]->Sumw2();
 	histos1D_[ "jet2SoftDropMassDenom_cutDijet" ] = fs_->make< TH1D >( "jet2SoftDropMassDenom_cutDijet", "jet2SoftDropMassDenom_cutDijet", 60, 0., 600. );
 	histos1D_[ "jet2SoftDropMassDenom_cutDijet" ]->Sumw2();
 	histos1D_[ "jet2PtDenom_cutDijet" ] = fs_->make< TH1D >( "jet2PtDenom_cutDijet", "jet2PtDenom_cutDijet", 150, 0., 1500. );
 	histos1D_[ "jet2PtDenom_cutDijet" ]->Sumw2();
+	histos1D_[ "jet2RhoDenom_cutDijet" ] = fs_->make< TH1D >( "jet2RhoDenom_cutDijet", "jet2RhoDenom_cutDijet", 40, -10., 10. );
+	histos1D_[ "jet2RhoDenom_cutDijet" ]->Sumw2();
+	histos1D_[ "jet2RhoPrunedDenom_cutDijet" ] = fs_->make< TH1D >( "jet2RhoPrunedDenom_cutDijet", "jet2RhoPrunedDenom_cutDijet", 40, -10., 10. );
+	histos1D_[ "jet2RhoPrunedDenom_cutDijet" ]->Sumw2();
 
 	histos2D_[ "jet1PrunedMassHTDenom_cutDijet" ] = fs_->make< TH2D >( "jet1PrunedMassHTDenom_cutDijet", "jet1PrunedMassHTDenom_cutDijet", 60, 0., 600., 500, 0., 5000.);
 	histos2D_[ "jet1PrunedMassHTDenom_cutDijet" ]->Sumw2();
@@ -745,12 +773,20 @@ void RUNBoostedTriggerEfficiency::beginJob() {
 	histos1D_[ "jet1SoftDropMassPassing_cutDijet" ]->Sumw2();
 	histos1D_[ "jet1PtPassing_cutDijet" ] = fs_->make< TH1D >( "jet1PtPassing_cutDijet", "jet1PtPassing_cutDijet", 150, 0., 1500. );
 	histos1D_[ "jet1PtPassing_cutDijet" ]->Sumw2();
+	histos1D_[ "jet1RhoPassing_cutDijet" ] = fs_->make< TH1D >( "jet1RhoPassing_cutDijet", "jet1RhoPassing_cutDijet", 40, -10., 10. );
+	histos1D_[ "jet1RhoPassing_cutDijet" ]->Sumw2();
+	histos1D_[ "jet1RhoPrunedPassing_cutDijet" ] = fs_->make< TH1D >( "jet1RhoPrunedPassing_cutDijet", "jet1RhoPrunedPassing_cutDijet", 40, -10., 10. );
+	histos1D_[ "jet1RhoPrunedPassing_cutDijet" ]->Sumw2();
 	histos1D_[ "jet2PrunedMassPassing_cutDijet" ] = fs_->make< TH1D >( "jet2PrunedMassPassing_cutDijet", "jet2PrunedMassPassing_cutDijet", 60, 0., 600. );
 	histos1D_[ "jet2PrunedMassPassing_cutDijet" ]->Sumw2();
 	histos1D_[ "jet2SoftDropMassPassing_cutDijet" ] = fs_->make< TH1D >( "jet2SoftDropMassPassing_cutDijet", "jet2SoftDropMassPassing_cutDijet", 60, 0., 600. );
 	histos1D_[ "jet2SoftDropMassPassing_cutDijet" ]->Sumw2();
 	histos1D_[ "jet2PtPassing_cutDijet" ] = fs_->make< TH1D >( "jet2PtPassing_cutDijet", "jet2PtPassing_cutDijet", 150, 0., 1500. );
 	histos1D_[ "jet2PtPassing_cutDijet" ]->Sumw2();
+	histos1D_[ "jet2RhoPassing_cutDijet" ] = fs_->make< TH1D >( "jet2RhoPassing_cutDijet", "jet2RhoPassing_cutDijet", 40, -10., 10. );
+	histos1D_[ "jet2RhoPassing_cutDijet" ]->Sumw2();
+	histos1D_[ "jet2RhoPrunedPassing_cutDijet" ] = fs_->make< TH1D >( "jet2RhoPrunedPassing_cutDijet", "jet2RhoPrunedPassing_cutDijet", 40, -10., 10. );
+	histos1D_[ "jet2RhoPrunedPassing_cutDijet" ]->Sumw2();
 
 	histos2D_[ "jet1PrunedMassHTPassing_cutDijet" ] = fs_->make< TH2D >( "jet1PrunedMassHTPassing_cutDijet", "jet1PrunedMassHTPassing_cutDijet", 60, 0., 600., 500, 0., 5000.);
 	histos2D_[ "jet1PrunedMassHTPassing_cutDijet" ]->Sumw2();
@@ -798,12 +834,20 @@ void RUNBoostedTriggerEfficiency::beginJob() {
 	histos1D_[ "jet1SoftDropMassDenom_cutHT" ]->Sumw2();
 	histos1D_[ "jet1PtDenom_cutHT" ] = fs_->make< TH1D >( "jet1PtDenom_cutHT", "jet1PtDenom_cutHT", 150, 0., 1500. );
 	histos1D_[ "jet1PtDenom_cutHT" ]->Sumw2();
+	histos1D_[ "jet1RhoDenom_cutHT" ] = fs_->make< TH1D >( "jet1RhoDenom_cutHT", "jet1RhoDenom_cutHT", 40, -10., 10. );
+	histos1D_[ "jet1RhoDenom_cutHT" ]->Sumw2();
+	histos1D_[ "jet1RhoPrunedDenom_cutHT" ] = fs_->make< TH1D >( "jet1RhoPrunedDenom_cutHT", "jet1RhoPrunedDenom_cutHT", 40, -10., 10. );
+	histos1D_[ "jet1RhoPrunedDenom_cutHT" ]->Sumw2();
 	histos1D_[ "jet2PrunedMassDenom_cutHT" ] = fs_->make< TH1D >( "jet2PrunedMassDenom_cutHT", "jet2PrunedMassDenom_cutHT", 60, 0., 600. );
 	histos1D_[ "jet2PrunedMassDenom_cutHT" ]->Sumw2();
 	histos1D_[ "jet2SoftDropMassDenom_cutHT" ] = fs_->make< TH1D >( "jet2SoftDropMassDenom_cutHT", "jet2SoftDropMassDenom_cutHT", 60, 0., 600. );
 	histos1D_[ "jet2SoftDropMassDenom_cutHT" ]->Sumw2();
 	histos1D_[ "jet2PtDenom_cutHT" ] = fs_->make< TH1D >( "jet2PtDenom_cutHT", "jet2PtDenom_cutHT", 150, 0., 1500. );
 	histos1D_[ "jet2PtDenom_cutHT" ]->Sumw2();
+	histos1D_[ "jet2RhoDenom_cutHT" ] = fs_->make< TH1D >( "jet2RhoDenom_cutHT", "jet2RhoDenom_cutHT", 40, -10., 10. );
+	histos1D_[ "jet2RhoDenom_cutHT" ]->Sumw2();
+	histos1D_[ "jet2RhoPrunedDenom_cutHT" ] = fs_->make< TH1D >( "jet2RhoPrunedDenom_cutHT", "jet2RhoPrunedDenom_cutHT", 40, -10., 10. );
+	histos1D_[ "jet2RhoPrunedDenom_cutHT" ]->Sumw2();
 
 	histos2D_[ "jet1PrunedMassHTDenom_cutHT" ] = fs_->make< TH2D >( "jet1PrunedMassHTDenom_cutHT", "jet1PrunedMassHTDenom_cutHT", 60, 0., 600., 500, 0., 5000.);
 	histos2D_[ "jet1PrunedMassHTDenom_cutHT" ]->Sumw2();
@@ -851,12 +895,20 @@ void RUNBoostedTriggerEfficiency::beginJob() {
 	histos1D_[ "jet1SoftDropMassPassing_cutHT" ]->Sumw2();
 	histos1D_[ "jet1PtPassing_cutHT" ] = fs_->make< TH1D >( "jet1PtPassing_cutHT", "jet1PtPassing_cutHT", 150, 0., 1500. );
 	histos1D_[ "jet1PtPassing_cutHT" ]->Sumw2();
+	histos1D_[ "jet1RhoPassing_cutHT" ] = fs_->make< TH1D >( "jet1RhoPassing_cutHT", "jet1RhoPassing_cutHT", 40, -10., 10. );
+	histos1D_[ "jet1RhoPassing_cutHT" ]->Sumw2();
+	histos1D_[ "jet1RhoPrunedPassing_cutHT" ] = fs_->make< TH1D >( "jet1RhoPrunedPassing_cutHT", "jet1RhoPrunedPassing_cutHT", 40, -10., 10. );
+	histos1D_[ "jet1RhoPrunedPassing_cutHT" ]->Sumw2();
 	histos1D_[ "jet2PrunedMassPassing_cutHT" ] = fs_->make< TH1D >( "jet2PrunedMassPassing_cutHT", "jet2PrunedMassPassing_cutHT", 60, 0., 600. );
 	histos1D_[ "jet2PrunedMassPassing_cutHT" ]->Sumw2();
 	histos1D_[ "jet2SoftDropMassPassing_cutHT" ] = fs_->make< TH1D >( "jet2SoftDropMassPassing_cutHT", "jet2SoftDropMassPassing_cutHT", 60, 0., 600. );
 	histos1D_[ "jet2SoftDropMassPassing_cutHT" ]->Sumw2();
 	histos1D_[ "jet2PtPassing_cutHT" ] = fs_->make< TH1D >( "jet2PtPassing_cutHT", "jet2PtPassing_cutHT", 150, 0., 1500. );
 	histos1D_[ "jet2PtPassing_cutHT" ]->Sumw2();
+	histos1D_[ "jet2RhoPassing_cutHT" ] = fs_->make< TH1D >( "jet2RhoPassing_cutHT", "jet2RhoPassing_cutHT", 40, -10., 10. );
+	histos1D_[ "jet2RhoPassing_cutHT" ]->Sumw2();
+	histos1D_[ "jet2RhoPrunedPassing_cutHT" ] = fs_->make< TH1D >( "jet2RhoPrunedPassing_cutHT", "jet2RhoPrunedPassing_cutHT", 40, -10., 10. );
+	histos1D_[ "jet2RhoPrunedPassing_cutHT" ]->Sumw2();
 
 	histos2D_[ "jet1PrunedMassHTPassing_cutHT" ] = fs_->make< TH2D >( "jet1PrunedMassHTPassing_cutHT", "jet1PrunedMassHTPassing_cutHT", 60, 0., 600., 500, 0., 5000.);
 	histos2D_[ "jet1PrunedMassHTPassing_cutHT" ]->Sumw2();

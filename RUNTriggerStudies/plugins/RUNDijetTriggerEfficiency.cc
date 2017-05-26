@@ -104,6 +104,14 @@ class RUNDijetTriggerEfficiency : public EDAnalyzer {
 		EDGetTokenT<vector<float>> neutralMultiplicity_;
 		EDGetTokenT<vector<float>> chargedMultiplicity_;
 		EDGetTokenT<vector<float>> muonEnergy_; 
+
+		/// Muons
+		EDGetTokenT<vector<float>> muonPt_;
+		EDGetTokenT<vector<float>> muonEta_;
+		EDGetTokenT<vector<float>> muonPhi_;
+		EDGetTokenT<vector<float>> muonE_;
+		EDGetTokenT<vector<float>> muonIsLoose_;
+		EDGetTokenT<vector<float>> muonIsGlobal_;
 };
 
 //
@@ -139,7 +147,14 @@ RUNDijetTriggerEfficiency::RUNDijetTriggerEfficiency(const ParameterSet& iConfig
 	chargedEmEnergyFrac_(consumes<vector<float>>(iConfig.getParameter<InputTag>("chargedEmEnergyFrac"))),
 	neutralMultiplicity_(consumes<vector<float>>(iConfig.getParameter<InputTag>("neutralMultiplicity"))),
 	chargedMultiplicity_(consumes<vector<float>>(iConfig.getParameter<InputTag>("chargedMultiplicity"))),
-	muonEnergy_(consumes<vector<float>>(iConfig.getParameter<InputTag>("muonEnergy")))
+	muonEnergy_(consumes<vector<float>>(iConfig.getParameter<InputTag>("muonEnergy"))),
+	// Muons
+	muonPt_(consumes<vector<float>>(iConfig.getParameter<InputTag>("muonPt"))), 
+	muonEta_(consumes<vector<float>>(iConfig.getParameter<InputTag>("muonEta"))), 
+	muonPhi_(consumes<vector<float>>(iConfig.getParameter<InputTag>("muonPhi"))), 
+	muonE_(consumes<vector<float>>(iConfig.getParameter<InputTag>("muonE"))), 
+	muonIsLoose_(consumes<vector<float>>(iConfig.getParameter<InputTag>("muonIsLoose"))), 
+	muonIsGlobal_(consumes<vector<float>>(iConfig.getParameter<InputTag>("muonIsGlobal")))
 {
 	cutAK8jetPt = iConfig.getParameter<double>("cutAK8jetPt");
 	cutAK8jet1Pt = iConfig.getParameter<double>("cutAK8jet1Pt");
@@ -267,6 +282,26 @@ void RUNDijetTriggerEfficiency::analyze(const Event& iEvent, const EventSetup& i
 	Handle<vector<float> > muonEnergy;
 	iEvent.getByToken(muonEnergy_, muonEnergy);
 
+	/// Muons 
+	Handle<vector<float> > muonPt;
+	iEvent.getByToken(muonPt_, muonPt);
+
+	Handle<vector<float> > muonEta;
+	iEvent.getByToken(muonEta_, muonEta);
+
+	Handle<vector<float> > muonPhi;
+	iEvent.getByToken(muonPhi_, muonPhi);
+
+	Handle<vector<float> > muonE;
+	iEvent.getByToken(muonE_, muonE);
+
+	Handle<vector<float> > muonIsLoose;
+	iEvent.getByToken(muonIsLoose_, muonIsLoose);
+
+	Handle<vector<float> > muonIsGlobal;
+	iEvent.getByToken(muonIsGlobal_, muonIsGlobal);
+
+
 	bool basedTriggerFired = checkTriggerBits( triggerNamesList, triggerBit, triggerPrescale, baseTrigger, true  );
 	bool ORTriggers = checkORListOfTriggerBits( triggerNamesList, triggerBit, triggerPrescale, triggerPass, false );
 
@@ -302,7 +337,22 @@ void RUNDijetTriggerEfficiency::analyze(const Event& iEvent, const EventSetup& i
 		}
 	}
 
+	////// Muon veto
+	vector< TLorentzVector > MUONS;
+	if ( muonPt->size() > 0 ) {
+		for (size_t m = 0; m < muonPt->size(); m++) {
+			if( ( (*muonIsLoose)[m] ) && ( (*muonPt)[m] > 10 ) && ( TMath::Abs((*muonEta)[m]) < 2.5 ) ) {
+				//LogWarning("muon") << (*muonPt)[m] << " " << (*muonEta)[m] << " " << (*muonIsLoose)[m] << " " << (*muonIsGlobal)[m] ;
+				//muonsPt->push_back( (*muonPt)[m] );
+				TLorentzVector tmpMuon;
+				tmpMuon.SetPtEtaPhiE( (*muonPt)[m], (*muonEta)[m], (*muonPhi)[m], (*muonE)[m] );
+				MUONS.push_back( tmpMuon );
+			}
+		}
+	}
 
+
+	bool isoMuon = true;
 	if ( JETS.size() > 0 ) {
 
 		histos2D_[ "jet1PrunedMassPt_cutJet_noTrigger" ]->Fill( JETS[0].prunedMass, JETS[0].p4.Pt() );
@@ -324,8 +374,15 @@ void RUNDijetTriggerEfficiency::analyze(const Event& iEvent, const EventSetup& i
 			histos2D_[ "jet1SoftDropMassPt_cutJet_noTriggerOneOrTwo" ]->Fill( JETS[0].softDropMass, JETS[0].p4.Pt() );
 		}
 
+		if ( MUONS.size() > 0 ) {
+			double jetMuonDeltaR = JETS[0].p4.DeltaR( MUONS[0] );
+			if ( jetMuonDeltaR < 0.8 ) isoMuon = false;
+			//LogWarning( "muons" ) << MUONS[0].Pt() << " " << jetMuonDeltaR << " " << isoMuon << " " << basedTriggerFired;
+		}
 
-		if ( basedTriggerFired ) {
+
+		if ( basedTriggerFired && isoMuon ) {
+			//LogWarning( "passed" ) << basedTriggerFired << " " << isoMuon ;
 			histos1D_[ "jet1PrunedMassDenom_cutJet" ]->Fill( JETS[0].prunedMass  );
 			histos1D_[ "jet1SoftDropMassDenom_cutJet" ]->Fill( JETS[0].softDropMass  );
 			histos1D_[ "jet1PtDenom_cutJet" ]->Fill( JETS[0].p4.Pt()   );
@@ -554,6 +611,13 @@ void RUNDijetTriggerEfficiency::fillDescriptions(edm::ConfigurationDescriptions 
 	desc.add<InputTag>("triggerPrescale",		InputTag("TriggerUserData:triggerPrescaleTree"));
 	desc.add<InputTag>("triggerBit",		InputTag("TriggerUserData:triggerBitTree"));
 	desc.add<InputTag>("triggerName",		InputTag("TriggerUserData:triggerNameTree"));
+	// Muons
+	desc.add<InputTag>("muonPt", 		InputTag("muons:muPt"));
+	desc.add<InputTag>("muonEta", 		InputTag("muons:muEta"));
+	desc.add<InputTag>("muonPhi", 		InputTag("muons:muPhi"));
+	desc.add<InputTag>("muonE", 		InputTag("muons:muE"));
+	desc.add<InputTag>("muonIsLoose", 		InputTag("muons:muIsLooseMuon"));
+	desc.add<InputTag>("muonIsGlobal", 		InputTag("muons:muIsGlobalMuon"));
 	descriptions.addDefault(desc);
 }
       
