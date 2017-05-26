@@ -27,7 +27,7 @@ gROOT.SetBatch()
 ######################################
 def myAnalyzer( fileSample, listCuts, signalName, UNC ):
 
-	outputFileName = 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_'+signalName+UNC+'_'+( '' if 'JetHT' in signalName else '80X_')+'V2p4_'+args.version+'p1.root' 
+	outputFileName = 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_'+signalName+UNC+'_'+( '' if 'JetHT' in signalName else 'Moriond17_')+'80X_V2p4_'+args.version+'p1.root' 
 	outputFile = TFile( outputFileName, 'RECREATE' )
 
 

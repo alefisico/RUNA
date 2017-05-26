@@ -48,7 +48,7 @@ def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax
 	"""docstring for plot"""
 
 	if 'DATA' in args.process: outputFileName = name+'_'+args.grooming+'_DATA_PlusBkgQCD'+args.qcd+'_'+args.boosted+'AnalysisPlots'+args.version+'.'+args.ext 
-	else: outputFileName = name+'_'+args.grooming+'_'+args.decay+'RPVSt'+args.mass+'_PlusBkgQCD'+args.qcd+'_'+args.boosted+'AnalysisPlots'+args.version+'.'+args.ext 
+	else: outputFileName = name+'_'+args.grooming+'_'+args.decay+'RPVSt'+str(args.mass)+'_PlusBkgQCD'+args.qcd+'_'+args.boosted+'AnalysisPlots'+args.version+'.'+args.ext 
 	if log: outputFileName = outputFileName.replace('Plots','Plots_Log')
 	print 'Processing.......', outputFileName
 	
@@ -75,7 +75,7 @@ def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax
 	if len(signalFiles) > 0:
 		dummySig=0
 		for sigSamples in signalFiles:
-			signalHistos[ sigSamples ] = signalFiles[ sigSamples ][0].Get( nameInRoot+'_RPVStopStopToJets_'+args.decay+'_M-'+sigSamples if args.miniTree else args.boosted+'AnalysisPlots'+('' if 'pruned' in args.grooming else args.grooming )+'/'+nameInRoot )
+			signalHistos[ sigSamples ] = signalFiles[ sigSamples ][0].Get( nameInRoot+'_RPVStopStopToJets_'+args.decay+'_M-'+str(sigSamples) if args.miniTree else args.boosted+'AnalysisPlots'+('' if 'pruned' in args.grooming else args.grooming )+'/'+nameInRoot )
 			#signalHistos[ sigSamples ] = signalFiles[ sigSamples ][0].Get(  nameInRoot+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_A' )
 			#if 'mass' in nameInRoot: signalHistos[ sigSamples ] = signalHistos[ sigSamples ].Rebin( len( boostedMassAveBins )-1, signalHistos[ sigSamples ].GetName(), boostedMassAveBins )
 			if rebinX > 1: signalHistos[ sigSamples ] = signalHistos[ sigSamples ].Rebin( rebinX )
@@ -83,6 +83,7 @@ def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax
 			if not 'DATA' in args.process: legend.AddEntry( signalHistos[ sigSamples ], signalFiles[ sigSamples ][2], 'l' if Norm else 'f' )
 			#legend.AddEntry( signalHistos[ sigSamples ], signalFiles[ sigSamples ][2], 'l' ) #if Norm else 'f' )
 			print sigSamples, round( signalHistos[ sigSamples ].Integral(), 2 )
+			print sigSamples, 'in mass window', round( signalHistos[ sigSamples ].Integral((args.mass-40)/rebinX, (args.mass+40)/rebinX), 2 )
 			if Norm:
 				signalHistos[ sigSamples ].SetLineColor( signalFiles[ sigSamples ][3] )
 				signalHistos[ sigSamples ].SetLineWidth( 3 )
@@ -112,6 +113,7 @@ def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax
 			if bkgFiles[ bkgSamples ][1] != 1: bkgHistos[ bkgSamples ].Scale( bkgFiles[ bkgSamples ][1] ) 
 			legend.AddEntry( bkgHistos[ bkgSamples ], bkgFiles[ bkgSamples ][2], 'l' if Norm else 'f' )
 			print bkgSamples, round( bkgHistos[ bkgSamples ].Integral(), 2 )
+			print bkgSamples, 'in mass window', round( bkgHistos[ bkgSamples ].Integral((args.mass-40)/rebinX, (args.mass+40)/rebinX), 2 )
 			if Norm:
 				bkgHistos[ bkgSamples ].SetLineColor( bkgFiles[ bkgSamples ][3] )
 				bkgHistos[ bkgSamples ].SetLineWidth( 3 )
@@ -232,15 +234,20 @@ def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax
 			else:
 				hRatio = signalHistos[ args.mass ].Clone()
 				hRatio.Reset()
-				for ibin in range(0, hRatio.GetNbinsX()):
+				allBkgWindow = 0
+				allSigWindow = 0
+				for ibin in range((args.mass-40)/rebinX, (args.mass+40)/rebinX+1 ): 
 					binContSignal = signalHistos[ args.mass ].GetBinContent(ibin)
+					allSigWindow += binContSignal
 					binContBkg = hBkg.GetBinContent(ibin)
+					allBkgWindow += binContBkg
 					try: value = binContSignal / TMath.Sqrt( binContBkg )
 					#try: value = binContSignal / TMath.Sqrt( binContSignal + binContBkg )
 					#try: value = binContSignal / ( binContSignal + binContBkg )
 					except ZeroDivisionError: continue
 					hRatio.SetBinContent( ibin, value )
 				ratioLabel = "S / #sqrt{B}"
+				print 's/B ', allSigWindow/TMath.Sqrt(allBkgWindow), allSigWindow, allBkgWindow
 			
 			labelAxis( name, hRatio, ( 'softDrop' if 'Puppi' in args.grooming else args.grooming) )
 			hRatio.GetYaxis().SetTitleOffset(1.2)
@@ -1124,51 +1131,53 @@ def plotQuality( dataFile, bkgFiles, Groom, nameInRoot, name, xmin, xmax, rebinX
 	del can
 
 
-def tmpplotDiffSample( qcdFile, ttbarFile, signalFile, name, reBin, xmax, labX, labY, log, Norm=False):
+def tmpplotDiffSample( qcdFile, ttbarFile, signalFile, name, xmin, xmax,reBin,  labX, labY, log, Norm=False):
 	"""docstring for plot"""
 
-	#outputFileName = name+'_'+args.boosted+'_QCD_'+args.cut+'_DiffPairingMethods.'+args.ext 
-	outputFileName = name+'_'+args.boosted+'_QCD_'+args.cut+'_DiffNumJets.'+args.ext 
-	#outputFileName = name+'_'+args.boosted+'_'+args.decay+'RPV'+str(args.mass)+'_'+args.cut+'_DiffPairingMethods.'+args.ext 
-	#outputFileName = name+'_'+args.boosted+'_'+args.decay+'RPV'+str(args.mass)+args.cut+'_DiffNumJets.'+args.ext 
-	print 'Processing.......', outputFileName
 
 	histos = OrderedDict()
-	#histos[ 'DeltaR' ] = qcdFile.Get( 'ResolvedAnalysisPlots/'+name+'_cutBestPair' )
-	#histos[ 'Mass' ] = qcdFile.Get( 'ResolvedAnalysisPlotsMassPairing/'+name+'_cutBestPair' )
-	#histos[ 'KinFit' ] = qcdFile.Get( 'ResolvedAnalysisPlotsChi2Pairing/'+name+'_cutBestPair' )
-	#histos[ 'DeltaR' ] = signalFile.Get( 'ResolvedAnalysisPlots/'+name+'_cutBestPair' )
-	#histos[ 'Mass' ] = signalFile.Get( 'ResolvedAnalysisPlotsMassPairing/'+name+'_cutBestPair' )
-	#histos[ 'KinFit' ] = signalFile.Get( 'ResolvedAnalysisPlotsChi2Pairing/'+name+'_cutBestPair' )
-
-	#histos[ 'DeltaR' ] = qcdFile.Get( 'ResolvedAnalysisPlots/massAve_cutMassAsym' )
-	#histos[ 'Mass' ] = qcdFile.Get( 'ResolvedAnalysisPlotsMassPairing/massAve_cutMassAsym' )
-	#histos[ 'KinFit' ] = qcdFile.Get( 'ResolvedAnalysisPlotsChi2Pairing/massAve_cutMassAsym' )
-	#histos[ 'DeltaR' ] = signalFile.Get( 'ResolvedAnalysisPlots/massAve_cutMassAsym' )
-	#histos[ 'Mass' ] = signalFile.Get( 'ResolvedAnalysisPlotsMassPairing/massAve_cutMassAsym' )
-	#histos[ 'KinFit' ] = signalFile.Get( 'ResolvedAnalysisPlotsChi2Pairing/massAve_cutMassAsym' )
+	#histos[ 'DeltaR' ] = qcdFile.Get( 'ResolvedAnalysisPlots/'+name+'_'+args.cut )
+	#histos[ 'Mass' ] = qcdFile.Get( 'ResolvedAnalysisPlotsMassPairing/'+name+'_'+args.cut )
+	#histos[ 'KinFit' ] = qcdFile.Get( 'ResolvedAnalysisPlotsChi2Pairing/'+name+'_'+args.cut )
+	#histos[ 'DeltaR' ] = signalFile.Get( 'ResolvedAnalysisPlots/'+name+'_'+args.cut )
+	#histos[ 'Mass' ] = signalFile.Get( 'ResolvedAnalysisPlotsMassPairing/'+name+'_'+args.cut )
+	#histos[ 'KinFit' ] = signalFile.Get( 'ResolvedAnalysisPlotsChi2Pairing/'+name+'_'+args.cut )
 
 	#histos[ '=4jets' ] = qcdFile.Get( name+args.cut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
 	#histos[ '>4jets' ] = ttbarFile.Get( name+args.cut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
-	histos[ '=4jets' ] = qcdFile.Get( name+args.cut+'_QCDPtAll' )
-	histos[ '>4jets' ] = ttbarFile.Get( name+args.cut+'_QCDPtAll' )
+	#histos[ '=4jets' ] = qcdFile.Get( name+args.cut+'_QCDPtAll' )
+	#histos[ '>4jets' ] = ttbarFile.Get( name+args.cut+'_QCDPtAll' )
 
-	'''
-	histos[ 'DeltaR + 4 jets' ] = qcdFile.Get( name+'_minDeltaR_'+args.cut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
-	histos[ 'Mass + 4 jets' ] = qcdFile.Get( name+'_minMass_'+args.cut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
-	histos[ 'KinFit + 4 jets' ] = qcdFile.Get( name+'_minChi_'+args.cut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
-	histos[ 'DeltaR + >4 jets' ] = ttbarFile.Get( name+'_minDeltaR_'+args.cut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
-	histos[ 'Mass + >4 jets' ] = ttbarFile.Get( name+'_minMass_'+args.cut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
-	histos[ 'KinFit + >4 jets' ] = ttbarFile.Get( name+'_minChi_'+args.cut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
-	'''
-	'''
-	histos[ 'DeltaR + 4 jets' ] = qcdFile.Get( name+'_minDeltaR_'+args.cut+'_QCDPtAll' )
-	histos[ 'Mass + 4 jets' ] = qcdFile.Get( name+'_minMass_'+args.cut+'_QCDPtAll' )
-	histos[ 'KinFit + 4 jets' ] = qcdFile.Get( name+'_minChi_'+args.cut+'_QCDPtAll' )
-	histos[ 'DeltaR + >4 jets' ] = ttbarFile.Get( name+'_minDeltaR_'+args.cut+'_QCDPtAll' )
-	histos[ 'Mass + >4 jets' ] = ttbarFile.Get( name+'_minMass_'+args.cut+'_QCDPtAll' )
-	histos[ 'KinFit + >4 jets' ] = ttbarFile.Get( name+'_minChi_'+args.cut+'_QCDPtAll' )
-	'''
+	if ( args.mass > 0 ):
+		outputFileName = name+'_'+args.boosted+'_'+args.decay+'RPV'+str(args.mass)+'_'+args.cut+'_4jets_DiffPairingMethods.'+args.ext 
+		#outputFileName = name+'_'+args.boosted+'_'+args.decay+'RPV'+str(args.mass)+args.cut+'_DiffNumJets.'+args.ext 
+		histos[ 'DeltaR' ] = qcdFile.Get( name+'_minDeltaR_'+args.cut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
+		histos[ 'DeltaR + MassAsym cut' ] = qcdFile.Get( name+'_minDeltaR_cutMassAsym_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
+		histos[ 'Mass' ] = qcdFile.Get( name+'_minMass_'+args.cut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
+		histos[ 'KinFit' ] = qcdFile.Get( name+'_minChi_'+args.cut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
+		'''
+		histos[ 'DeltaR + >4 jets' ] = ttbarFile.Get( name+'_minDeltaR_'+args.cut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
+		histos[ 'Mass + >4 jets' ] = ttbarFile.Get( name+'_minMass_'+args.cut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
+		histos[ 'KinFit + >4 jets' ] = ttbarFile.Get( name+'_minChi_'+args.cut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
+		'''
+	else: 
+		#outputFileName = name+'_'+args.boosted+'_QCD_'+args.cut+'_DiffPairingMethods.'+args.ext 
+		#outputFileName = name+'_'+args.boosted+'_QCD_'+args.cut+'_DiffDeltaChi.'+args.ext 
+		outputFileName = name+'_'+args.boosted+'_QCD_'+args.cut+'_DiffNumJets.'+args.ext 
+		histos[ 'DeltaR' ] = qcdFile.Get( name+'_minDeltaR_'+args.cut+'_QCDPtAll' )
+		histos[ 'DeltaR + MassAsym cut' ] = qcdFile.Get( name+'_minDeltaR_cutMassAsym_QCDPtAll' )
+		histos[ 'Mass' ] = qcdFile.Get( name+'_minMass_'+args.cut+'_QCDPtAll' )
+		#histos[ 'Mass + delta>75' ] = qcdFile.Get( name+'_minMass_'+args.cut+'75_QCDPtAll' )
+		#histos[ 'Mass + delta>100' ] = qcdFile.Get( name+'_minMass_'+args.cut+'100_QCDPtAll' )
+		#histos[ 'Mass + delta>150' ] = qcdFile.Get( name+'_minMass_'+args.cut+'150_QCDPtAll' )
+		#histos[ 'Mass + delta>200' ] = qcdFile.Get( name+'_minMass_'+args.cut+'_QCDPtAll' )
+		histos[ 'KinFit' ] = qcdFile.Get( name+'_minChi_'+args.cut+'_QCDPtAll' )
+		#histos[ 'KinFit + delta>100' ] = qcdFile.Get( name+'_minChi_'+args.cut+'100_QCDPtAll' )
+		#histos[ 'KinFit + delta>150' ] = qcdFile.Get( name+'_minChi_'+args.cut+'150_QCDPtAll' )
+		#histos[ 'KinFit + delta>200' ] = qcdFile.Get( name+'_minChi_'+args.cut+'_QCDPtAll' )
+		histos[ 'DeltaR + >4 jets' ] = ttbarFile.Get( name+'_minDeltaR_'+args.cut+'_QCDPtAll' )
+		histos[ 'Mass + >4 jets' ] = ttbarFile.Get( name+'_minMass_'+args.cut+'_QCDPtAll' )
+		histos[ 'KinFit + >4 jets' ] = ttbarFile.Get( name+'_minChi_'+args.cut+'_QCDPtAll' )
 	'''
 	histos[ 'delta200' ] = qcdFile.Get( name+'_delta_QCDHTAll' )
 	histos[ 'delta200+2CSVL' ] = qcdFile.Get( name+'_delta_2CSVv2L_QCDHTAll' )
@@ -1220,6 +1229,7 @@ def tmpplotDiffSample( qcdFile, ttbarFile, signalFile, name, reBin, xmax, labX, 
 	#histos[ 'signal Puppi+SoftDrop' ] = signalFile.Get( 'BoostedAnalysisPlotsPuppi/'+name )
 
 	#binWidth = histos['Sample1'].GetBinWidth(1)
+	print 'Processing.......', outputFileName
 
 	legend=TLegend(0.60,0.60,0.90,0.90)
 	legend.SetFillStyle(0)
@@ -1228,7 +1238,7 @@ def tmpplotDiffSample( qcdFile, ttbarFile, signalFile, name, reBin, xmax, labX, 
 	maxList = []
 	for h in histos:
 		histos[h].Rebin( reBin )
-		#histos[h].Scale( 1/ histos[h].Integral() )
+		histos[h].Scale( args.lumi ) #1/ histos[h].Integral() )
 		histos[h].SetLineWidth(2)
 		histos[h].SetLineColor( dummy )
 		#histos[h].SetLineColor( (kBlue if 'CHS' in h else kRed) )
@@ -1242,8 +1252,9 @@ def tmpplotDiffSample( qcdFile, ttbarFile, signalFile, name, reBin, xmax, labX, 
 		if dummy == 9: dummy = 40
 	
 	histos.values()[0].SetMaximum( 1.2* max(maxList) )
-	#histos.values()[0].GetXaxis().SetRangeUser( int(args.mass)-200, int(args.mass)+200 ) #  0, xmax )
-	histos.values()[0].GetXaxis().SetRangeUser( 0, xmax )
+	#histos.values()[0].SetMinimum( 0.01 )
+	if ( args.mass > 0 ): histos.values()[0].GetXaxis().SetRangeUser( int(args.mass)-200, int(args.mass)+200 ) 
+	else: histos.values()[0].GetXaxis().SetRangeUser( 0, xmax )
 
 	can = TCanvas('c1', 'c1',  10, 10, 750, 500 )
 	if log: can.SetLogy()
@@ -1274,7 +1285,7 @@ if __name__ == '__main__':
 	parser.add_argument('-b', '--boosted', action='store', default='Boosted', help='Boosted or non boosted, example: Boosted' )
 	parser.add_argument('-v', '--version', action='store', default='v00', help='Version: v01, v02.' )
 	parser.add_argument('-g', '--grom', action='store', default='pruned', dest='grooming', help='Grooming Algorithm, example: Pruned, Filtered.' )
-	parser.add_argument('-m', '--mass', action='store', default='100', help='Mass of Stop, example: 100' )
+	parser.add_argument('-m', '--mass', type=int, action='store', default='100', help='Mass of Stop, example: 100' )
 	parser.add_argument('-C', '--cut', action='store', default='_deltaEtaDijet', help='cut, example: cutDEta' )
 	parser.add_argument('-s', '--single', action='store', default='all', help='single histogram, example: massAve_cutDijet.' )
 	parser.add_argument('-q', '--qcd', action='store', default='HT', dest='qcd', help='Type of QCD binning, example: HT.' )
@@ -1315,14 +1326,14 @@ if __name__ == '__main__':
 		dataFile = TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_JetHT_Run2016_80X_V2p4_'+args.version+'.root')
 		signalFiles[ args.mass ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = '+str(args.mass)+' GeV', kRed]
 		#signalFiles[ '500' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-500_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = 500 GeV', kRed+2]
-		#if 'Boosted' in args.boosted: 
-		#	bkgFiles[ 'TT' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_TTJets_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 't #bar{t} + Jets', kGreen+2 ]
-			#bkgFiles[ 'WJetsToQQ' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_WJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'W + Jets', 38 ]
+		if 'Boosted' in args.boosted: 
+			bkgFiles[ 'TT' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_TT_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 't #bar{t} + Jets', kGreen+2 ]
+			bkgFiles[ 'WJetsToQQ' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_WJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'W + Jets', 38 ]
 			#bkgFiles[ 'Dibosons' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_Dibosons_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'Dibosons', kMagenta+2 ]
 			#bkgFiles[ 'ZJetsToQQ' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_ZJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'Z + Jets', kOrange ]
 		bkgFiles[ 'QCD'+args.qcd+'All' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_QCD'+args.qcd+'All_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi*QCDSF, 'QCD'+args.qcd+'', kBlue-4 ]
 	else:
-		dataFile = TFile.Open(folder+'/RUNAnalysis_JetHT_Run2016E_80X_V2p4_'+args.version+'.root')
+		dataFile = TFile.Open(folder+'/RUNAnalysis_JetHT_Run2016_80X_V2p4_'+args.version+'.root')
 		signalFiles[ args.mass ] = [ TFile.Open(folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = '+str(args.mass)+' GeV', kRed]
 		if 'Boosted' in args.boosted: 
 			bkgFiles[ 'TTJets' ] = [ TFile.Open(folder+'/RUNAnalysis_TT_80X_V2p4_'+args.version+'.root'), args.lumi, 't #bar{t} + Jets', kGreen+2 ]
@@ -1373,7 +1384,7 @@ if __name__ == '__main__':
 		[ '2D', 'Boosted', 'deltaEtaDijetVsjet2Tau31', '| #eta_{j1} - #eta_{j2} |', '2nd Leading jet #tau_{31} |', 0, 5, 1, 0, 1, 1, jetMassHTlabX, jetMassHTlabY],
 		[ '2D', 'Boosted', 'jet1Tau21VsRhoDDT', 'Leading jet #tau_{21}', 'Leading jet #rho\'', 0, 1, 1, -6, 10, 1, jetMassHTlabX, jetMassHTlabY],
 		[ '2D', 'Boosted', 'jet2Tau21VsRhoDDT', '2nd Leading jet #tau_{21}', '2nd Leading jet #rho\'', 0, 1, 1, -6, 10, 1, jetMassHTlabX, jetMassHTlabY],
-		[ '2D', 'Resolved', 'deltavsMassAve', 'Average dijet mass [GeV]', 'Delta', 100, 700, 20, 0, 1000, 20, jetMassHTlabX, jetMassHTlabY],
+		[ '2D', 'Resolved', 'deltavsMassAve', 'Average dijet mass [GeV]', 'Delta', 100, 700, 20, -200, 1000, 20, jetMassHTlabX, jetMassHTlabY],
 		[ '2D', 'Resolved', 'massAveVsMinChi2', 'Average dijet mass [GeV]', 'Min( #chi^{2} )', 0, 1000, 10, 0, 5, 2, jetMassHTlabX, jetMassHTlabY],
 		[ '2D', 'Resolved', 'massAveVsMinDeltaR', 'Average dijet mass [GeV]', 'Min( #Delta R )', 0, 1000, 10, 0, 5, 2, jetMassHTlabX, jetMassHTlabY],
 		[ '2D', 'Resolved', 'massAveVsMinMassAsym', 'Average dijet mass [GeV]', 'Min( Mass Asym )', 0, 1000, 10, 0, 1, 1, jetMassHTlabX, jetMassHTlabY],
@@ -1394,7 +1405,7 @@ if __name__ == '__main__':
 		[ '1D', 'Boosted', 'massAve', 60, 350, 5, 0.92, 0.85, True, False],
 		[ '1DDATA', 'Boosted', 'massAve', 60, 350, 20, 0.92, 0.85, False, False],
 		#[ '1DData', 'Boosted', 'massAve', 60, 350, (1 if args.miniTree else 5), 0.92, 0.85, True, False],
-		[ '1DDATA', 'Resolved', 'massAve', 0, 1000, 20, 0.92, 0.85, False, False],
+		#[ '1DDATA', 'Resolved', 'massAve', 0, 1000, 20, 0.92, 0.85, False, False],
 
 		[ '1D', 'Resolved', 'HT', 700, 5000, 2, '', '', True, False],
 		[ '1D', 'Resolved', 'jet1Pt', 100, 1500, 2, '', '', True, False],
@@ -1402,7 +1413,7 @@ if __name__ == '__main__':
 		[ '1D', 'Resolved', 'jet3Pt', 0, 500, 2, '', '', True, False],
 		[ '1D', 'Resolved', 'jet4Pt', 50, 500, 1, '', '', True, False],
 		#[ '1D', 'Resolved', 'massAve', 0, 1000, 2, '', '', True, False],
-		[ '1D', 'Resolved', 'massAve', 0, 1000, 20, '', '', True, False],
+		[ '1D', 'Resolved', 'massAve', 0, 1500, 10, '', '', True, False],
 		[ '1D', 'Boosted', 'deltaEtaDijet', '', '', 5,  0.90, 0.70, False, False],
 		[ '1D', 'Boosted', 'prunedMassAsym', '', '', 1, (0.90 if 'n-1' in args.cut else 0.40), (0.70 if 'n-1' in args.cut else 0.4), False, ( False if 'n-1' in args.cut else True )],	
 		[ '1D', 'Boosted', 'jet1Tau21', '', '', 1, 0.9, 0.70, False, True],
@@ -1438,6 +1449,9 @@ if __name__ == '__main__':
 		[ 'qual', 'Resolved', 'massAve', 0, 1000, 20, 0.90, 0.70, True, False],
 		[ 'qual', 'Resolved', 'massAsym', 0, 1, 1, 0.90, 0.70, False, False],
 		[ 'qual', 'Resolved', 'deltaEta', '', '', 1,  0.90, 0.70, True, False],	### n- 1
+		[ 'tmp', 'Resolved', 'massAve', 0, 1500, 20, 0.90, 0.70, (False if (args.mass > 0 ) else True), False],
+		[ 'tmp', 'Resolved', 'massAsym', 0, 1, 1, 0.90, 0.70, False, False],
+		[ 'tmp', 'Resolved', 'deltaEta', 0, 5, 1,  0.90, 0.70, True, False],	### n- 1
 
 		[ 'jetIDQual', 'Boosted', 'deltaEtaDijet', '', '', 1,  0.90, 0.70, True, False],	### n- 1
 		[ 'jetIDQual', 'Boosted', 'prunedMassAsym', '', '', 1, 0.40, 0.4, False, True ],	
@@ -1580,8 +1594,8 @@ if __name__ == '__main__':
 	if 'acc' in args.process:
 		plotSignalAcceptance( folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p4_v06p1.root', 'massAve'+args.cut, False)
 
-	if 'tmp' in args.process:
-		#tmpplotDiffSample( bkgFiles[ 'QCD'+args.qcd+'All' ][0], bkgFiles[ 'QCD'+args.qcd+'All' ][0], signalFiles[ args.mass ][0], 'massAve', 10, 2000, '', '', True)
+	#if 'tmp' in args.process:
+#		tmpplotDiffSample( bkgFiles[ 'QCD'+args.qcd+'All' ][0], bkgFiles[ 'QCD'+args.qcd+'All' ][0], signalFiles[ args.mass ][0], 'massAve', 10, 1500, '', '', True)
 #		tmpplotDiffSample( bkgFiles[ 'QCD'+args.qcd+'All' ][0], bkgFiles[ 'TTJets' ][0], signalFiles[ args.mass ][0], 'massAve'+args.cut, 5, 400, '', '', True)
 #		tmpplotDiffSample( bkgFiles[ 'QCD'+args.qcd+'All' ][0], bkgFiles[ 'TTJets' ][0], signalFiles[ args.mass ][0], 'jet1Tau21'+args.cut, 1, 1, 0.3, .55, False )
 #		tmpplotDiffSample( bkgFiles[ 'QCD'+args.qcd+'All' ][0], bkgFiles[ 'TTJets' ][0], signalFiles[ args.mass ][0], 'jet2Tau21'+args.cut, 1, 1, .3, .55, False )
@@ -1589,45 +1603,44 @@ if __name__ == '__main__':
 #		tmpplotDiffSample( bkgFiles[ 'QCD'+args.qcd+'All' ][0], bkgFiles[ 'TTJets' ][0], signalFiles[ args.mass ][0], 'deltaEtaDijet'+args.cut, 5, 5, '', '', False )
 #		tmpplotDiffSample( bkgFiles[ 'QCD'+args.qcd+'All' ][0], bkgFiles[ 'TTJets' ][0], signalFiles[ args.mass ][0], 'massAsym', 1, 1, .3, .55, False )
 		#tmpplotDiffSample( bkgFiles[ 'QCD'+args.qcd+'All' ][0], bkgFiles[ 'QCD'+args.qcd+'All' ][0], signalFiles[ args.mass ][0], 'deltaEta', 1, 5, '', '', False )
-		'''
-			tmpplotDiffSample( bkgFiles[ bkg ][0], bkg, 'jet1PrunedMass'+args.cut, 5, 400, '', '', True )
-			tmpplotDiffSample( bkgFiles[ bkg ][0], bkg, 'jet2PrunedMass'+args.cut, 5, 400, '', '', True )
-		'''
-		#tmpplotDiffSample( TFile(folder+'/RUNMiniResolvedAnalysis_RPVStopStopToJets_UDD312_M-'+str(args.mass)+'_Moriond17_80X_V2p4_v08p2_4jets.root'), 
-		#		TFile(folder+'/RUNMiniResolvedAnalysis_RPVStopStopToJets_UDD312_M-'+str(args.mass)+'_Moriond17_80X_V2p4_v08p2.root'), signalFiles[ args.mass ][0], 'massAve', 10, 2000, '', '', True)
-		tmpplotDiffSample( TFile(folder+'/RUNMiniResolvedAnalysis_QCDPtAll_Moriond17_80X_V2p4_v08p2_4jets.root'), 
-				TFile(folder+'/RUNMiniResolvedAnalysis_QCDPtAll_Moriond17_80X_V2p4_v08p2.root'), signalFiles[ args.mass ][0], 'massAve', 10, 2000, '', '', True)
+		#tmpplotDiffSample( bkgFiles[ bkg ][0], bkg, 'jet1PrunedMass'+args.cut, 5, 400, '', '', True )
+		#tmpplotDiffSample( bkgFiles[ bkg ][0], bkg, 'jet2PrunedMass'+args.cut, 5, 400, '', '', True )
 
 	for i in Plots:
 		if args.process in '2D': 
 			for cut1 in listCuts:
-				#plot2D( dataFile, 'JetHT_Run2016', 1, args.grooming, i[0]+cut1, i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10] )
-				for sig in signalFiles: plot2D( signalFiles[ sig ][0], 'RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass), signalFiles[ sig ][1], args.grooming, i[0]+cut1, i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10] )
-				for bkg in bkgFiles: plot2D( bkgFiles[ bkg ][0], bkg, bkgFiles[ bkg ][1], args.grooming, i[0]+cut1, i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10] )
+				#plot2D( dataFile, 'JetHT_Run2016', 1, args.grooming, i[0]+'_'+cut1, i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10] )
+				for sig in signalFiles: plot2D( signalFiles[ sig ][0], 'RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass), signalFiles[ sig ][1], args.grooming, i[0]+'_'+cut1, i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10] )
+				for bkg in bkgFiles: plot2D( bkgFiles[ bkg ][0], bkg, bkgFiles[ bkg ][1], args.grooming, i[0]+'_'+cut1, i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10] )
 			#plot2D( inputFileTTJets, 'TTJets', args.grooming, i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10] )
 			#plot2D( inputFileWJetsToQQ, 'WJets', args.grooming, i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10] )
 			#plot2D( inputFileZJetsToQQ, 'ZJets', args.grooming, i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10] )
 
 		elif '1D' in args.process:
 			for cut1 in listCuts:
-				plotSignalBkg( signalFiles, bkgFiles, dataFile, i[0]+cut1, i[0]+cut1, i[1], i[2], i[3], i[4], i[5], i[6], i[7] )
+				plotSignalBkg( signalFiles, bkgFiles, dataFile, i[0]+'_'+cut1, i[0]+'_'+cut1, i[1], i[2], i[3], i[4], i[5], i[6], i[7] )
 		
 		elif ( 'jetIDQual' in args.process ):
 			for cut1 in listCuts:
-				if 'Boosted' in args.boosted: plotQuality( dataFile, bkgFiles, args.grooming, i[0]+cut1, i[0]+cut1, i[1], i[2], i[3], i[4], i[5], i[6], i[7] ) #, fitRatio=True )
-				else: plotQuality( dataFile, bkgFiles, '', args.boosted+'AnalysisPlots'+('' if 'pruned' in args.grooming else args.grooming)+'/'+i[0]+cut1, i[0]+cut1, i[1], i[2], i[3], i[4], i[5], i[6], i[7]) #, fitRatio=True ) 
+				if 'Boosted' in args.boosted: plotQuality( dataFile, bkgFiles, args.grooming, i[0]+'_'+cut1, i[0]+'_'+cut1, i[1], i[2], i[3], i[4], i[5], i[6], i[7] ) #, fitRatio=True )
+				else: plotQuality( dataFile, bkgFiles, '', args.boosted+'AnalysisPlots'+('' if 'pruned' in args.grooming else args.grooming)+'/'+i[0]+'_'+cut1, i[0]+'_'+cut1, i[1], i[2], i[3], i[4], i[5], i[6], i[7]) #, fitRatio=True ) 
 		elif ( 'qual' in args.process ):
 			for cut1 in listCuts:
-				if 'Boosted' in args.boosted: plotQuality( dataFile, bkgFiles, args.grooming, i[0]+cut1, i[0]+cut1, i[1], i[2], i[3], i[4], i[5], i[6], i[7] )
-				else: plotQuality( dataFile, bkgFiles, '', i[0]+cut1, i[0]+cut1, i[1], i[2], i[3], i[4], i[5], i[6], i[7])#, fitRatio=True )
+				if 'Boosted' in args.boosted: plotQuality( dataFile, bkgFiles, args.grooming, i[0]+'_'+cut1, i[0]+'_'+cut1, i[1], i[2], i[3], i[4], i[5], i[6], i[7] )
+				else: plotQuality( dataFile, bkgFiles, '', i[0]+'_'+cut1, i[0]+'_'+cut1, i[1], i[2], i[3], i[4], i[5], i[6], i[7])#, fitRatio=True )
 		
 		elif 'Norm' in args.process:
 			for cut1 in listCuts:
-				plotSignalBkg( signalFiles, bkgFiles, dataFile, i[0]+cut1, i[0]+cut1, i[1], i[2], i[3], i[4], i[5], i[6], i[7], True )
-				#plotSignalBkg( signalFiles, bkgFiles, dataFile, i[0]+cut1, i[0]+cut1, i[1], i[2], i[3], i[4], i[5], i[6], i[7], True )
+				plotSignalBkg( signalFiles, bkgFiles, dataFile, i[0]+'_'+cut1, i[0]+'_'+cut1, i[1], i[2], i[3], i[4], i[5], i[6], i[7], True )
+				#plotSignalBkg( signalFiles, bkgFiles, dataFile, i[0]+'_'+cut1, i[0]+'_'+cut1, i[1], i[2], i[3], i[4], i[5], i[6], i[7], True )
 
 
 		elif 'simple' in args.process:
 			plotSimple( inputFileTTJets, 'TTJets', args.grooming, i[0], i[1], i[2], i[3], i[4] )
 			plotSimple( inputFileWJetsToQQ, 'WJets', args.grooming, i[0], i[1], i[2], i[3], i[4] )
 			plotSimple( inputFileZJetsToQQ, 'ZJets', args.grooming, i[0], i[1], i[2], i[3], i[4] )
+
+		elif 'tmp' in args.process:
+			for cut1 in listCuts:
+				tmpplotDiffSample( TFile(folder+'/RUNMiniResolvedAnalysis_'+( 'RPVStopStopToJets_UDD312_M-'+str(args.mass) if (args.mass > 0 ) else 'QCDPtAll' )+'_Moriond17_80X_V2p4_'+args.version+'_4jets.root'), 
+					TFile(folder+'/RUNMiniResolvedAnalysis_'+( 'RPVStopStopToJets_UDD312_M-'+str(args.mass) if (args.mass > 0 ) else 'QCDPtAll' )+'_Moriond17_80X_V2p4_'+args.version+'.root'), signalFiles[ args.mass ][0], i[0], i[1], i[2], i[3], i[4], i[5], i[6] ) 

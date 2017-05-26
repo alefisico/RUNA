@@ -406,13 +406,13 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 	bkgFuncParameters = rootFitter( bkgFile, hist+('QCD'+args.qcd+'All' if args.miniTree else ''), scale, bkgFunctions, minX, maxX, rebinX, True)
 	'''
 	bkgFuncParameters = rootFitter( dataFile, 
-			hist+('JetHT_Run2016' if args.miniTree else ''), 
-			1, 
+			hist+( 'QCD'+args.qcd+'All' if args.bkgAsData else ('JetHT_Run2016' if args.miniTree else '')) , 
+			( scale*0.85 if args.bkgAsData else 1 ), 
 			bkgFunctions, 
 			minX, 
 			maxX, 
 			rebinX, 
-			True )
+			( False if args.bkgAsData else True ))
 
 	########## Storing parameters in RooRealVar
 	dictPar = OrderedDict()
@@ -626,7 +626,7 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		accXeffGraph.GetYaxis().SetTitle( 'Acceptance #times efficiency' )
 		accXeffGraph.GetXaxis().SetTitle( "Resonance mass [GeV]" )
 		accXeffGraph.GetYaxis().SetTitleOffset( 0.8 )
-		#accXeffGraph.GetYaxis().SetRangeUser( 0.0001, 0.1  )
+		accXeffGraph.GetYaxis().SetRangeUser( 0.0001, 0.01  )
 
 		#legend.Draw()
 		CMS_lumi.extraText = "Simulation Preliminary"
@@ -1107,7 +1107,7 @@ if __name__ == '__main__':
 	if ( args.mass > 0 ): listMass = [ args.mass ]
 	else: 
 		if '312' in args.decay: listMass = [ 240, 300, 350 ] + range( 450, 850, 50 ) + [ 950, 1000, 1100 ] # + range( 1000, 1600, 100 ) 
-		else: listMass = [ 240, 280, 300, 350 ] + range( 450, 900, 50 ) + [950, 1000, 1100, 1200, 1300] #+  range( 1100, 1600, 100 )
+		else: listMass = [ 240, 280, 300, 350 ] + range( 450, 850, 50 ) + [950, 1000, 1100, 1200, 1300] #+  range( 1100, 1600, 100 )
 
 
 	outputDir = "Plots/"
