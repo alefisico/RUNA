@@ -1312,7 +1312,7 @@ if __name__ == '__main__':
 	
 	if 'Pt' in args.qcd: 
 		bkgLabel='(w QCD pythia8)'
-		QCDSF = ( 0.68 if 'Resolved' in args.boosted else (0.86 if 'Puppi' in args.grooming else 0.89) )
+		QCDSF = ( 0.68 if 'Resolved' in args.boosted else (0.86 if 'Puppi' in args.grooming else 0.89) )  ### 0.54 with all data for resolved
 	else: 
 		bkgLabel='(w QCD madgraphMLM+pythia8)'
 		QCDSF = 0.85
@@ -1431,10 +1431,6 @@ if __name__ == '__main__':
 		#[ 'qual', 'Boosted', 'jet2CosThetaStar', '', '', 1, 0.90, 0.70, False, True],
 		#[ 'qual', 'Boosted', 'jet1SubjetPtRatio', '', '', 1, 0.90, 0.70, True, True],
 		#[ 'qual', 'Boosted', 'jet2SubjetPtRatio', '', '', 1, 0.90, 0.70, True, True],
-		[ 'qual', 'Boosted', 'jet1Pt', 100, 1500, 20, 0.90, 0.70, False, False],
-		#[ 'qual', 'Boosted', 'jet1Eta', -3, 3, 1, 0.90, 0.70, False, False],
-		[ 'qual', 'Boosted', 'jet2Pt', 100, 1500, 20, 0.90, 0.70, False, False],
-		#[ 'qual', 'Boosted', 'jet2Eta', -3, 3, 1, 0.90, 0.70, False, False],
 		[ 'qual', 'Boosted', 'numJets', 0, 10, 1, 0.90, 0.70, True, False],
 		[ 'qual', 'Boosted', 'massAve', 0, 400, 10, 0.90, 0.70, True, False],
 		[ 'qual', 'Boosted', 'HT', 700, 2000, 20, 0.90, 0.70, True, False],
@@ -1446,65 +1442,69 @@ if __name__ == '__main__':
 		[ 'qual', 'Resolved', 'jet4Pt', 0, 300, 1, 0.90, 0.70, True, False],
 		[ 'qual', 'Resolved', 'HT', 800, 3000, 20, 0.90, 0.70, True, False],
 		[ 'qual', 'Resolved', 'jetNum', '', '', 1, 0.90, 0.70, True, False],
-		[ 'qual', 'Resolved', 'massAve', 0, 1000, 20, 0.90, 0.70, True, False],
+		[ 'qual', 'Resolved', 'massAve', 0, 1000, 20, 0.90, 0.70, False, False],
 		[ 'qual', 'Resolved', 'massAsym', 0, 1, 1, 0.90, 0.70, False, False],
 		[ 'qual', 'Resolved', 'deltaEta', '', '', 1,  0.90, 0.70, True, False],	### n- 1
 		[ 'tmp', 'Resolved', 'massAve', 0, 1500, 20, 0.90, 0.70, (False if (args.mass > 0 ) else True), False],
 		[ 'tmp', 'Resolved', 'massAsym', 0, 1, 1, 0.90, 0.70, False, False],
 		[ 'tmp', 'Resolved', 'deltaEta', 0, 5, 1,  0.90, 0.70, True, False],	### n- 1
 
-		[ 'jetIDQual', 'Boosted', 'deltaEtaDijet', '', '', 1,  0.90, 0.70, True, False],	### n- 1
-		[ 'jetIDQual', 'Boosted', 'prunedMassAsym', '', '', 1, 0.40, 0.4, False, True ],	
-		[ 'jetIDQual', 'Boosted', 'jet1Tau21', '', '', 1, 0.9, 0.70, False, True],
-		[ 'jetIDQual', 'Boosted', 'jet2Tau21', '', '', 1, 0.9, 0.70, False, True],
-		[ 'jetIDQual', 'Boosted', 'massAve', 0, 400, 10, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Boosted', 'HT', 700, 5000, 20, 0.90, 0.70, True, False],
-		[ 'jetIDQual', args.boosted, 'NPV', 0, 50, 2, 0.90, 0.70, False, True],
-		[ 'jetIDQual', args.boosted, 'jetNum', '', '', 1, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Boosted', 'jet1NeutralHadronEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Boosted', 'jet1NeutralEmEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Boosted', 'jet1ChargedHadronEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Boosted', 'jet1ChargedEmEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
-		#[ 'jetIDQual', 'Boosted', 'jet1ChargedMultiplicity', 0, 0.5, 1, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Boosted', 'jet1NumConst', '', '', 1, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Boosted', 'jet1Pt', 400, 1500, 1, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Boosted', 'jet1Eta', -3, 3, 5, 0.90, 0.70, False, True],
-		#[ 'jetIDQual', 'Boosted', 'jet1Mass', 0, 1000, 10, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Boosted', 'jet1PrunedMass', 0, 1000, 10, 0.90, 0.70, True, False],
-		#[ 'jetIDQual', 'Boosted', 'jet1TrimmedMass', 0, 1000, 10, 0.90, 0.70, True, False],
-		#[ 'jetIDQual', 'Boosted', 'jet1FilteredMass', 0, 1000, 10, 0.90, 0.70, True, False],
-		#[ 'jetIDQual', 'Boosted', 'jet1SoftDropMass', 0, 1000, 10, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Boosted', 'jet2NeutralHadronEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Boosted', 'jet2NeutralEmEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Boosted', 'jet2ChargedHadronEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Boosted', 'jet2ChargedEmEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
-		#[ 'jetIDQual', 'Boosted', 'jet2ChargedMultiplicity', 0, 0.5, 1, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Boosted', 'jet2NumConst', '', '', 1, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Boosted', 'jet2Pt', 400, 1500, 1, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Boosted', 'jet2Eta', -3, 3, 5, 0.90, 0.70, False, True],
-		#[ 'jetIDQual', 'Boosted', 'jet2Mass', 0, 1000, 10, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Boosted', 'jet2PrunedMass', 0, 1000, 10, 0.90, 0.70, True, False],
-		#[ 'jetIDQual', 'Boosted', 'jet2TrimmedMass', 0, 1000, 10, 0.90, 0.70, True, False],
-		#[ 'jetIDQual', 'Boosted', 'jet2FilteredMass', 0, 1000, 10, 0.90, 0.70, True, False],
-		#[ 'jetIDQual', 'Boosted', 'jet2SoftDropMass', 0, 1000, 10, 0.90, 0.70, True, False],
-		[ 'jetIDQual', args.boosted, 'MET', '', '', 1, 0.90, 0.70, False, True],
-		[ 'jetIDQual', args.boosted, 'METHT', '', '', 1, 0.90, 0.70, True, False],
-		#[ 'jetIDQual', args.boosted, 'NPV_NOPUWeight', 0, 50, 2, 0.90, 0.70, False, False],
-		#[ 'jetIDQual', args.boosted, 'neutralHadronEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
-		#[ 'jetIDQual', args.boosted, 'neutralEmEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
-		#[ 'jetIDQual', args.boosted, 'chargedHadronEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
-		#[ 'jetIDQual', args.boosted, 'chargedEmEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
-		#[ 'jetIDQual', args.boosted, 'chargedMultiplicity', 0, 0.5, 1, 0.90, 0.70, True, False],
-		#[ 'jetIDQual', args.boosted, 'numConst', '', '', 1, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Resolved', 'jet1Pt', 0, 1500, 5, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Resolved', 'jet2Pt', 0, 1500, 5, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Resolved', 'jet3Pt', 0, 1500, 5, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Resolved', 'jet4Pt', 0, 1500, 5, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Resolved', 'jet1QGL', 0, 1, 1, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Resolved', 'jet2QGL', 0, 1, 1, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Resolved', 'jet3QGL', 0, 1, 1, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Resolved', 'jet4QGL', 0, 1, 1, 0.90, 0.70, True, False],
-		[ 'jetIDQual', 'Resolved', 'HT', 500, 5000, 10, 0.90, 0.70, True, False],
+		[ 'qual', 'Boosted', 'deltaEtaDijet', '', '', 1,  0.90, 0.70, True, False],	### n- 1
+		[ 'qual', 'Boosted', 'prunedMassAsym', '', '', 1, 0.40, 0.4, False, True ],	
+		[ 'qual', 'Boosted', 'jet1Tau21', '', '', 1, 0.9, 0.70, False, True],
+		[ 'qual', 'Boosted', 'jet2Tau21', '', '', 1, 0.9, 0.70, False, True],
+		[ 'qual', 'Boosted', 'massAve', 0, 400, 10, 0.90, 0.70, True, False],
+		[ 'qual', 'Boosted', 'HT', 700, 5000, 20, 0.90, 0.70, True, False],
+		[ 'qual', args.boosted, 'NPV', 0, 50, 2, 0.90, 0.70, False, True],
+		[ 'qual', args.boosted, 'jetNum', '', '', 1, 0.90, 0.70, True, False],
+		[ 'qual', 'Boosted', 'jet1NeutralHadronEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
+		[ 'qual', 'Boosted', 'jet1NeutralEmEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
+		[ 'qual', 'Boosted', 'jet1ChargedHadronEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
+		[ 'qual', 'Boosted', 'jet1ChargedEmEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
+		#[ 'qual', 'Boosted', 'jet1ChargedMultiplicity', 0, 0.5, 1, 0.90, 0.70, True, False],
+		[ 'qual', 'Boosted', 'jet1NumConst', '', '', 1, 0.90, 0.70, True, False],
+		[ 'qual', 'Boosted', 'jet1Pt', 400, 1500, 1, 0.90, 0.70, True, False],
+		[ 'qual', 'Boosted', 'jet1Eta', -3, 3, 5, 0.90, 0.70, False, True],
+		#[ 'qual', 'Boosted', 'jet1Mass', 0, 1000, 10, 0.90, 0.70, True, False],
+		[ 'qual', 'Boosted', 'jet1PrunedMass', 0, 1000, 10, 0.90, 0.70, True, False],
+		#[ 'qual', 'Boosted', 'jet1TrimmedMass', 0, 1000, 10, 0.90, 0.70, True, False],
+		#[ 'qual', 'Boosted', 'jet1FilteredMass', 0, 1000, 10, 0.90, 0.70, True, False],
+		#[ 'qual', 'Boosted', 'jet1SoftDropMass', 0, 1000, 10, 0.90, 0.70, True, False],
+		[ 'qual', 'Boosted', 'jet2NeutralHadronEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
+		[ 'qual', 'Boosted', 'jet2NeutralEmEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
+		[ 'qual', 'Boosted', 'jet2ChargedHadronEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
+		[ 'qual', 'Boosted', 'jet2ChargedEmEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
+		#[ 'qual', 'Boosted', 'jet2ChargedMultiplicity', 0, 0.5, 1, 0.90, 0.70, True, False],
+		[ 'qual', 'Boosted', 'jet2NumConst', '', '', 1, 0.90, 0.70, True, False],
+		[ 'qual', 'Boosted', 'jet2Pt', 400, 1500, 1, 0.90, 0.70, True, False],
+		[ 'qual', 'Boosted', 'jet2Eta', -3, 3, 5, 0.90, 0.70, False, True],
+		#[ 'qual', 'Boosted', 'jet2Mass', 0, 1000, 10, 0.90, 0.70, True, False],
+		[ 'qual', 'Boosted', 'jet2PrunedMass', 0, 1000, 10, 0.90, 0.70, True, False],
+		#[ 'qual', 'Boosted', 'jet2TrimmedMass', 0, 1000, 10, 0.90, 0.70, True, False],
+		#[ 'qual', 'Boosted', 'jet2FilteredMass', 0, 1000, 10, 0.90, 0.70, True, False],
+		#[ 'qual', 'Boosted', 'jet2SoftDropMass', 0, 1000, 10, 0.90, 0.70, True, False],
+		[ 'qual', args.boosted, 'jet1Btag', '', '', 1, 0.90, 0.70, False, False],
+		[ 'qual', args.boosted, 'jet2Btag', '', '', 1, 0.90, 0.70, False, False],
+		[ 'qual', args.boosted, 'jet3Btag', '', '', 1, 0.90, 0.70, False, False],
+		[ 'qual', args.boosted, 'jet4Btag', '', '', 1, 0.90, 0.70, False, False],
+		[ 'qual', args.boosted, 'MET', '', '', 1, 0.90, 0.70, False, True],
+		[ 'qual', args.boosted, 'METHT', '', '', 1, 0.90, 0.70, True, False],
+		#[ 'qual', args.boosted, 'NPV_NOPUWeight', 0, 50, 2, 0.90, 0.70, False, False],
+		[ 'qual', args.boosted, 'neutralHadronEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
+		[ 'qual', args.boosted, 'neutralEmEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
+		[ 'qual', args.boosted, 'chargedHadronEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
+		[ 'qual', args.boosted, 'chargedEmEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
+		[ 'qual', args.boosted, 'chargedMultiplicity', 0, 0.5, 1, 0.90, 0.70, True, False],
+		[ 'qual', args.boosted, 'numConst', '', '', 1, 0.90, 0.70, True, False],
+		[ 'qual', 'Resolved', 'jet1Pt', 0, 1500, 5, 0.90, 0.70, True, False],
+		[ 'qual', 'Resolved', 'jet2Pt', 0, 1500, 5, 0.90, 0.70, True, False],
+		[ 'qual', 'Resolved', 'jet3Pt', 0, 1500, 5, 0.90, 0.70, True, False],
+		[ 'qual', 'Resolved', 'jet4Pt', 0, 1500, 5, 0.90, 0.70, True, False],
+		[ 'qual', 'Resolved', 'jet1QGL', 0, 1, 1, 0.90, 0.70, True, False],
+		[ 'qual', 'Resolved', 'jet2QGL', 0, 1, 1, 0.90, 0.70, True, False],
+		[ 'qual', 'Resolved', 'jet3QGL', 0, 1, 1, 0.90, 0.70, True, False],
+		[ 'qual', 'Resolved', 'jet4QGL', 0, 1, 1, 0.90, 0.70, True, False],
+		[ 'qual', 'Resolved', 'HT', 500, 5000, 10, 0.90, 0.70, True, False],
 
 		#[ 'Norm', 'Boosted', 'NPV', '', '', 1, '', '', False, False],
 		#[ 'Norm', 'Boosted', 'jet1Subjet1Pt', '', '', '', '', True, False],
@@ -1620,14 +1620,13 @@ if __name__ == '__main__':
 			for cut1 in listCuts:
 				plotSignalBkg( signalFiles, bkgFiles, dataFile, i[0]+'_'+cut1, i[0]+'_'+cut1, i[1], i[2], i[3], i[4], i[5], i[6], i[7] )
 		
-		elif ( 'jetIDQual' in args.process ):
-			for cut1 in listCuts:
-				if 'Boosted' in args.boosted: plotQuality( dataFile, bkgFiles, args.grooming, i[0]+'_'+cut1, i[0]+'_'+cut1, i[1], i[2], i[3], i[4], i[5], i[6], i[7] ) #, fitRatio=True )
-				else: plotQuality( dataFile, bkgFiles, '', args.boosted+'AnalysisPlots'+('' if 'pruned' in args.grooming else args.grooming)+'/'+i[0]+'_'+cut1, i[0]+'_'+cut1, i[1], i[2], i[3], i[4], i[5], i[6], i[7]) #, fitRatio=True ) 
 		elif ( 'qual' in args.process ):
 			for cut1 in listCuts:
-				if 'Boosted' in args.boosted: plotQuality( dataFile, bkgFiles, args.grooming, i[0]+'_'+cut1, i[0]+'_'+cut1, i[1], i[2], i[3], i[4], i[5], i[6], i[7] )
-				else: plotQuality( dataFile, bkgFiles, '', i[0]+'_'+cut1, i[0]+'_'+cut1, i[1], i[2], i[3], i[4], i[5], i[6], i[7])#, fitRatio=True )
+				plotQuality( dataFile, bkgFiles, 
+						args.grooming, 
+						( '' if args.miniTree else (args.boosted+'AnalysisPlots'+('' if 'pruned' in args.grooming else args.grooming)+'/'))+i[0]+'_'+cut1, 
+						i[0]+'_'+cut1, 
+						i[1], i[2], i[3], i[4], i[5], i[6], i[7] ) #, fitRatio=True )
 		
 		elif 'Norm' in args.process:
 			for cut1 in listCuts:

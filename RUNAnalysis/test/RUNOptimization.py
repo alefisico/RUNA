@@ -68,7 +68,7 @@ def calcROCs( BkgSamples, SigSamples, treename, varList, window, cutsList ):
 	print '-'*40
 	print '---- RPV mass', args.mass
 	for sigVar in varList: 
-		allHistos[ sigVar[0]+"_Sig" ] = getHistoFromTree( SigSamples[ args.mass ], treename, sigVar[0], cuts, allHistos[ sigVar[0]+"_Sig" ], SF ) 
+		allHistos[ sigVar[0]+"_Sig" ] = getHistoFromTree( SigSamples[ args.mass ], treename, sigVar[0], cuts, allHistos[ sigVar[0]+"_Sig" ], 1 ) 
 		print '---- processing... ', sigVar[0]
 
 
@@ -81,7 +81,7 @@ def calcROCs( BkgSamples, SigSamples, treename, varList, window, cutsList ):
 		print '---- ', bkgSample
 		for bkgVar in varList: 
 			print '---- processing... ', bkgVar[0]
-			allHistos[ bkgVar[0]+"_"+bkgSample ] = getHistoFromTree( BkgSamples[ bkgSample ][0], treename, bkgVar[0], cuts, allHistos[ bkgVar[0]+"_"+bkgSample ], SF ) 
+			allHistos[ bkgVar[0]+"_"+bkgSample ] = getHistoFromTree( BkgSamples[ bkgSample ][0], treename, bkgVar[0], cuts, allHistos[ bkgVar[0]+"_"+bkgSample ], 1 ) 
 
 		for var in varList:
 			BkgHisto = allHistos[ var[0]+"_"+bkgSample ]
@@ -221,20 +221,31 @@ def makeROCs( textFile, variables, bkgSamples, perVariable, cutsList, printVar, 
 				totalBkgErr = np.sqrt( totalBkgErr ) 
 
 				sqrtSigBkg = np.sqrt( np.add(totalSig, totalBkg ) )
-				sigOverSqrtSigBkg = np.divide( totalSig, sqrtSigBkg )
+				#sigOverSqrtSigBkg = np.divide( totalSig, sqrtSigBkg )
 
 				sigBkgErr = np.sqrt( np.add( np.power( totalSigErr, 2 ), np.power( totalBkgErr, 2 ) ) )
 				sqrtSigBkgErr = np.divide( sigBkgErr, 2*sqrtSigBkg )
-				totalErrSigOverSqrtSigBkg = np.sqrt( np.add( np.power( np.divide( totalSigErr, totalSig ), 2), np.power( np.divide( sqrtSigBkgErr, sqrtSigBkg ), 2) ) )
+				#totalErrSigOverSqrtSigBkg = np.sqrt( np.add( np.power( np.divide( totalSigErr, totalSig ), 2), np.power( np.divide( sqrtSigBkgErr, sqrtSigBkg ), 2) ) )
 				#print args.mass, sigOverSqrtSigBkg
 				#print totalErrSigOverSqrtSigBkg
-				sigOverSqrtSigBkg = np.divide( totalSig, np.sqrt(totalBkg) ) 
+				#sigOverSqrtSigBkg = np.divide( totalSig, np.sqrt(totalBkg) ) 
 				with np.errstate(divide='ignore', invalid='ignore'):
 					sigOverSqrtSigBkg = np.true_divide( totalSig, np.sqrt(totalBkg) ) 
 					sigOverSqrtSigBkg[ sigOverSqrtSigBkg == np.inf ] = 0
 					sigOverSqrtSigBkg = np.nan_to_num( sigOverSqrtSigBkg )
+				totalErrSigOverSqrtBkg =  np.add( np.divide( totalBkgErr, np.sqrt( totalBkg ) ), -np.divide( (totalSig*totalSigErr), (2*np.power(totalBkg, 1.5)) ) )
 				#sigOverSqrtSigBkg = np.sqrt( 2*( (totalSig+totalBkg)*np.log( 1 + np.divide( totalSig, totalBkg ) ) - totalSig ) )
-				SOB = TGraphErrors( len(totalSig), ( (dictVariablesNum[ var[0]+'_QCD'+args.qcd+'All_ROC' ][2])/5. if 'deltaEta' in var[0] else (dictVariablesNum[ var[0]+'_QCD'+args.qcd+'All_ROC' ][2]) ), sigOverSqrtSigBkg, array( 'd', [0]*len(sigOverSqrtSigBkg)), totalErrSigOverSqrtSigBkg ) 
+
+				if 'deltaEta' in var[0]: dummyBin = 5
+				elif var[0] == 'delta': dummyBin = 300.
+				else: dummyBin = 1
+				binsHisto = (dictVariablesNum[ var[0]+'_QCD'+args.qcd+'All_ROC' ][2])/dummyBin
+				SOB = TGraphErrors( len(totalSig), 
+						binsHisto, 
+						sigOverSqrtSigBkg, 
+						array( 'd', [0]*len(sigOverSqrtSigBkg)), 
+						totalErrSigOverSqrtBkg ) # totalErrSigOverSqrtSigBkg ) 
+
 				#SOB = TGraph( len(totalSig), (dictVariablesNum[ var[0]+'_QCD'+args.qcd+'All_ROC' ][2])/var[7], sigOverSqrtSigBkg ) 
 				dictNumVar[ var[0] ] = SOB 
 				#if returnSOB in var[0]: return SOB
@@ -623,18 +634,18 @@ if __name__ == '__main__':
 	else: folder = 'Rootfiles/'
 
 	bkgSamples = OrderedDict()
-	bkgSamples[ 'QCD'+args.qcd+'All' ] = [ folder+'/RUNAnalysis_QCD'+args.qcd+'All_80X_V2p3_'+args.version+'.root', kBlue-4 ]
+	bkgSamples[ 'QCD'+args.qcd+'All' ] = [ folder+'/RUNAnalysis_QCD'+args.qcd+'All_80X_V2p4_'+args.version+'.root', kBlue-4 ]
 	if 'Boosted' in args.boosted:
-		bkgSamples[ 'TTJets' ] = [ folder+'/RUNAnalysis_TTJets_80X_V2p3_'+args.version+'.root', kGreen+2 ]
-		bkgSamples[ 'WJetsToQQ' ] = [ folder+'/RUNAnalysis_WJetsToQQ_80X_V2p3_'+args.version+'.root', 38 ]
-		bkgSamples[ 'ZJetsToQQ' ] = [ folder+'/RUNAnalysis_ZJetsToQQ_80X_V2p3_'+args.version+'.root', kOrange ]
-		bkgSamples[ 'Dibosons' ] = [ folder+'/RUNAnalysis_Dibosons_80X_V2p3_'+args.version+'.root', kMagenta+2 ]
-		#bkgSamples[ 'WWTo4Q' ] = [ folder+'/RUNAnalysis_WWTo4Q_80X_V2p3_'+args.version+'.root', kMagenta+2 ]
-		#bkgSamples[ 'ZZTo4Q' ] = [ folder+'/RUNAnalysis_ZZTo4Q_80X_V2p3_'+args.version+'.root', kOrange+2 ]
-		#bkgSamples[ 'WZ' ] = [ folder+'/RUNAnalysis_WZ_80X_V2p3_'+args.version+'.root', kCyan ]
+		bkgSamples[ 'TTJets' ] = [ folder+'/RUNAnalysis_TTJets_80X_V2p4_'+args.version+'.root', kGreen+2 ]
+		bkgSamples[ 'WJetsToQQ' ] = [ folder+'/RUNAnalysis_WJetsToQQ_80X_V2p4_'+args.version+'.root', 38 ]
+		bkgSamples[ 'ZJetsToQQ' ] = [ folder+'/RUNAnalysis_ZJetsToQQ_80X_V2p4_'+args.version+'.root', kOrange ]
+		bkgSamples[ 'Dibosons' ] = [ folder+'/RUNAnalysis_Dibosons_80X_V2p4_'+args.version+'.root', kMagenta+2 ]
+		#bkgSamples[ 'WWTo4Q' ] = [ folder+'/RUNAnalysis_WWTo4Q_80X_V2p4_'+args.version+'.root', kMagenta+2 ]
+		#bkgSamples[ 'ZZTo4Q' ] = [ folder+'/RUNAnalysis_ZZTo4Q_80X_V2p4_'+args.version+'.root', kOrange+2 ]
+		#bkgSamples[ 'WZ' ] = [ folder+'/RUNAnalysis_WZ_80X_V2p4_'+args.version+'.root', kCyan ]
 
 	sigSamples = {}
-	sigSamples[ args.mass ] = folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_80X_V2p3_'+args.version+'.root'
+	sigSamples[ args.mass ] = folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_80X_V2p4_'+args.version+'.root'
 
 	SigSample = folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'-madgraph_RunIISpring15MiniAODv2-74X_Asympt25ns_v09_v03.root'
 	treename = "ResolvedAnalysisPlots/RUNATree" if ( 'Resolved' in args.boosted ) else 'BoostedAnalysisPlots'+args.grooming+'/RUNATree'
@@ -688,8 +699,8 @@ if __name__ == '__main__':
 		plotROC( 'SOB_massAsym', '', '', '', True, True, diffMasses=True )
 
 	elif 'delta' in args.process:
-		optimizeDelta( TFile( folder+'/RUNMiniResolvedAnalysis_QCD'+args.qcd+'All_Moriond17_80X_V2p3_'+args.version+'.root' ),
-			folder+'/RUNMiniResolvedAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p3_'+args.version+'.root',
+		optimizeDelta( TFile( folder+'/RUNMiniResolvedAnalysis_QCD'+args.qcd+'All_Moriond17_80X_V2p4_'+args.version+'.root' ),
+			folder+'/RUNMiniResolvedAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p4_'+args.version+'.root',
 			( [ 240, 350, 450, 550, 650, 750, 850, 950] if '312' in args.decay else [280, 500, 600, 700] ) ) 
 
 	elif 'TMVA' in args.process:

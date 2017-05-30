@@ -125,13 +125,17 @@ process.ResolvedAnalysisPlots = cms.EDAnalyzer('RUNResolvedAnalysis',
 )
 
 #process.ResolvedAnalysisPlotsScouting = process.ResolvedAnalysisPlots.clone( cutAK4jetPt = cms.double( 50.0 ), cutAK4HT = cms.double( 450 ), mkTree = cms.bool( True ) )
-process.ResolvedAnalysisPlotsMassPairing = process.ResolvedAnalysisPlots.clone( pairingMethod = cms.string( "mass" ), mkTree = cms.bool( False ) )
-process.ResolvedAnalysisPlotsChi2Pairing = process.ResolvedAnalysisPlots.clone( pairingMethod = cms.string( "chi2" ), mkTree = cms.bool( False ) )
+#process.ResolvedAnalysisPlotsMassPairing = process.ResolvedAnalysisPlots.clone( pairingMethod = cms.string( "mass" ), mkTree = cms.bool( False ) )
+#process.ResolvedAnalysisPlotsChi2Pairing = process.ResolvedAnalysisPlots.clone( pairingMethod = cms.string( "chi2" ), mkTree = cms.bool( False ) )
 
 process.ResolvedAnalysisPlotsJESUp = process.ResolvedAnalysisPlots.clone( systematics = cms.string( 'JESUp' ), mkTree = cms.bool( False ) )
 process.ResolvedAnalysisPlotsJESDown = process.ResolvedAnalysisPlots.clone( systematics = cms.string( 'JESDown' ), mkTree = cms.bool( False ) )
 process.ResolvedAnalysisPlotsJERUp = process.ResolvedAnalysisPlots.clone( systematics = cms.string( 'JERUp' ), mkTree = cms.bool( False ) )
 process.ResolvedAnalysisPlotsJERDown = process.ResolvedAnalysisPlots.clone( systematics = cms.string( 'JERDown' ), mkTree = cms.bool( False ) )
+process.ResolvedAnalysisPlotsPUUp = process.ResolvedAnalysisPlots.clone( systematics = cms.string( 'PUUp' ), 
+			mkTree = cms.bool( False ), dataPUFile=cms.string("PileupData2016BCDEFGH_ReReco_72383.root") )
+process.ResolvedAnalysisPlotsPUDown = process.ResolvedAnalysisPlots.clone( systematics = cms.string( 'PUDown' ), 
+			mkTree = cms.bool( False ), dataPUFile=cms.string("PileupData2016BCDEFGH_ReReco_66016.root") )
 
 ############################################################
 
@@ -171,6 +175,10 @@ process.BoostedAnalysisPlotsJESUp = process.BoostedAnalysisPlots.clone( systemat
 process.BoostedAnalysisPlotsJESDown = process.BoostedAnalysisPlots.clone( systematics = cms.string( 'JESDown' ), mkTree = cms.bool( False ) )
 process.BoostedAnalysisPlotsJERUp = process.BoostedAnalysisPlots.clone( systematics = cms.string( 'JERUp' ), mkTree = cms.bool( False ) )
 process.BoostedAnalysisPlotsJERDown = process.BoostedAnalysisPlots.clone( systematics = cms.string( 'JERDown' ), mkTree = cms.bool( False ) )
+process.BoostedAnalysisPlotsPUUp = process.BoostedAnalysisPlots.clone( systematics = cms.string( 'PUUp' ), 
+			mkTree = cms.bool( False ), dataPUFile=cms.string("PileupData2016BCDEFGH_ReReco_72383.root") )
+process.BoostedAnalysisPlotsPUDown = process.BoostedAnalysisPlots.clone( systematics = cms.string( 'PUDown' ), 
+			mkTree = cms.bool( False ), dataPUFile=cms.string("PileupData2016BCDEFGH_ReReco_66016.root") )
 
 process.BoostedAnalysisPlotsPuppi = process.BoostedAnalysisPlots.clone( 
 		PUMethod		= cms.string('Puppi'),
@@ -269,10 +277,14 @@ else:
 		process.p += process.BoostedAnalysisPlotsJESDown
 		process.p += process.BoostedAnalysisPlotsJERUp
 		process.p += process.BoostedAnalysisPlotsJERDown
+		process.p += process.BoostedAnalysisPlotsPUUp
+		process.p += process.BoostedAnalysisPlotsPUDown
 		process.p += process.ResolvedAnalysisPlotsJESUp
 		process.p += process.ResolvedAnalysisPlotsJESDown
 		process.p += process.ResolvedAnalysisPlotsJERUp
 		process.p += process.ResolvedAnalysisPlotsJERDown
+		process.p += process.ResolvedAnalysisPlotsPUUp
+		process.p += process.ResolvedAnalysisPlotsPUDown
 
 process.TFileService=cms.Service("TFileService",fileName=cms.string( ( 'Rootfiles/' if options.local else '' )+'RUN'+outputNAME+NAME+'.root' ) )
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000

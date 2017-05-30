@@ -528,7 +528,7 @@ if __name__ == '__main__':
 
 		[ '2D', 'prunedMassAveHT', 'Leading Jet Pruned Mass [GeV]', 'HT [GeV]', 20, 200, 2, HTMinX, 1200, 10, jetMassHTlabX, jetMassHTlabY],
 		#[ '2D', 'jetMassHT', 20, 200, 2, HTMinX, 1200, 10, jetMassHTlabX, jetMassHTlabY],
-		[ '2D', 'jet4PtHT', '4th jet Pt [GeV]', 'HT [GeV]',  20, 200, 2, HTMinX, 1200, 10, jetMassHTlabX, jetMassHTlabY],
+		[ '2D', 'jet4PtHT', '4th jet Pt [GeV]', 'HT [GeV]',  60, 300, 2, HTMinX, 1200, 10, jetMassHTlabX, jetMassHTlabY],
 		]
 
 	if 'all' in args.single: Plots = [ x[1:] for x in plotList if x[0] in args.proc ]
@@ -557,7 +557,7 @@ if __name__ == '__main__':
 	Samples[ 'SingleMuonG' ] = [ 'RUNTriggerEfficiencies_SingleMuon_Run2016G_V2p4_'+args.version+'.root', 7721.06 ] # 7115.97 ] 
 	Samples[ 'SingleMuonH' ] = [ 'RUNTriggerEfficiencies_SingleMuon_Run2016H_V2p4_'+args.version+'.root', 8629.24 ] # 8545.04 ] 
 	#Samples[ 'SingleMuonH3' ] = [ 'RUNTriggerEfficiencies_SingleMuon_Run2016H3_V2p1_'+args.version+'.root', 221.44 ]  
-	Samples[ 'SingleMuonAll' ] = [ 'RUNTriggerEfficiencies_SingleMuon_Run2016_V2p4_'+args.version+'.root', 36780.41  ]  #### 36742.26
+	Samples[ 'SingleMuonAll' ] = [ 'RUNTriggerEfficiencies_SingleMuon_Run2016_V2p4_'+args.version+'.root', 35864. ] # 36780.41  ]  #### 36742.26
 
 	Samples[ 'JetHTB' ] = [ 'RUNTriggerEfficiencies_JetHT_Run2016B_V2p1_'+args.version+'.root', 40.49 ] 
 	Samples[ 'JetHTC' ] = [ 'RUNTriggerEfficiencies_JetHT_Run2016C_V2p1_'+args.version+'.root', 2.13 ] 
