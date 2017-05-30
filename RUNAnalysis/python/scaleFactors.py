@@ -181,7 +181,7 @@ dictEvents = {
 		'RPVStopStopToJets_UDD312_M-280' :	 [ 0 ],
 		'RPVStopStopToJets_UDD312_M-300' :	 [ 537728 ],
 		'RPVStopStopToJets_UDD312_M-350' :	 [ 236097 ],
-		'RPVStopStopToJets_UDD312_M-400' :	 [  ],
+		'RPVStopStopToJets_UDD312_M-400' :	 [ 144116  ],
 		'RPVStopStopToJets_UDD312_M-450' :	 [ 49390 ],
 		'RPVStopStopToJets_UDD312_M-500' :	 [ 51048 ],
 		'RPVStopStopToJets_UDD312_M-550' :	 [ 51848 ],
