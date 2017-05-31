@@ -59,6 +59,7 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 	allHistos[ "jet2Btag_cutBestPair_"+sample ] = TH1F( "jet2Btag_cutBestPair_"+sample, "jet2Btag_cutBestPair_"+sample, 20, 0., 1 )
 	allHistos[ "jet3Btag_cutBestPair_"+sample ] = TH1F( "jet3Btag_cutBestPair_"+sample, "jet3Btag_cutBestPair_"+sample, 20, 0., 1 )
 	allHistos[ "jet4Btag_cutBestPair_"+sample ] = TH1F( "jet4Btag_cutBestPair_"+sample, "jet4Btag_cutBestPair_"+sample, 20, 0., 1 )
+	allHistos[ "jetsBtag_cutBestPair_"+sample ] = TH1F( "jetsBtag_cutBestPair_"+sample, "jetsBtag_cutBestPair_"+sample, 20, 0., 1 )
 
 	allHistos[ "massAve_delta_"+sample ] = TH1F( "massAve_delta_"+sample, "massAve_delta_"+sample, 3000, 0., 3000 )
 	allHistos[ "HT_delta_"+sample ] = TH1F( "HT_delta_"+sample, "HT_delta_"+sample, 5000, 0., 5000 )
@@ -86,6 +87,7 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 	allHistos[ "jet2Btag_delta_"+sample ] = TH1F( "jet2Btag_delta_"+sample, "jet2Btag_delta_"+sample, 20, 0., 1 )
 	allHistos[ "jet3Btag_delta_"+sample ] = TH1F( "jet3Btag_delta_"+sample, "jet3Btag_delta_"+sample, 20, 0., 1 )
 	allHistos[ "jet4Btag_delta_"+sample ] = TH1F( "jet4Btag_delta_"+sample, "jet4Btag_delta_"+sample, 20, 0., 1 )
+	allHistos[ "jetsBtag_delta_"+sample ] = TH1F( "jetsBtag_delta_"+sample, "jetsBtag_delta_"+sample, 20, 0., 1 )
 
 	allHistos[ "massAve_delta_4qgl_"+sample ] = TH1F( "massAve_delta_4qgl_"+sample, "massAve_delta_4qgl_"+sample, 3000, 0., 3000 )
 	allHistos[ "massAve_2qgl_"+sample ] = TH1F( "massAve_2qgl_"+sample, "massAve_2qgl_"+sample, 3000, 0., 3000 )
