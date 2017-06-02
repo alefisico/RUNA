@@ -46,19 +46,18 @@ jetMassHTlabY = 0.20
 jetMassHTlabX = 0.85
 
 
-def plotSystematics( inFileSample, Groom, name, xmin, xmax, labX, labY, log):
+def plotSystematics( name, xmin, xmax, labX, labY, log):
 	"""docstring for plot"""
 
-	if args.version in [ 'v05' ]:
-		if 'low' in args.RANGE : 
-			massList = [ 80, 90, 100, 110, 120, 130, 140, 150 ]
-			massWindow = 30 
-		else: 
-			massList = [ 170, 180, 190, 210, 220, 230, 240, 300, 350 ] 
-			massWindow = 30 
+	### enlisting masses available
+	if 'Boosted' in args.boosted:
+		massList = [ 80, 90, 100, 110, 120, 130, 140, 150, 170, 180, 190, 210, 220, 230, 240, 300 ] 
+		massWindow = 30 
 	else:
-			massList = [ 80, 90, 100, 110, 120, 130, 140, 150, 170, 180, 190, 210, 220, 230, 240, 300 ] 
-			massWindow = 30 
+		if '312' in args.decay: 
+			massList = [ 200, 220, 240 ] + range( 300, 1050, 50 ) + range( 1100, 1300, 100 ) 
+			massList.remove( 850 )
+		else: massList = [ 200, 220, 240, 280, 300, 350 ] + range( 450, 900, 50 ) + [950, 1000, 1100, 1200, 1300] #+  range( 1100, 1600, 100 )
 
 	nomArray = []
 	nomArrayErr = []
@@ -71,23 +70,24 @@ def plotSystematics( inFileSample, Groom, name, xmin, xmax, labX, labY, log):
 	downOverNomArray = []
 	errDownOverNomArray = []
 
-	dummy = 0
+	if args.batchSys: folder = '/cms/gomez/archiveEOS/Archive/v8020/Analysis/'+args.version+'/'
+	else: folder = 'Rootfiles/'
+
+	## looping over the masses
 	for xmass in massList:
 
 		gStyle.SetOptFit(1)
-		NominalFile = TFile.Open( inFileSample.replace( '100', str(xmass) ) )
-		UpFile = TFile.Open( inFileSample.replace( '100', str(xmass)+args.unc+'Up'  ) )
-		DownFile = TFile.Open( inFileSample.replace( '100', str(xmass)+args.unc+'Down'  ) )
-
+		rootFile = TFile.Open( folder+'RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(xmass)+'_80X_V2p4_'+args.version+'.root' )  ## opening root file
 		outputFileName = name+'_'+args.decay+'RPVSt'+str(xmass)+'_'+args.unc+args.boosted+'_'+args.version+'.'+args.ext 
 		print 'Processing.......', outputFileName
 
+		### opening different histograms
 		histos = {}
-		histos[ 'Up' ] = UpFile.Get( name+'_RPVStopStopToJets_'+args.decay+'_M-'+str(xmass) )
-		histos[ 'Down' ] = DownFile.Get( name+'_RPVStopStopToJets_'+args.decay+'_M-'+str(xmass) )
-		histos[ 'Nominal' ] = NominalFile.Get( name+'_RPVStopStopToJets_'+args.decay+'_M-'+str(xmass) )
+		histos[ 'Up' ] = rootFile.Get( 'ResolvedAnalysisPlots/'+name ) 
+		histos[ 'Down' ] = rootFile.Get( 'ResolvedAnalysisPlots'+args.unc+'Up/'+name )
+		histos[ 'Nominal' ] = rootFile.Get( 'ResolvedAnalysisPlots'+args.unc+'Down/'+name )
 
-		scale = 1 / (scaleFactor( 'RPVStopStopToJets_UDD312_M-'+str(xmass) )*args.lumi )
+		scale = 1 / (scaleFactor( 'RPVStopStopToJets_UDD312_M-'+str(xmass) ) )  ## removing scaling of histogram
 		for k in histos: 
 			histos[ k ].Scale( scale )
 			histos[ k ] = histos[ k ].Rebin( args.reBin )
@@ -100,9 +100,11 @@ def plotSystematics( inFileSample, Groom, name, xmin, xmax, labX, labY, log):
 		#for k in histos: histos[ k ] = histos[ k ].Rebin( len( boostedMassAveBins )-1, histos[ k ].GetName(), boostedMassAveBins )
 
 		##### window for acceptance
-		lowEdgeWindow = int(xmass/args.reBin -  2*( int( massWidthList[ dummy ] )/args.reBin ))
-		highEdgeWindow = int(xmass/args.reBin + 2*( int( massWidthList[ dummy ] )/args.reBin ))
-		dummy += 1
+		if 'Resolved' in args.boosted: massWindow = 9.73 + ( 0.029 * xmass ) 	## from generator level 
+		else: massWindow = 30 
+		lowEdgeWindow = int(xmass/args.reBin -  2*( massWindow )/args.reBin )
+		highEdgeWindow = int(xmass/args.reBin + 2*( massWindow )/args.reBin )
+
 		'''
 		####### Fits for Nominal/Up/Down
 		gausNom = TF1("gausNom", "gaus", 0, 400 )
@@ -234,11 +236,11 @@ def plotSystematics( inFileSample, Groom, name, xmin, xmax, labX, labY, log):
 		can1.Modified()
 		'''
 
-		labelAxis( name, histos['Nominal'], Groom )
+		labelAxis( name, histos['Nominal'], ('pruned' if 'Boosted' in args.grooming else '') )
 		legend.Draw()
 		CMS_lumi.extraText = "Simulation Preliminary"
 		CMS_lumi.relPosX = 0.12
-		CMS_lumi.CMS_lumi( (pad1 if 'PDF' in args.unc else 'can' ), 4, 0)
+		#CMS_lumi.CMS_lumi( (pad1 if 'PDF' in args.unc else 'can' ), 4, 0)
 		if not (labX and labY): labels( name, '' )
 		else: labels( name, '', labX, labY )
 
@@ -356,7 +358,7 @@ def plotSystematics( inFileSample, Groom, name, xmin, xmax, labX, labY, log):
 	multiGraphRatio.GetYaxis().SetTitleSize(0.12)
 	multiGraphRatio.GetYaxis().SetTitleOffset(0.45)
 	multiGraphRatio.GetYaxis().CenterTitle()
-	can.SaveAs('Plots/'+name+'_'+args.decay+'RPVSt_'+args.RANGE+'_'+args.unc+args.boosted+'_'+args.version+'.'+args.ext)
+	can.SaveAs('Plots/'+name+'_'+args.decay+'RPVSt_'+args.unc+args.boosted+'_'+args.version+'.'+args.ext)
 	del can
 	
 
@@ -369,23 +371,19 @@ if __name__ == '__main__':
 	parser.add_argument('-v', '--version', action='store', default='v05', dest='version', help='Version of files: v05.' )
 	parser.add_argument('-g', '--grom', action='store', default='pruned', dest='grooming', help='Grooming Algorithm, example: Pruned, Filtered.' )
 	parser.add_argument('-C', '--cut', action='store', default='_deltaEtaDijet', dest='cut', help='cut, example: cutDEta' )
-	parser.add_argument('-l', '--lumi', action='store', type=float, dest='lumi', default=2606, help='Luminosity, example: 1.' )
-	parser.add_argument('-r', '--range', action='store', default='low', dest='RANGE', help='Trigger used, example PFHT800.' )
 	parser.add_argument('-e', '--extension', action='store', default='png', dest='ext', help='Extension of plots.' )
 	parser.add_argument('-u', '--unc', action='store', default='JES', dest='unc',  help='Type of uncertainty' )
 	parser.add_argument('-R', '--reBin', action='store', default=5, type=float, dest='reBin', help='Rebin number.' )
+	parser.add_argument('-B', '--batchSys', action='store_true',  dest='batchSys', default=False, help='Process: all or single.' )
 
 	try: args = parser.parse_args()
 	except:
 		parser.print_help()
 		sys.exit(0)
 
+
 	CMS_lumi.lumi_13TeV = ''#str( round( ( args.lumi / 1000 ), 2 ) )+" fb^{-1}"
 	
-	if 'Resolved' in args.boosted: args.grooming =  '' 
-	if 'all' in args.grooming: Groommers = [ '', 'Trimmed', 'Pruned', 'Filtered', "SoftDrop" ]
-	else: Groommers = [ args.grooming ]
 
-
-	for optGroom in Groommers: plotSystematics( 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_RPVStopStopToJets_'+args.decay+'_M-100_'+args.RANGE+'_'+args.version+'.root', optGroom, 'massAve'+args.cut, 0, 400, 0.85, 0.45, True )
+	plotSystematics( 'massAve_'+args.cut, 0, 400, 0.85, 0.45, False )
 			
