@@ -683,7 +683,7 @@ def plotSignalCutFlow( runaFile, miniRunaFile, xmax, log, Norm=False ):
 	can.SaveAs( 'Plots/'+outputFileName )
 	del can
 
-def plotSignalShape( miniRunaFile, nameInRoot, rebinX, log ):
+def plotSignalShape( nameInRoot, rebinX, log ):
 	"""docstring for plot"""
 
 	outputFileName = 'signalShape_'+nameInRoot+'_'+args.grooming+'_'+args.decay+'RPVSt_'+args.boosted+'AnalysisPlots'+args.version+'.'+args.ext 
@@ -697,18 +697,17 @@ def plotSignalShape( miniRunaFile, nameInRoot, rebinX, log ):
 	files = {}
 	dummy=1
 	
-#	if 'Tau21' in nameInRoot: 
 	if 'Boosted' in args.boosted:
 		massList = [80, 120, 150, 190, 240, 300 ]
 		massWidthList = [8.56280909196305, 8.814786972730516, 9.435770844457956, 12.86644189449206, 12.94592267653858, 15.762703291273564]
 	else:
-		if '312' in args.decay: massList = [ 240, 300, 450, 500, 600, 700, 800, 950, 1000 ] 
-		else: massList = [ 280, 500, 600, 700, 800, 950, 1100 ] 
+		massList = [ 200, 300, 450, 500, 700, 800, 1000 ] 
+		massWidthList = [ 15.53, 18.43, 22.78, 24.23, 30.03, 32.93, 38.73 ] #### 9.737+(0.029*imass)
 
 
-	for M in massList:
-		fileName = miniRunaFile.replace( args.mass, str(M) )
-		files[ M ] = TFile( fileName )
+	for imass in massList:
+		fileName = folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(imass)+'_Moriond17_80X_V2p4_'+args.version+'.root'
+		files[ imass ] = TFile( fileName )
 	
 	maxList = []
 	multiGraph = TMultiGraph()
@@ -1588,11 +1587,10 @@ if __name__ == '__main__':
 	if 'Scf' in args.process:
 		plotSignalCutFlow(folder+'/RUNAnalysis_RPVStopStopToJets_UDD312_M-100_RunIIFall15MiniAODv2_v76x_v2p0_'+args.version+'.root', folder+'/RUNMiniBoostedAnalysis_'+args.grooming+'_RPVStopStopToJets_UDD312_M-100_'+args.version+'.root', (10 if 'high' in args.RANGE else 12), True, True )
 	if 'signal' in args.process:
-		plotSignalShape(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p4_v07p1.root', 'massAve'+args.cut, 1, False)
-		#plotSignalShape(folder+'/RUNMiniBoostedAnalysis_'+args.grooming+'_RPVStopStopToJets_UDD312_M-100_'+args.version+'.root', 'jet2Tau21'+args.cut, 1, False)
-		#plotSignalShape(folder+'/RUNMiniBoostedAnalysis_'+args.grooming+'_RPVStopStopToJets_UDD312_M-100_'+args.version+'.root', 'jet2Pt'+args.cut, 20, False)
+		plotSignalShape( args.single+'_'+args.cut, 1, False)
+
 	if 'acc' in args.process:
-		plotSignalAcceptance( folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p4_v06p1.root', 'massAve'+args.cut, False)
+		plotSignalAcceptance( folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p4_'+args.version+'.root', 'massAve'+args.cut, False)
 
 	#if 'tmp' in args.process:
 #		tmpplotDiffSample( bkgFiles[ 'QCD'+args.qcd+'All' ][0], bkgFiles[ 'QCD'+args.qcd+'All' ][0], signalFiles[ args.mass ][0], 'massAve', 10, 1500, '', '', True)

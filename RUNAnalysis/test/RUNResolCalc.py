@@ -68,6 +68,7 @@ def plotResolutionCalculator( inFileSample, Groom, name, xmin, xmax, rebinX, lab
 		histos[ 'massAve' ] = massAveFile.Get( args.boosted+'AnalysisPlots/'+name )
 		scale = scaleFactor( 'RPVStopStopToJets_UDD312_M-'+str(xmass) ) 
 		#histos[ 'massAve' ].Scale( 1/scale )
+		histos[ 'massAve' ].Scale( args.lumi )
 
 		#if rebinX > 1:  histos[ 'massAve' ].Rebin( rebinX )
 		histos[ 'massAve' ].Rebin( 5 )
@@ -80,8 +81,8 @@ def plotResolutionCalculator( inFileSample, Groom, name, xmin, xmax, rebinX, lab
 		for i in range(0,3): histos[ 'massAve' ].Fit(gausNom, 'MIR', '', int(xmass)-massWindow, int(xmass)+massWindow )
 
 		meanGaus = gausNom.GetParameter( 1 )
-		resol = gausNom.GetParameter( 2 ) / xmass
-		resolError = gausNom.GetParError( 2 ) /xmass 
+		resol = gausNom.GetParameter( 2 ) #/ xmass
+		resolError = gausNom.GetParError( 2 ) #/xmass 
 		#resol = 2.355 * gausNom.GetParameter( 2 ) / meanGaus 
 		#resolError = 2.355 * gausNom.GetParError( 2 ) 
 		#resol = gausNom.GetParameter( 2 )# / meanGaus 

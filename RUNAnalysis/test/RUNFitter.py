@@ -440,18 +440,22 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 	for imass in listMass:
 
 		######## Fitting signal and extracting parameters
+		tmpResolution = 9.73 + ( 0.029 * imass)
 		print '|----> Signal'
+		print '|----> tmp resolution', tmpResolution
 		SignalParameters = rootFitter( TFile.Open( inFileSignal.replace( str(args.mass), str(imass) ) ), 
 				hist+('RPVStopStopToJets_'+args.decay+'_M-'+str(imass) if args.miniTree else ''), 
 				scale, 
-				[ fitFunctions['gaus'] ], 
-				imass-(100 if (imass < 800 ) else 200 ), 
-				imass+(100 if (imass < 800 ) else 200 ), 
+				[ [ fitFunctions['gaus'][0], [ 1, imass, tmpResolution ] ] ], 
+				imass-(tmpResolution*2), # (100 if (imass < 800 ) else 200 ), 
+				imass+(tmpResolution*2), # (100 if (imass < 800 ) else 200 ), 
 				rebinX, 
-				True )
+				True,
+				False )
 
 		print SignalParameters[0]['gaus'][2]
 		massWindow = int(SignalParameters[0]['gaus'][2])*2		### size of search
+		print 'mass window', massWindow
 		mass = RooRealVar( 'mass', 'mass', imass-massWindow, imass+massWindow )
 		mypdfs = RooArgList()
 
@@ -626,7 +630,7 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		accXeffGraph.GetYaxis().SetTitle( 'Acceptance #times efficiency' )
 		accXeffGraph.GetXaxis().SetTitle( "Resonance mass [GeV]" )
 		accXeffGraph.GetYaxis().SetTitleOffset( 0.8 )
-		accXeffGraph.GetYaxis().SetRangeUser( 0.0001, 0.01  )
+		#accXeffGraph.GetYaxis().SetRangeUser( 0.0001, 0.01  )
 
 		#legend.Draw()
 		CMS_lumi.extraText = "Simulation Preliminary"
@@ -1104,10 +1108,13 @@ if __name__ == '__main__':
 	hist = 'massAve_'+args.cut+'_'
 	scale = args.lumi 
 	rebinX = 20 
-	if ( args.mass > 0 ): listMass = [ args.mass ]
+	if ( args.mass > 0 ): 
+		listMass = [ args.mass ]
 	else: 
-		if '312' in args.decay: listMass = [ 240, 300, 350 ] + range( 450, 850, 50 ) + [ 950, 1000, 1100 ] # + range( 1000, 1600, 100 ) 
-		else: listMass = [ 240, 280, 300, 350 ] + range( 450, 850, 50 ) + [950, 1000, 1100, 1200, 1300] #+  range( 1100, 1600, 100 )
+		if '312' in args.decay: 
+			listMass = [ 200, 220, 240 ] + range( 300, 1050, 50 ) + range( 1100, 1300, 100 ) 
+			listMass.remove( 850 )
+		else: listMass = [ 200, 220, 240, 280, 300, 350 ] + range( 450, 900, 50 ) + [950, 1000, 1100, 1200, 1300] #+  range( 1100, 1600, 100 )
 
 
 	outputDir = "Plots/"
