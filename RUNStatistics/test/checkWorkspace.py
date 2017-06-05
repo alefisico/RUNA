@@ -12,17 +12,17 @@ gROOT.SetBatch()
 
 def main():
 
-     #inputFileWorkspace = TFile("Rootfiles/workspace_RPVStopStopToJets_UDD312_M-300_Resolved_delta_v02.root") 
-     inputFileWorkspace = TFile("Rootfiles/workspace_RPVStopStopToJets_UDD312_M-300_Resolved_delta_2qgl_v02p1.root") 
+     inputFileWorkspace = TFile("Rootfiles/workspace_RPVStopStopToJets_UDD312_M-300_Resolved_delta_BiasTest_v08p0.root") 
+     #inputFileWorkspace = TFile("Rootfiles/workspace_RPVStopStopToJets_UDD312_M-300_Resolved_delta_2qgl_v02p1.root") 
      #inputFileWorkspace = TFile("test.root") 
 
-     workspace = inputFileWorkspace.Get("myWS")
-     #workspace = inputFileWorkspace.Get("w")
+     #workspace = inputFileWorkspace.Get("myWS")
+     workspace = inputFileWorkspace.Get("bkgWS")
      workspace.Print()
 
      mjj = workspace.var("mass")
      #mjj = workspace.var("massAve")
-     #mjj.Print()
+     mjj.Print()
      '''
      mjj1 = workspace.var("massAveBkg")
      mjj1.Print()
@@ -39,10 +39,10 @@ def main():
      signal = workspace.data("signal")
 #     signalUp = workspace.data("signal__JESUp")
 #     signalDown = workspace.data("signal__JESDown")
-     data.Print()
+#     data.Print()
      #signal.Print()
 
-     data_TH1_fineBinning = data.createHistogram("data_TH1_fineBinning",mjj)    
+#     data_TH1_fineBinning = data.createHistogram("data_TH1_fineBinning",mjj)    
 #     data_TH1_fineBinning.SetLineColor(1)
 #     signal_TH1_fineBinning = signal.createHistogram("signal_TH1_fineBinning",mjj)    
 #     signalUp_TH1_fineBinning = signalUp.createHistogram("signalUp_TH1_fineBinning",mjj)    
@@ -61,7 +61,8 @@ def main():
      canvas = TCanvas()
      #canvas.SetLogy()
      xframe = workspace.var("mass").frame()
-     workspace.pdf("background").plotOn(xframe)
+     #workspace.pdf("background").plotOn(xframe)
+     workspace.pdf("landau_pdf").plotOn(xframe)
      #workspace.pdf("signal").plotOn(xframe)
      xframe.Draw()
 

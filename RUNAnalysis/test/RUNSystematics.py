@@ -83,9 +83,9 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 
 		### opening different histograms
 		histos = {}
-		histos[ 'Up' ] = rootFile.Get( 'ResolvedAnalysisPlots/'+name ) 
-		histos[ 'Down' ] = rootFile.Get( 'ResolvedAnalysisPlots'+args.unc+'Up/'+name )
-		histos[ 'Nominal' ] = rootFile.Get( 'ResolvedAnalysisPlots'+args.unc+'Down/'+name )
+		histos[ 'Nominal' ] = rootFile.Get( 'ResolvedAnalysisPlots/'+name ) 
+		histos[ 'Up' ] = rootFile.Get( 'ResolvedAnalysisPlots'+args.unc+'Up/'+name )
+		histos[ 'Down' ] = rootFile.Get( 'ResolvedAnalysisPlots'+args.unc+'Down/'+name )
 
 		scale = 1 / (scaleFactor( 'RPVStopStopToJets_UDD312_M-'+str(xmass) ) )  ## removing scaling of histogram
 		for k in histos: 

@@ -327,10 +327,15 @@ if __name__ == '__main__':
 	CMS_lumi.lumi_13TeV = str( round( (args.lumi/1000.), 1 ) )+" fb^{-1}"
 	#if args.addComparison: 
 	lumi = args.lumi/1000
-	#if 'gaus' in args.process: massList = range( 80, 360, 10 )
+	#if 'gaus' in args.process: listMass = range( 80, 360, 10 )
 	if 'Resolved' in args.boosted: 
-		if '312' in args.decay: massList =  [ 240, 300, 350, 450, 500, 550, 600, 650, 700, 750, 800, 950, 1000 ]
-		else: massList = [ 240, 280, 300, 350, 500, 550, 600, 650, 700, 750, 800, 850, 950, 1000 ]
-	#else: massList = [ 80, 90, 100, 110, 120, 130, 140, 150, 170, 180, 190, 210, 220, 230, 240, 300]
-	else: massList = [ 80, 100, 120, 140, 170, 180, 190, 230, 240 ]
-	plotLimits( massList  )
+		args.grooming = ''
+		if '312' in args.decay:  
+			listMass = [ 200, 220, 240 ] + range( 300, 1050, 50 ) + range( 1100, 1200, 100 ) 
+			listMass.remove( 850 )
+		else: listMass = [ 200, 220, 240, 280, 300, 350 ] + range( 450, 900, 50 ) + [950, 1000, 1100, ] #+  range( 1100, 1600, 100 )
+
+
+	#else: listMass = [ 80, 90, 100, 110, 120, 130, 140, 150, 170, 180, 190, 210, 220, 230, 240, 300]
+	else: listMass = [ 80, 100, 120, 140, 170, 180, 190, 230, 240 ]
+	plotLimits( listMass  )

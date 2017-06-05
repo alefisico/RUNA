@@ -225,7 +225,7 @@ def makeROCs( textFile, variables, bkgSamples, perVariable, cutsList, printVar, 
 
 				sigBkgErr = np.sqrt( np.add( np.power( totalSigErr, 2 ), np.power( totalBkgErr, 2 ) ) )
 				sqrtSigBkgErr = np.divide( sigBkgErr, 2*sqrtSigBkg )
-				#totalErrSigOverSqrtSigBkg = np.sqrt( np.add( np.power( np.divide( totalSigErr, totalSig ), 2), np.power( np.divide( sqrtSigBkgErr, sqrtSigBkg ), 2) ) )
+				totalErrSigOverSqrtSigBkg = np.sqrt( np.add( np.power( np.divide( totalSigErr, totalSig ), 2), np.power( np.divide( sqrtSigBkgErr, sqrtSigBkg ), 2) ) )
 				#print args.mass, sigOverSqrtSigBkg
 				#print totalErrSigOverSqrtSigBkg
 				#sigOverSqrtSigBkg = np.divide( totalSig, np.sqrt(totalBkg) ) 
@@ -236,15 +236,16 @@ def makeROCs( textFile, variables, bkgSamples, perVariable, cutsList, printVar, 
 				totalErrSigOverSqrtBkg =  np.add( np.divide( totalBkgErr, np.sqrt( totalBkg ) ), -np.divide( (totalSig*totalSigErr), (2*np.power(totalBkg, 1.5)) ) )
 				#sigOverSqrtSigBkg = np.sqrt( 2*( (totalSig+totalBkg)*np.log( 1 + np.divide( totalSig, totalBkg ) ) - totalSig ) )
 
-				if 'deltaEta' in var[0]: dummyBin = 5
-				elif var[0] == 'delta': dummyBin = 300.
+				if var[0] == 'deltaEta': dummyBin = 5
+				elif 'delta' in var[0]: dummyBin = 300.
 				else: dummyBin = 1
 				binsHisto = (dictVariablesNum[ var[0]+'_QCD'+args.qcd+'All_ROC' ][2])/dummyBin
 				SOB = TGraphErrors( len(totalSig), 
 						binsHisto, 
 						sigOverSqrtSigBkg, 
 						array( 'd', [0]*len(sigOverSqrtSigBkg)), 
-						totalErrSigOverSqrtBkg ) # totalErrSigOverSqrtSigBkg ) 
+						#totalErrSigOverSqrtBkg ) 
+						totalErrSigOverSqrtSigBkg ) 
 
 				#SOB = TGraph( len(totalSig), (dictVariablesNum[ var[0]+'_QCD'+args.qcd+'All_ROC' ][2])/var[7], sigOverSqrtSigBkg ) 
 				dictNumVar[ var[0] ] = SOB 
@@ -305,8 +306,8 @@ def plotROC( name, sample, dictROC, numCuts, varOrbkg, SOB, diffMasses=False ):
 	if SOB:
 		if diffMasses: multiGraph.GetXaxis().SetTitle( 'Leading jet #tau_{21}' )
 		else: multiGraph.GetXaxis().SetTitle( 'A.U.' )
-		multiGraph.GetYaxis().SetTitle('S/#sqrt{S+B}')
-		#multiGraph.GetYaxis().SetTitle('S/#sqrt{B}')
+		#multiGraph.GetYaxis().SetTitle('S/#sqrt{S+B}')
+		multiGraph.GetYaxis().SetTitle('S/#sqrt{B}')
 		#multiGraph.GetYaxis().SetTitle('#sqrt{2*((s+b)ln(s/b)-s)}')
 	else:
 		multiGraph.GetXaxis().SetRangeUser(-0.05,1.05)
@@ -657,11 +658,11 @@ if __name__ == '__main__':
 		#[ 'Resolved', 'jetsQGL[2]', 50, 0., 1., False, 0., 0., 5, 1 ],
 		#[ 'Resolved', 'jetsQGL[3]', 50, 0., 1., False, 0., 0., 5, 1 ],
 		[ 'Resolved', 'deltaEta', 50, 0., 5., True, 0, 0., 5, 1 ],
-		[ 'Resolved', 'massAsym', 20, 0., 1., True, 0., 0., 1, 2 ],
+		[ 'Resolved', 'massAsym', 20, 0., 1., True, 0.1, 0., 1, 2 ],
 		#[ 'Resolved', 'cosThetaStar1', 20, 0., 1., True, 0., 0., 1, 3 ],
 		#[ 'Resolved', 'cosThetaStar2', 20, 0., 1., True, 0., 0., 1, 4 ],
-		[ 'Resolved', 'delta1', 50, 0, 300,  False, 0, 0., 500, 5 ],
-		[ 'Resolved', 'delta2', 50, 0, 300, False, 0, 0., 500, 6 ],
+		[ 'Resolved', 'delta1', 300, 0, 300,  False, 0, 0., 300, 5 ],
+		[ 'Resolved', 'delta2', 300, 0, 300, False, 0, 0., 300, 6 ],
 		#[ 'Resolved', 'xi1', 20, 0., 1., True, 0, 0.6 ],
 		#[ 'Resolved', 'xi2', 20, 0., 1., True , 0, 0.6],
 		[ 'Boosted', "prunedMassAsym", 20, 0., 1., True, 0., 0.2, 1, 1 ],

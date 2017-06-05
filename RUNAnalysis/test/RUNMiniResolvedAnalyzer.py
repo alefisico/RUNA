@@ -96,6 +96,7 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 	allHistos[ "massAve_delta_2CSVv2M_"+sample ] = TH1F( "massAve_delta_2CSVv2M_"+sample, "massAve_delta_2CSVv2M_"+sample, 3000, 0., 3000 )
 	allHistos[ "massAve_delta_1CSVv2L_"+sample ] = TH1F( "massAve_delta_1CSVv2L_"+sample, "massAve_delta_1CSVv2L_"+sample, 3000, 0., 3000 )
 	allHistos[ "massAve_delta_2CSVv2L_"+sample ] = TH1F( "massAve_delta_2CSVv2L_"+sample, "massAve_delta_2CSVv2L_"+sample, 3000, 0., 3000 )
+	allHistos[ "tmpmassAve_delta_2CSVv2L_"+sample ] = TH1F( "tmpmassAve_delta_2CSVv2L_"+sample, "tmpmassAve_delta_2CSVv2L_"+sample, 3000, 0., 3000 )
 	allHistos[ "massAve_delta_1CSVv2T_"+sample ] = TH1F( "massAve_delta_1CSVv2T_"+sample, "massAve_delta_1CSVv2T_"+sample, 3000, 0., 3000 )
 	allHistos[ "massAve_delta_2CSVv2T_"+sample ] = TH1F( "massAve_delta_2CSVv2T_"+sample, "massAve_delta_2CSVv2T_"+sample, 3000, 0., 3000 )
 
@@ -352,6 +353,11 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 			'massAve', 
 			fullSel*twoBtagL, 
 			allHistos[ 'massAve_delta_2CSVv2L_'+sample ], 
+			( 0.10 if 'JetHT' in sample else 1 ) )
+	getHistoFromTree( fileSample, treeName,
+			'massAve', 
+			fullSel*twoBtagL*TCut(), 
+			allHistos[ 'tmpmassAve_delta_2CSVv2L_'+sample ], 
 			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	oneBtagT = TCut('( (jetsCSVv2[0]>0.9535) || (jetsCSVv2[1]>0.9535) || (jetsCSVv2[2]>0.9535) || (jetsCSVv2[3]>0.9535) )')

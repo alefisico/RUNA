@@ -133,7 +133,8 @@ def rootFitter( inFile, hist, scale, fitFunctions, minX, maxX, rebinX, plot, log
 			#### this is just a trick to keep fitting...
 			tmpFitFunc = finalHisto.GetFunction( fitFunc[0].GetName() )
 			chi2Ndf = tmpFitFunc.GetChisquare() / tmpFitFunc.GetNDF()
-			tmpStatus = ( tmpFit - fitFunc[0].GetParameter(1) ) / fitFunc[0].GetParameter(1)
+			try: tmpStatus = ( tmpFit - fitFunc[0].GetParameter(1) ) / fitFunc[0].GetParameter(1)
+			except ZeroDivisionError: tmpStatus = 0
 			if ((tmpStatus < 0.001) or (chi2Ndf < 1.5 ) ): 
 				keepFitting = False
 				print "|----> Final fit for ", fitFunc[0].GetName(), 'with chi2/ndf', tmpFitFunc.GetChisquare() , tmpFitFunc.GetNDF()
@@ -390,7 +391,7 @@ def FitterCombination( inFileData, inFileBkg, inFileSignal, hist, scale, bkgFunc
 	#hResidual.Sumw2()
 	hResidual.Draw("e")
 	line.Draw("same")
-	c3.SaveAs("Plots/"+hist.replace('ResolvedAnalysisPlots/','')+"_"+args.process+"_"+args.version+"Fit"+bkgFunction[0][0].GetName()+"_ResolvedAnalysis_"+args.version+"."+args.extension)
+	c3.SaveAs("Plots/"+hist.replace('ResolvedAnalysisPlots/','')+"_"+('MC' if args.bkgAsData else args.process)+"_"+args.version+"Fit"+bkgFunction[0][0].GetName()+"_ResolvedAnalysis_"+args.version+"."+args.extension)
 	del c3
 
 
@@ -519,8 +520,14 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 			
 			if 'Bias' in args.process:
 				print '|----> Adding ', bkgFunc[0].GetName()+'_pdf', ' to bias test'
-				dictRooPdf[ bkgFunc[0].GetName()+'_pdf' ] = RooGenericPdf( bkgFunc[0].GetName()+'_pdf' , bkgFunc[2], tmpList ) 
+				if 'landau' in bkgFunc[0].GetName(): 
+					landauSigMean = RooRealVar('landauSigMean', 'landauSigMean', bkgFuncParameters[0]['landau'][1], -abs(bkgFuncParameters[0]['landau'][1])*100, abs(bkgFuncParameters[0]['landau'][1])*100)
+					landauSigSigma = RooRealVar('landauSigSigma', 'landauSigSigma', bkgFuncParameters[0]['landau'][2], -abs(bkgFuncParameters[0]['landau'][2])*100, abs(bkgFuncParameters[0]['landau'][2])*100)
+					dictRooPdf[ bkgFunc[0].GetName()+'_pdf' ] = RooLandau( bkgFunc[0].GetName()+'_pdf' , bkgFunc[2], mass, landauSigMean, landauSigSigma ) 
+				else:
+					dictRooPdf[ bkgFunc[0].GetName()+'_pdf' ] = RooGenericPdf( bkgFunc[0].GetName()+'_pdf' , bkgFunc[2], tmpList ) 
 				dictRooPdf[ bkgFunc[0].GetName()+'_pdf' ].fitTo( rooDataHist )
+				dictRooPdf[ bkgFunc[0].GetName()+'_pdf' ].Print()
 				mypdfs.add( dictRooPdf[ bkgFunc[0].GetName()+'_pdf' ] )
 
 			else:
@@ -1128,7 +1135,7 @@ if __name__ == '__main__':
 
 	###### Input parameters
 	histYaxis = "Average dijet mass [GeV]"
-	minFit = 200
+	minFit = 160
 	maxFit = 1200
 	CMS_lumi.lumi_13TeV = str( round( (args.lumi/1000.), 1 ) )+" fb^{-1}"
 	CMS_lumi.extraText = "Preliminary Simulation"
@@ -1136,11 +1143,11 @@ if __name__ == '__main__':
 	######## Fit Functions
 	fitFunctions = {}
 	fitFunctions['P5'] = [ TF1("P5", "[0]*TMath::Power(1-(x/13000.0),[1])/(TMath::Power(x/13000.0,[2]+([3]*TMath::Log(x/13000.))+([4]*TMath::Power(TMath::Log(x/13000.),2))))",0,2000), 
-			[ 0, 100, 2, 0.1, 0.01], 
+			[ 1, 100, 2, 0.1, 0.01], 
 			'(pow(1-@0/13000,@1)/pow(@0/13000,@2+@3*log(@0/13000)+@4*pow(log(@0/13000),2))' ]
 
 	fitFunctions['P4'] = [ TF1("P4", "[0]*TMath::Power(1-(x/13000.0),[1])/(TMath::Power(x/13000.0,[2]+([3]*TMath::Log(x/13000.))))",0,2000), 
-			[ 0, 100, 2, 0.1], 
+			[ 1, 100, 0.1, 0.01 ], #0, 100, 2, 0.1], 
 			'pow(1-@0/13000,@1)/pow(@0/13000,@2+@3*log(@0/13000))' ]
 
 	fitFunctions['P3'] = [ TF1("P3", "[0]* TMath::Power(1-(x/13000.0),[1]) / (TMath::Power(x/13000.0,[2]))",0,2000), 
@@ -1148,24 +1155,28 @@ if __name__ == '__main__':
 			'pow(1-@0/13000,@1)/pow(@0/13000,@2)' ]
 
 	fitFunctions['P2'] = [ TF1("P2", "[0] / TMath::Power(x/13000.0,[1])",0,2000), 
-			[ ], 
+			[ 1, 1 ], 
 			'pow(@0/13000,-@1)' ]
 
-	fitFunctions['dijet'] = [ TF1("dijet", "[0]+ TMath::Exp( ([1]*TMath::Log(x/13000.0)) + ([2]*TMath::Power(TMath::Log(x/13000.0),2)) + ([3]*TMath::Power(TMath::Log(x/13000.0),3)))", 0, 2000 ), 
+	fitFunctions['dijet'] = [ TF1("dijet", "[0]+ TMath::Exp( ([1]*TMath::Log(x/13000.0)) + ([2]*TMath::Power(TMath::Log(x/13000.0),2)) + ([3]*TMath::Power(TMath::Log(x/13000.0),3)) + ([4]*TMath::Power(TMath::Log(x/13000.0),4)))", 0, 2000 ), 
 			[ ],
-			'exp( (@1*log(@0/13000)) + (@2*pow(log(@0/13000),2)) + ( @3*pow(log(@0/13000),3)))']
+			'exp( (@1*log(@0/13000)) + (@2*pow(log(@0/13000),2)) + ( @3*pow(log(@0/13000),3)) + ( @4*pow(log(@0/13000),4)))']
 
-	fitFunctions['expoPoli'] = [ TF1("expoPoli", "[0]+exp([1]*x+[2]*x*x+[3]*x*x*x+[4]*x*x*x*x)", 0, 1000 ), 
+	fitFunctions['expoPoli'] = [ TF1("expoPoli", "[0]+exp([1]*x+[2]*x*x+[3]*x*x*x+[4]*x*x*x*x)", 0, 2000 ), 
 			[ ],
 			'(exp((@1*@0)+(@2*pow(@0,2))+(@3*pow(@0,3))+(@4*pow(@0,4))))']
 
 	fitFunctions['atlas'] = [ 
 			TF1("atlas", "[0]* TMath::Power((1-TMath::Power(x/13000.0,0.33)),[1]) / TMath::Power(x/13000.0,[2])",0,2000), 
-			[ 1000, 100, 1 ], 
+			[ (1 if '2CSVvsL' in args.cut else 0.01 ), 100, 1 ], 
 			'(pow(1-pow(@0/13000,0.33),@1)/pow(@0/13000,@2))' ]
 
+	fitFunctions['Landau'] = [ 
+			TF1("landau", "[0]*TMath::Landau(-x,[1],[2])",0,2000), 
+			[ 10000, 1000, 1000  ], 
+			'landau(@0,@1,@2)' ]
+
 	fitFunctions['P1'] = [ TF1("P1", "[0] / (TMath::Power(x/13000.0,[1]))",0,2000), [ 0] ]
-	fitFunctions['landau'] = [ TF1("landau","[0]*TMath::Landau(-x,[1],[2])",0,2000), [ ] ]
 	fitFunctions['gaus'] = [ TF1("gaus", "gaus", 0, 2000), [ ] ]
 	fitFunctions['P4Gaus'] = [ TF1("P4Gaus", "[0]*pow(1-(x/13000.0),[1])/pow(x/13000.0,[2]+([3]*log(x/13000.)))+gaus(4)",0,2000), [] ]
 
@@ -1201,7 +1212,7 @@ if __name__ == '__main__':
 			listMass,
 			hist, 
 			scale, 
-			[ fitFunctions['P3'], fitFunctions['atlas'], fitFunctions['expoPoli'], fitFunctions['dijet'] ], 
+			[ fitFunctions['P3'], fitFunctions['atlas'], fitFunctions['Landau'], fitFunctions['dijet'] ], 
 			minFit, maxFit, 1 ) )
 
 	elif 'Fisher' in args.process:
