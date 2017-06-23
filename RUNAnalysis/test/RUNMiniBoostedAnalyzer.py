@@ -25,7 +25,7 @@ except ImportError:
 
 gROOT.SetBatch()
 ######################################
-def myAnalyzer( fileSample, listCuts, signalName, UNC ):
+def myPlotAnalyzer( fileSample, listCuts, signalName, UNC ):
 
 	outputFileName = 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_'+signalName+UNC+'_'+( '' if 'JetHT' in signalName else 'Moriond17_')+'80X_V2p4_'+args.version+'p1.root' 
 	outputFile = TFile( outputFileName, 'RECREATE' )
@@ -42,58 +42,25 @@ def myAnalyzer( fileSample, listCuts, signalName, UNC ):
 	if 'JetHT' in signalName: signalName = 'JetHT_Run2016'
 	elif 'QCD_HT' in signalName: signalName = 'QCDHTAll'
 	elif 'QCD_Pt' in signalName: signalName = 'QCDPtAll'
-	'''
-	allHistos[ "cutFlow_"+signalName ] = TH1F( "cutflow_"+signalName, "cutflow_"+signalName, len(listCuts), 0., len(listCuts) )
-	allHistos[ "cutFlow_Scaled_"+signalName ] = TH1F( "cutflow_scaled_"+signalName, "cutflow_scaled_"+signalName, len(listCuts), 0., len(listCuts) )
-	allHistos[ "cutFlow_Scaled_Weights_"+signalName ] = TH1F( "cutflow_scaled_weights_"+signalName, "cutflow_scaled_weights_"+signalName, len(listCuts), 0., len(listCuts) )
-	allHistos[ "HT_"+signalName ] = TH1F( "HT_"+signalName, "HT_"+signalName, 5000, 0., 5000 )
-	allHistos[ "MET_"+signalName ] = TH1F( "MET_"+signalName, "MET_"+signalName, 500, 0., 500 )
-	allHistos[ "massAve_"+signalName ] = TH1F( "massAve_"+signalName, "massAve_"+signalName, 500, 0., 500 )
-	allHistos[ "numJets_"+signalName ] = TH1F( "numJets_"+signalName, "numJets_"+signalName, 20, 0., 20 )
-	allHistos[ "jet1Pt_"+signalName ] = TH1F( "jet1Pt_"+signalName, "jet1Pt_"+signalName, 2000, 0., 2000 )
-	allHistos[ "jet2Pt_"+signalName ] = TH1F( "jet2Pt_"+signalName, "jet2Pt_"+signalName, 2000, 0., 2000 )
-	allHistos[ "jet1CosThetaStar_"+signalName ] = TH1F( "jet1CosThetaStar_"+signalName, "jet1CosThetaStar_"+signalName, 20, 0., 1 )
-	allHistos[ "jet2CosThetaStar_"+signalName ] = TH1F( "jet2CosThetaStar_"+signalName, "jet2CosThetaStar_"+signalName, 20, 0., 1 )
-	allHistos[ "jet1Tau32_"+signalName ] = TH1F( "jet1Tau32_"+signalName, "jet1Tau32_"+signalName, 20, 0., 1 )
-	allHistos[ "jet2Tau32_"+signalName ] = TH1F( "jet2Tau32_"+signalName, "jet2Tau32_"+signalName, 20, 0., 1 )
-	allHistos[ "jet1RhoDDT_"+signalName ] = TH1F( "jet1RhoDDT_"+signalName, "jet1RhoDDT_"+signalName, 200, -10, 10 )
-	allHistos[ "jet2RhoDDT_"+signalName ] = TH1F( "jet2RhoDDT_"+signalName, "jet2RhoDDT_"+signalName, 200, -10, 10 )
-	allHistos[ "jet1Tau21VsRhoDDT_"+signalName ] = TH2F( "jet1Tau21VsRhoDDT_"+signalName, "jet1Tau21VsRhoDDT_"+signalName, 20, 0., 1., 200, -10, 10 )
-	allHistos[ "jet2Tau21VsRhoDDT_"+signalName ] = TH2F( "jet2Tau21VsRhoDDT_"+signalName, "jet2Tau21VsRhoDDT_"+signalName, 20, 0., 1., 200, -10, 10 )
-	allHistos[ "jet1Tau21DDT_"+signalName ] = TH1F( "jet1Tau21DDT_"+signalName, "jet1Tau21DDT_"+signalName, 30, -1, 2 )
-	allHistos[ "jet2Tau21DDT_"+signalName ] = TH1F( "jet2Tau21DDT_"+signalName, "jet2Tau21DDT_"+signalName, 30, -1, 2 )
-	allHistos[ "jet1Tau21DDTVsRhoDDT_"+signalName ] = TH2F( "jet1Tau21DDTVsRhoDDT_"+signalName, "jet1Tau21DDTVsRhoDDT_"+signalName, 20, 0., 1., 200, -10, 10 )
-	allHistos[ "jet2Tau21DDTVsRhoDDT_"+signalName ] = TH2F( "jet2Tau21DDTVsRhoDDT_"+signalName, "jet2Tau21DDTVsRhoDDT_"+signalName, 20, 0., 1., 200, -10, 10 )
-	allHistos[ "jet1Tau31_"+signalName ] = TH1F( "jet1Tau31_"+signalName, "jet1Tau31_"+signalName, 20, 0., 1 )
-	allHistos[ "jet2Tau31_"+signalName ] = TH1F( "jet2Tau31_"+signalName, "jet2Tau31_"+signalName, 20, 0., 1 )
-	allHistos[ "jet1SubjetPtRatio_"+signalName ] = TH1F( "jet1SubjetPtRatio_"+signalName, "jet1SubjetPtRatio_"+signalName, 20, 0., 1 )
-	allHistos[ "jet2SubjetPtRatio_"+signalName ] = TH1F( "jet2SubjetPtRatio_"+signalName, "jet2SubjetPtRatio_"+signalName, 20, 0., 1 )
-	allHistos[ "jet1BtagCSV_"+signalName ] = TH1F( "jet1BtagCSV_"+signalName, "jet1BtagCSV_"+signalName, 5, 0., 5 )
-	allHistos[ "jet2BtagCSV_"+signalName ] = TH1F( "jet2BtagCSV_"+signalName, "jet2BtagCSV_"+signalName, 5, 0., 5 )
-	allHistos[ "jetsBtagCSV_"+signalName ] = TH1F( "jetsBtagCSV_"+signalName, "jetsBtagCSV_"+signalName, 5, 0., 5 )
-	'''
+	
 	allHistos[ "massAve_preSel_"+signalName ] = TH1F( "massAve_preSel_"+signalName, "massAve_preSel_"+signalName, massBins, massXmin, massXmax )
-	allHistos[ "massAve_preSel_lowNPV_"+signalName ] = TH1F( "massAve_preSel_lowNPV_"+signalName, "massAve_preSel_lowNPV_"+signalName, massBins, massXmin, massXmax )
-	allHistos[ "NPV_preSel_lowNPV_"+signalName ] = TH1F( "NPV_preSel_lowNPV_"+signalName, "NPV_preSel_lowNPV_"+signalName, 50, 0, 50 )
-	allHistos[ "massAve_preSel_medNPV_"+signalName ] = TH1F( "massAve_preSel_medNPV_"+signalName, "massAve_preSel_medNPV_"+signalName, massBins, massXmin, massXmax )
-	allHistos[ "NPV_preSel_medNPV_"+signalName ] = TH1F( "NPV_preSel_medNPV_"+signalName, "NPV_preSel_medNPV_"+signalName, 50, 0, 50 )
-	allHistos[ "massAve_preSel_highNPV_"+signalName ] = TH1F( "massAve_preSel_highNPV_"+signalName, "massAve_preSel_highNPV_"+signalName, massBins, massXmin, massXmax )
-	allHistos[ "NPV_preSel_highNPV_"+signalName ] = TH1F( "NPV_preSel_highNPV_"+signalName, "NPV_preSel_highNPV_"+signalName, 50, 0, 50 )
 	allHistos[ "HT_preSel_"+signalName ] = TH1F( "HT_preSel_"+signalName, "HT_preSel_"+signalName, 5000, 0, 5000 )
+	allHistos[ "numJets_preSel_"+signalName ] = TH1F( "numJets_preSel_"+signalName, "numJets_preSel_"+signalName, 10, 0, 10)
 	allHistos[ "deltaEtaDijet_preSel_"+signalName ] = TH1F( "deltaEtaDijet_preSel_"+signalName, "deltaEtaDijet_preSel_"+signalName, 50, 0., 5 )
 	allHistos[ "prunedMassAsym_preSel_"+signalName ] = TH1F( "prunedMassAsym_preSel_"+signalName, "prunedMassAsym_preSel_"+signalName, 20, 0., 1 )
 	allHistos[ "jet1Tau21_preSel_"+signalName ] = TH1F( "jet1Tau21_preSel_"+signalName, "jet1Tau21_preSel_"+signalName, 20, 0., 1 )
 	allHistos[ "jet2Tau21_preSel_"+signalName ] = TH1F( "jet2Tau21_preSel_"+signalName, "jet2Tau21_preSel_"+signalName, 20, 0., 1 )
-	allHistos[ "jet1Tau31_preSel_"+signalName ] = TH1F( "jet1Tau31_preSel_"+signalName, "jet1Tau31_preSel_"+signalName, 20, 0., 1 )
-	allHistos[ "jet2Tau31_preSel_"+signalName ] = TH1F( "jet2Tau31_preSel_"+signalName, "jet2Tau31_preSel_"+signalName, 20, 0., 1 )
+	allHistos[ "jet1Tau32_preSel_"+signalName ] = TH1F( "jet1Tau32_preSel_"+signalName, "jet1Tau32_preSel_"+signalName, 20, 0., 1 )
+	allHistos[ "jet2Tau32_preSel_"+signalName ] = TH1F( "jet2Tau32_preSel_"+signalName, "jet2Tau32_preSel_"+signalName, 20, 0., 1 )
 
 	allHistos[ "deltaEtaDijet_n-1_"+signalName ] = TH1F( "deltaEtaDijet_n-1_"+signalName, "deltaEtaDijet_n-1_"+signalName, 50, 0., 5 )
 	allHistos[ "prunedMassAsym_n-1_"+signalName ] = TH1F( "prunedMassAsym_n-1_"+signalName, "prunedMassAsym_n-1_"+signalName, 20, 0., 1 )
 	allHistos[ "jet1Tau21_n-1_"+signalName ] = TH1F( "jet1Tau21_n-1_"+signalName, "jet1Tau21_n-1_"+signalName, 20, 0., 1 )
 	allHistos[ "jet2Tau21_n-1_"+signalName ] = TH1F( "jet2Tau21_n-1_"+signalName, "jet2Tau21_n-1_"+signalName, 20, 0., 1 )
-	allHistos[ "jet1Tau31_n-1_"+signalName ] = TH1F( "jet1Tau31_n-1_"+signalName, "jet1Tau31_n-1_"+signalName, 20, 0., 1 )
-	allHistos[ "jet2Tau31_n-1_"+signalName ] = TH1F( "jet2Tau31_n-1_"+signalName, "jet2Tau31_n-1_"+signalName, 20, 0., 1 )
+	allHistos[ "jet1Tau32_n-1_"+signalName ] = TH1F( "jet1Tau32_n-1_"+signalName, "jet1Tau32_n-1_"+signalName, 20, 0., 1 )
+	allHistos[ "jet2Tau32_n-1_"+signalName ] = TH1F( "jet2Tau32_n-1_"+signalName, "jet2Tau32_n-1_"+signalName, 20, 0., 1 )
 	listCuts.append( [ 'btag' ] )
+
 	for var in listCuts:
 		if 'deltaEta' in var[0]: 
 			allHistos[ var[0]+'_'+signalName ] = TH1F( var[0]+'_'+signalName, var[0]+'_'+signalName, 50, 0., 5. )
@@ -103,18 +70,12 @@ def myAnalyzer( fileSample, listCuts, signalName, UNC ):
 			for var1 in listCuts: allHistos[ var[0]+'_'+var1[0]+"_"+signalName ] = TH1F( var[0]+'_'+var1[0]+"_"+signalName, var[0]+'_'+var1[0]+"_"+signalName, 20, 0., 1. )
 		allHistos[ "massAve_"+var[0]+'_'+signalName ] = TH1F( "massAve_"+var[0]+'_'+signalName, "massAve_"+var[0]+'_'+signalName, massBins, massXmin, massXmax )
 
-		allHistos[ "HT_"+var[0]+"_"+signalName ] = TH1F( "HT_"+var[0]+"_"+signalName, "HT_"+var[0]+"_"+signalName, 5000, 0., 5000 )
-		allHistos[ "MET_"+var[0]+"_"+signalName ] = TH1F( "MET_"+var[0]+"_"+signalName, "MET_"+var[0]+"_"+signalName, 500, 0., 500 )
-		allHistos[ "numJets_"+var[0]+"_"+signalName ] = TH1F( "numJets_"+var[0]+"_"+signalName, "numJets_"+var[0]+"_"+signalName, 20, 0., 20 )
-		allHistos[ "jet1Pt_"+var[0]+"_"+signalName ] = TH1F( "jet1Pt_"+var[0]+"_"+signalName, "jet1Pt_"+var[0]+"_"+signalName, 2000, 0., 2000 )
-		allHistos[ "jet2Pt_"+var[0]+"_"+signalName ] = TH1F( "jet2Pt_"+var[0]+"_"+signalName, "jet2Pt_"+var[0]+"_"+signalName, 2000, 0., 2000 )
+		#allHistos[ "HT_"+var[0]+"_"+signalName ] = TH1F( "HT_"+var[0]+"_"+signalName, "HT_"+var[0]+"_"+signalName, 5000, 0., 5000 )
+		#allHistos[ "MET_"+var[0]+"_"+signalName ] = TH1F( "MET_"+var[0]+"_"+signalName, "MET_"+var[0]+"_"+signalName, 500, 0., 500 )
+		#allHistos[ "numJets_"+var[0]+"_"+signalName ] = TH1F( "numJets_"+var[0]+"_"+signalName, "numJets_"+var[0]+"_"+signalName, 20, 0., 20 )
+		#allHistos[ "jet1Pt_"+var[0]+"_"+signalName ] = TH1F( "jet1Pt_"+var[0]+"_"+signalName, "jet1Pt_"+var[0]+"_"+signalName, 2000, 0., 2000 )
+		#allHistos[ "jet2Pt_"+var[0]+"_"+signalName ] = TH1F( "jet2Pt_"+var[0]+"_"+signalName, "jet2Pt_"+var[0]+"_"+signalName, 2000, 0., 2000 )
 	listCuts.remove( ['btag'] )
-	allHistos[ "massAve_deltaEtaDijet_lowNPV_"+signalName ] = TH1F( "massAve_deltaEtaDijet_lowNPV_"+signalName, "massAve_deltaEtaDijet_lowNPV_"+signalName, massBins, massXmin, massXmax )
-	allHistos[ "NPV_deltaEtaDijet_lowNPV_"+signalName ] = TH1F( "NPV_deltaEtaDijet_lowNPV_"+signalName, "NPV_deltaEtaDijet_lowNPV_"+signalName, 50, 0, 50 )
-	allHistos[ "massAve_deltaEtaDijet_medNPV_"+signalName ] = TH1F( "massAve_deltaEtaDijet_medNPV_"+signalName, "massAve_deltaEtaDijet_medNPV_"+signalName, massBins, massXmin, massXmax )
-	allHistos[ "NPV_deltaEtaDijet_medNPV_"+signalName ] = TH1F( "NPV_deltaEtaDijet_medNPV_"+signalName, "NPV_deltaEtaDijet_medNPV_"+signalName, 50, 0, 50 )
-	allHistos[ "massAve_deltaEtaDijet_highNPV_"+signalName ] = TH1F( "massAve_deltaEtaDijet_highNPV_"+signalName, "massAve_deltaEtaDijet_highNPV_"+signalName, massBins, massXmin, massXmax )
-	allHistos[ "NPV_deltaEtaDijet_highNPV_"+signalName ] = TH1F( "NPV_deltaEtaDijet_highNPV_"+signalName, "NPV_deltaEtaDijet_highNPV_"+signalName, 50, 0, 50 )
 
 	for ind in listOfOptions:
 		tmpName = listCuts[ind[0]][0]+'Vs'+listCuts[ind[1]][0]+'_'+signalName
@@ -124,23 +85,16 @@ def myAnalyzer( fileSample, listCuts, signalName, UNC ):
 				)
 
 	tmpNameSam = listCuts[-2][0]+'Vs'+listCuts[-1][0]+'_'+signalName
-	#tmpNameSam = tmpName #listCuts[-2][0]+'Vs'+listCuts[-1][0]+'_'+signalName
 	for k in [ 'A', 'B', 'C', 'D' ]:
-		#allHistos[ "massAve_"+tmpNameSam+'_'+k ] = TH1F( "massAve_"+tmpNameSam+'_'+k, "massAve_"+tmpNameSam+'_'+k,  len(boostedMassAveBins)-1, boostedMassAveBins )
-		#allHistos[ "massAve_"+tmpNameSam+'_btag_'+k ] = TH1F( "massAve_"+tmpNameSam+'_btag_'+k, "massAve_"+tmpNameSam+'_btag_'+k,  len(boostedMassAveBins)-1, boostedMassAveBins )
 		allHistos[ "massAve_"+tmpNameSam+'_'+k ] = TH1F( "massAve_"+tmpNameSam+'_'+k, "massAve_"+tmpNameSam+'_'+k, massBins, massXmin, massXmax )
 		allHistos[ "massAve_"+tmpNameSam+'_btag_'+k ] = TH1F( "massAve_"+tmpNameSam+'_btag_'+k, "massAve_"+tmpNameSam+'_btag_'+k, massBins, massXmin, massXmax )
 		allHistos[ tmpNameSam+'_'+k ] = TH2F( tmpNameSam+'_'+k, tmpNameSam+'_'+k, 
 				(50 if 'deltaEta' in listCuts[-2][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[-2][0] else 1. ),
 				(50 if 'deltaEta' in listCuts[-1][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[-1][0] else 1. ) 
-				#(50 if 'deltaEta' in listCuts[ind[0]][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[ind[0]][0] else 1. ),
-				#(50 if 'deltaEta' in listCuts[ind[1]][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[ind[1]][0] else 1. ) 
 				)
 		allHistos[ tmpNameSam+'_btag_'+k ] = TH2F( tmpNameSam+'_btag_'+k, tmpNameSam+'_btag_'+k, 
 				(50 if 'deltaEta' in listCuts[-2][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[-2][0] else 1. ),
 				(50 if 'deltaEta' in listCuts[-1][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[-1][0] else 1. ) 
-				#(50 if 'deltaEta' in listCuts[ind[0]][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[ind[0]][0] else 1. ),
-				#(50 if 'deltaEta' in listCuts[ind[1]][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[ind[1]][0] else 1. ) 
 				)
 
 	for h in allHistos: allHistos[h].Sumw2()
@@ -150,9 +104,9 @@ def myAnalyzer( fileSample, listCuts, signalName, UNC ):
 	#lumiWeight = ( 1 if 'JetHT' in signalName else sf  )
 	#SF = 'puWeight*'+str(lumiWeight)
 	SF = TCut('lumiWeight * puWeight') # * '+str(args.lumi))
-	preselection = TCut('HT>900') * TCut( SF )
+	preselection = TCut('HT>900') * TCut("numJets==2") * TCut( SF )
 	stringSel = '' 
-	for var in listCuts: stringSel = stringSel+'('+var[0]+'<'+str(var[1])+')'
+	for var in listCuts: stringSel = stringSel+'('+var[0]+('>' if '32' in var[0] else '<')+str(var[1])+')'
 	stringSel = stringSel.replace(')(',') * (')
 	print '---- Cuts applied: ', stringSel, preselection * TCut( stringSel )
 
@@ -182,47 +136,18 @@ def myAnalyzer( fileSample, listCuts, signalName, UNC ):
 			preselection,
 			allHistos[ 'HT_preSel_'+signalName ], 
 			( 0.05 if 'JetHT' in signalName else 1 ) ) 
+
+	getHistoFromTree( fileSample, treeName,
+			'numJets', 
+			preselection,
+			allHistos[ 'numJets_preSel_'+signalName ], 
+			( 0.05 if 'JetHT' in signalName else 1 ) ) 
+	
 	
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAve', 
 			preselection, 
 			allHistos[ 'massAve_preSel_'+signalName ], 
-			( 0.05 if 'JetHT' in signalName else 1 ) ) 
-
-	getHistoFromTree( fileSample, treeName,
-			'prunedMassAve', 
-			preselection+TCut( '(numPV<12)' ), 
-			allHistos[ 'massAve_preSel_lowNPV_'+signalName ], 
-			( 0.05 if 'JetHT' in signalName else 1 ) ) 
-
-	getHistoFromTree( fileSample, treeName,
-			'numPV', 
-			preselection+TCut( '(numPV<12)' ), 
-			allHistos[ 'NPV_preSel_lowNPV_'+signalName ], 
-			( 0.05 if 'JetHT' in signalName else 1 ) ) 
-
-	getHistoFromTree( fileSample, treeName,
-			'prunedMassAve', 
-			preselection+TCut( '(numPV>12) && (numPV<24)' ), 
-			allHistos[ 'massAve_preSel_medNPV_'+signalName ], 
-			( 0.05 if 'JetHT' in signalName else 1 ) ) 
-
-	getHistoFromTree( fileSample, treeName,
-			'numPV', 
-			preselection+TCut( '(numPV>12) && (numPV<24)' ), 
-			allHistos[ 'NPV_preSel_medNPV_'+signalName ], 
-			( 0.05 if 'JetHT' in signalName else 1 ) ) 
-
-	getHistoFromTree( fileSample, treeName,
-			'prunedMassAve', 
-			preselection+TCut( '(numPV>24)' ), 
-			allHistos[ 'massAve_preSel_highNPV_'+signalName ], 
-			( 0.05 if 'JetHT' in signalName else 1 ) ) 
-
-	getHistoFromTree( fileSample, treeName,
-			'numPV', 
-			preselection+TCut( '(numPV>24)' ), 
-			allHistos[ 'NPV_preSel_highNPV_'+signalName ], 
 			( 0.05 if 'JetHT' in signalName else 1 ) ) 
 
 	getHistoFromTree( fileSample, treeName,
@@ -246,6 +171,16 @@ def myAnalyzer( fileSample, listCuts, signalName, UNC ):
 			preselection,
 			allHistos[ 'jet2Tau21_preSel_'+signalName ], 
 			( 0.05 if 'JetHT' in signalName else 1 ) ) 
+	getHistoFromTree( fileSample, treeName,
+			'jet1Tau32', 
+			preselection,
+			allHistos[ 'jet1Tau32_preSel_'+signalName ], 
+			( 0.05 if 'JetHT' in signalName else 1 ) ) 
+	getHistoFromTree( fileSample, treeName,
+			'jet2Tau32', 
+			preselection,
+			allHistos[ 'jet2Tau32_preSel_'+signalName ], 
+			( 0.05 if 'JetHT' in signalName else 1 ) ) 
 
 
 
@@ -256,40 +191,11 @@ def myAnalyzer( fileSample, listCuts, signalName, UNC ):
 			allHistos[ 'massAve_deltaEtaDijet_'+signalName ], 
 			( 0.05 if 'JetHT' in signalName else 1 ) ) 
 
+	### ttabr selection inclusive
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAve', 
-			sel+TCut('(numPV<12)'), 
-			allHistos[ 'massAve_deltaEtaDijet_lowNPV_'+signalName ], 
-			( 0.05 if 'JetHT' in signalName else 1 ) ) 
-
-	getHistoFromTree( fileSample, treeName,
-			'numPV', 
-			sel+TCut('(numPV<12)'), 
-			allHistos[ 'NPV_deltaEtaDijet_lowNPV_'+signalName ], 
-			( 0.05 if 'JetHT' in signalName else 1 ) ) 
-
-	getHistoFromTree( fileSample, treeName,
-			'prunedMassAve', 
-			sel+TCut('(numPV>12) && (numPV<24)'), 
-			allHistos[ 'massAve_deltaEtaDijet_medNPV_'+signalName ], 
-			( 0.05 if 'JetHT' in signalName else 1 ) ) 
-
-	getHistoFromTree( fileSample, treeName,
-			'numPV', 
-			sel+TCut('(numPV>12) && (numPV<24)'), 
-			allHistos[ 'NPV_deltaEtaDijet_medNPV_'+signalName ], 
-			( 0.05 if 'JetHT' in signalName else 1 ) ) 
-
-	getHistoFromTree( fileSample, treeName,
-			'prunedMassAve', 
-			sel+TCut('(numPV>24)'), 
-			allHistos[ 'massAve_deltaEtaDijet_highNPV_'+signalName ], 
-			( 0.05 if 'JetHT' in signalName else 1 ) ) 
-
-	getHistoFromTree( fileSample, treeName,
-			'numPV', 
-			sel+TCut('(numPV>24)'), 
-			allHistos[ 'NPV_deltaEtaDijet_highNPV_'+signalName ], 
+			preselection + TCut( stringSel.replace('(jet1Tau32>0.54)','(jet1Tau32<0.54)').replace('(jet2Tau32>0.54)','(jet2Tau32<0.54)') ), 
+			allHistos[ 'massAve_jet2Tau32_'+signalName ], 
 			( 0.05 if 'JetHT' in signalName else 1 ) ) 
 
 
@@ -315,6 +221,17 @@ def myAnalyzer( fileSample, listCuts, signalName, UNC ):
 			preselection + TCut( stringSel.replace('&& (jet2Tau21<0.45)','') ), 
 			allHistos[ 'jet2Tau21_n-1_'+signalName ], 
 			( 0.05 if 'JetHT' in signalName else 1 ) ) 
+	getHistoFromTree( fileSample, treeName,
+			'jet1Tau32', 
+			preselection + TCut( stringSel.replace('&& (jet1Tau32<0.54)','') ), 
+			allHistos[ 'jet1Tau32_n-1_'+signalName ], 
+			( 0.05 if 'JetHT' in signalName else 1 ) ) 
+	getHistoFromTree( fileSample, treeName,
+			'jet2Tau32', 
+			preselection + TCut( stringSel.replace('&& (jet2Tau32<0.54)','') ), 
+			allHistos[ 'jet2Tau32_n-1_'+signalName ], 
+			( 0.05 if 'JetHT' in signalName else 1 ) ) 
+
 
 	### ABCD plots
 	for region, selABCD in ABCDRegions.items():
@@ -350,7 +267,101 @@ def myAnalyzer( fileSample, listCuts, signalName, UNC ):
 				allHistos[ 'prunedMassAsymVsdeltaEtaDijet_'+signalName+'_btag'+region ],
 				( 0.05 if 'JetHT' in signalName else 1 ) ) 
 
+	outputFile.Write()
+	##### Closing
+	print 'Writing output file: '+ outputFileName
+	outputFile.Close()
 
+
+######################################
+def myAnalyzer( fileSample, listCuts, signalName, UNC ):
+
+	outputFileName = 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_'+signalName+UNC+'_'+( '' if 'JetHT' in signalName else 'Moriond17_')+'80X_V2p4_'+args.version+'p1.root' 
+	outputFile = TFile( outputFileName, 'RECREATE' )
+
+
+	################################################################################################## Histos
+	massBins = 500
+	massXmin = 0.
+	massXmax = 500.
+	listOfOptions = [ [ j,k] for j in range(len(listCuts)-1) for k in range(1, len(listCuts) ) if k > j ]
+
+	print '--- Sample ', signalName
+	sf = scaleFactor(signalName)
+	if 'JetHT' in signalName: signalName = 'JetHT_Run2016'
+	elif 'QCD_HT' in signalName: signalName = 'QCDHTAll'
+	elif 'QCD_Pt' in signalName: signalName = 'QCDPtAll'
+	allHistos[ "massAve_preSel_"+signalName ] = TH1F( "massAve_preSel_"+signalName, "massAve_preSel_"+signalName, massBins, massXmin, massXmax )
+	allHistos[ "HT_preSel_"+signalName ] = TH1F( "HT_preSel_"+signalName, "HT_preSel_"+signalName, 5000, 0, 5000 )
+	allHistos[ "deltaEtaDijet_preSel_"+signalName ] = TH1F( "deltaEtaDijet_preSel_"+signalName, "deltaEtaDijet_preSel_"+signalName, 50, 0., 5 )
+	allHistos[ "prunedMassAsym_preSel_"+signalName ] = TH1F( "prunedMassAsym_preSel_"+signalName, "prunedMassAsym_preSel_"+signalName, 20, 0., 1 )
+	allHistos[ "jet1Tau21_preSel_"+signalName ] = TH1F( "jet1Tau21_preSel_"+signalName, "jet1Tau21_preSel_"+signalName, 20, 0., 1 )
+	allHistos[ "jet2Tau21_preSel_"+signalName ] = TH1F( "jet2Tau21_preSel_"+signalName, "jet2Tau21_preSel_"+signalName, 20, 0., 1 )
+	allHistos[ "jet1Tau31_preSel_"+signalName ] = TH1F( "jet1Tau31_preSel_"+signalName, "jet1Tau31_preSel_"+signalName, 20, 0., 1 )
+	allHistos[ "jet2Tau31_preSel_"+signalName ] = TH1F( "jet2Tau31_preSel_"+signalName, "jet2Tau31_preSel_"+signalName, 20, 0., 1 )
+
+	allHistos[ "deltaEtaDijet_n-1_"+signalName ] = TH1F( "deltaEtaDijet_n-1_"+signalName, "deltaEtaDijet_n-1_"+signalName, 50, 0., 5 )
+	allHistos[ "prunedMassAsym_n-1_"+signalName ] = TH1F( "prunedMassAsym_n-1_"+signalName, "prunedMassAsym_n-1_"+signalName, 20, 0., 1 )
+	allHistos[ "jet1Tau21_n-1_"+signalName ] = TH1F( "jet1Tau21_n-1_"+signalName, "jet1Tau21_n-1_"+signalName, 20, 0., 1 )
+	allHistos[ "jet2Tau21_n-1_"+signalName ] = TH1F( "jet2Tau21_n-1_"+signalName, "jet2Tau21_n-1_"+signalName, 20, 0., 1 )
+	allHistos[ "jet1Tau31_n-1_"+signalName ] = TH1F( "jet1Tau31_n-1_"+signalName, "jet1Tau31_n-1_"+signalName, 20, 0., 1 )
+	allHistos[ "jet2Tau31_n-1_"+signalName ] = TH1F( "jet2Tau31_n-1_"+signalName, "jet2Tau31_n-1_"+signalName, 20, 0., 1 )
+	listCuts.append( [ 'btag' ] )
+	for var in listCuts:
+		if 'deltaEta' in var[0]: 
+			allHistos[ var[0]+'_'+signalName ] = TH1F( var[0]+'_'+signalName, var[0]+'_'+signalName, 50, 0., 5. )
+			for var1 in listCuts: allHistos[ var[0]+'_'+var1[0]+"_"+signalName ] = TH1F( var[0]+'_'+var1[0]+"_"+signalName, var[0]+'_'+var1[0]+"_"+signalName, 50, 0., 5. )
+		else: 
+			allHistos[ var[0]+'_'+signalName ] = TH1F( var[0]+'_'+signalName, var[0]+'_'+signalName, 20, 0., 1. )
+			for var1 in listCuts: allHistos[ var[0]+'_'+var1[0]+"_"+signalName ] = TH1F( var[0]+'_'+var1[0]+"_"+signalName, var[0]+'_'+var1[0]+"_"+signalName, 20, 0., 1. )
+		allHistos[ "massAve_"+var[0]+'_'+signalName ] = TH1F( "massAve_"+var[0]+'_'+signalName, "massAve_"+var[0]+'_'+signalName, massBins, massXmin, massXmax )
+
+		allHistos[ "HT_"+var[0]+"_"+signalName ] = TH1F( "HT_"+var[0]+"_"+signalName, "HT_"+var[0]+"_"+signalName, 5000, 0., 5000 )
+		allHistos[ "MET_"+var[0]+"_"+signalName ] = TH1F( "MET_"+var[0]+"_"+signalName, "MET_"+var[0]+"_"+signalName, 500, 0., 500 )
+		allHistos[ "numJets_"+var[0]+"_"+signalName ] = TH1F( "numJets_"+var[0]+"_"+signalName, "numJets_"+var[0]+"_"+signalName, 20, 0., 20 )
+		allHistos[ "jet1Pt_"+var[0]+"_"+signalName ] = TH1F( "jet1Pt_"+var[0]+"_"+signalName, "jet1Pt_"+var[0]+"_"+signalName, 2000, 0., 2000 )
+		allHistos[ "jet2Pt_"+var[0]+"_"+signalName ] = TH1F( "jet2Pt_"+var[0]+"_"+signalName, "jet2Pt_"+var[0]+"_"+signalName, 2000, 0., 2000 )
+	listCuts.remove( ['btag'] )
+
+	for ind in listOfOptions:
+		tmpName = listCuts[ind[0]][0]+'Vs'+listCuts[ind[1]][0]+'_'+signalName
+		allHistos[ tmpName ] = TH2F( tmpName, tmpName, 
+				(50 if 'deltaEta' in listCuts[ind[0]][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[ind[0]][0] else 1. ),
+				(50 if 'deltaEta' in listCuts[ind[1]][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[ind[1]][0] else 1. ) 
+				)
+
+	tmpNameSam = listCuts[-2][0]+'Vs'+listCuts[-1][0]+'_'+signalName
+	#tmpNameSam = tmpName #listCuts[-2][0]+'Vs'+listCuts[-1][0]+'_'+signalName
+	for k in [ 'A', 'B', 'C', 'D' ]:
+		#allHistos[ "massAve_"+tmpNameSam+'_'+k ] = TH1F( "massAve_"+tmpNameSam+'_'+k, "massAve_"+tmpNameSam+'_'+k,  len(boostedMassAveBins)-1, boostedMassAveBins )
+		#allHistos[ "massAve_"+tmpNameSam+'_btag_'+k ] = TH1F( "massAve_"+tmpNameSam+'_btag_'+k, "massAve_"+tmpNameSam+'_btag_'+k,  len(boostedMassAveBins)-1, boostedMassAveBins )
+		allHistos[ "massAve_"+tmpNameSam+'_'+k ] = TH1F( "massAve_"+tmpNameSam+'_'+k, "massAve_"+tmpNameSam+'_'+k, massBins, massXmin, massXmax )
+		allHistos[ "massAve_"+tmpNameSam+'_btag_'+k ] = TH1F( "massAve_"+tmpNameSam+'_btag_'+k, "massAve_"+tmpNameSam+'_btag_'+k, massBins, massXmin, massXmax )
+		allHistos[ tmpNameSam+'_'+k ] = TH2F( tmpNameSam+'_'+k, tmpNameSam+'_'+k, 
+				(50 if 'deltaEta' in listCuts[-2][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[-2][0] else 1. ),
+				(50 if 'deltaEta' in listCuts[-1][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[-1][0] else 1. ) 
+				#(50 if 'deltaEta' in listCuts[ind[0]][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[ind[0]][0] else 1. ),
+				#(50 if 'deltaEta' in listCuts[ind[1]][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[ind[1]][0] else 1. ) 
+				)
+		allHistos[ tmpNameSam+'_btag_'+k ] = TH2F( tmpNameSam+'_btag_'+k, tmpNameSam+'_btag_'+k, 
+				(50 if 'deltaEta' in listCuts[-2][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[-2][0] else 1. ),
+				(50 if 'deltaEta' in listCuts[-1][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[-1][0] else 1. ) 
+				#(50 if 'deltaEta' in listCuts[ind[0]][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[ind[0]][0] else 1. ),
+				#(50 if 'deltaEta' in listCuts[ind[1]][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[ind[1]][0] else 1. ) 
+				)
+
+	for h in allHistos: allHistos[h].Sumw2()
+
+	################################################################################################## Running the Analysis
+	print '-'*40
+	#lumiWeight = ( 1 if 'JetHT' in signalName else sf  )
+	#SF = 'puWeight*'+str(lumiWeight)
+	SF = TCut('lumiWeight * puWeight') # * '+str(args.lumi))
+	preselection = TCut('HT>900') * TCut("numJets==2") * TCut( SF )
+	stringSel = '' 
+	for var in listCuts: stringSel = stringSel+'('+var[0]+'<'+str(var[1])+')'
+	stringSel = stringSel.replace(')(',') * (')
+	print '---- Cuts applied: ', stringSel, preselection * TCut( stringSel )
 #	for sample in dictSamples:
 #
 #		####### Get GenTree 
@@ -639,7 +650,7 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument( '-m', '--mass', action='store', dest='mass', default=100, help='Mass of the Stop' )
 	parser.add_argument( '-g', '--grooming', action='store',  dest='grooming', default='pruned', help='Jet Algorithm' )
-	parser.add_argument( '-p', '--process', action='store',  dest='process', default='single', help='Process: all or single.' )
+	parser.add_argument( '-p', '--process', action='store',  dest='process', default='Plots', help='Process: Plots or run.' )
 	parser.add_argument( '-d', '--decay', action='store',  dest='decay', default='UDD312', help='Decay: UDD312 or UDD323.' )
 	parser.add_argument( '-s', '--sample', action='store',   dest='samples', default='RPV', help='Type of sample' )
 	parser.add_argument( '-u', '--unc', action='store',  dest='unc', default='', help='Process: all or single.' )
@@ -678,8 +689,17 @@ if __name__ == '__main__':
 	#allSamples[ 'WZ' ] = folder+'/RUNAnalysis_WZ_80X_V2p4_'+args.version+'.root'
 	allSamples[ 'QCD'+args.qcd+'All' ] = folder+'/RUNAnalysis_QCD'+args.qcd+'All_80X_V2p4_'+args.version+'.root'
 
-	if 'pruned' in args.grooming: cuts = selection['CHSpruned'] 
-	else: cuts = selection['PUPPIsoftDrop']
+	if 'pruned' in args.grooming: 
+		cuts = [ 
+				[ 'jet1Tau32', 0.54 ], [ 'jet2Tau32', 0.54 ],
+				[ 'jet1Tau21', 0.45 ], [ 'jet2Tau21', 0.45 ], 
+				[ 'prunedMassAsym', 0.10 ], 
+				[ 'deltaEtaDijet', 1.5 ]
+				]
+	else:
+		cuts = [ 
+				[ 'jet1Tau21', 0.45 ], [ 'jet2Tau21', 0.45 ], [ 'prunedMassAsym', 0.10 ], [ 'deltaEtaDijet', 1.5 ] 
+				]
 		
 	if 'RPV' in args.samples: args.samples = 'RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)
 	dictSamples = OrderedDict()
@@ -689,10 +709,13 @@ if __name__ == '__main__':
 	allHistos = {}
 
 	for sample in dictSamples:
-		if ('RPV' in args.samples) and args.unc:
-			for uncType in [ args.unc+'Up', args.unc+'Down' ]: 
-				p = Process( target=myAnalyzer, args=( dictSamples[sample], cuts, sample, uncType ) )
-		else: 
-			p = Process( target=myAnalyzer, args=( dictSamples[sample], cuts, sample, '' ) )
-		p.start()
-		p.join()
+		if 'Plots' in args.process: 
+			if ('RPV' in args.samples) and args.unc:
+				for uncType in [ args.unc+'Up', args.unc+'Down' ]: 
+					p = Process( target=myPlotAnalyzer, args=( dictSamples[sample], cuts, sample, uncType ) )
+			else: 
+				p = Process( target=myPlotAnalyzer, args=( dictSamples[sample], cuts, sample, '' ) )
+		else:
+			p = Process( target=myAnalyzer, args=( dictSamples[sample], preselection, cuts, sample, '' ) )
+	p.start()
+	p.join()
