@@ -65,6 +65,7 @@ typedef struct Jet_struc {
 class myJet {
 	public:
 		TLorentzVector p4;
+		TLorentzVector genp4;
 		TLorentzVector subjet0;
 		double subjet0BtagCSVv2;
 		double subjet0BtagCMVAv2;

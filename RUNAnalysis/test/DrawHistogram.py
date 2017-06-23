@@ -1399,6 +1399,9 @@ if __name__ == '__main__':
 		[ '2D', 'Resolved', 'massAveminChi2vsminDeltaR', 'Average dijet mass (#chi^{2}) [GeV]', 'Average dijet mass (#Delta R)', 0, 1000, 20, 0, 1000, 20, jetMassHTlabX, jetMassHTlabY],
 		[ '2D', 'Resolved', 'minChi2vsminDeltaR', 'Min( #chi^{2} )', 'Min #Delta R', 0, 5, 2, 0, 5, 2, jetMassHTlabX, jetMassHTlabY],
 		#[ '2D', 'Resolved', 'delta', 'Average dijet mass [GeV]', 'Delta', 100, 700, 10, 0, 1000, 10, jetMassHTlabX, jetMassHTlabY],
+		[ '2D', 'Resolved', 'jet12vsjet34Mass', 'dijet 1 mass [GeV]', 'dijet 2 mass [GeV]', 0, 1000, 20, 0, 1000, 20, jetMassHTlabX, jetMassHTlabY],
+		[ '2D', 'Resolved', 'massAvevsjet34Mass', 'average dijet mass [GeV]', 'dijet 2 mass [GeV]', 0, 1000, 20, 0, 1000, 20, jetMassHTlabX, jetMassHTlabY],
+		[ '2D', 'Resolved', 'massAvevsjet12Mass', 'average dijet mass [GeV]', 'dijet 1 mass [GeV]', 0, 1000, 20, 0, 1000, 20, jetMassHTlabX, jetMassHTlabY],
 
 		[ '1D', 'Boosted', 'jet1Pt', 100, 1500, 1, '', '', False],
 		[ '1D', 'Boosted', 'jet1Eta', -3, 3, 1, '', '', False],

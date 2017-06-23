@@ -488,7 +488,17 @@ void RUNResolvedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup)
 	double rawHT = 0;
 	HT = 0;
 
+	/////// Genjets
+	vector< TLorentzVector > genJets;
+	for (size_t i = 0; i < jetGenPt->size(); i++) {
+		if( TMath::Abs( (*jetGenPt)[i] ) < 30 ) continue;
+		TLorentzVector tmpGenJet;
+		tmpGenJet.SetPtEtaPhiE( (*jetGenPt)[i], (*jetGenEta)[i], (*jetGenPhi)[i], (*jetGenE)[i] );
+		genJets.push_back( tmpGenJet );
+	}
+
 	/////// Preselect jets
+	double minDeltaRGenJet = 99999;
 	for (size_t i = 0; i < jetPt->size(); i++) {
 
 		if( TMath::Abs( (*jetEta)[i] ) > 2.4 ) continue;
@@ -548,6 +558,17 @@ void RUNResolvedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup)
 			histos1D_[ "numConst" ]->Fill( (*chargedMultiplicity)[i] + (*neutralMultiplicity)[i], totalWeight );
 			histos1D_[ "chargedMultiplicity" ]->Fill( (*chargedMultiplicity)[i] * jec, totalWeight );
 
+			TLorentzVector genJetP4;
+			for ( auto genJet : genJets ) {
+				double tmpDeltaR = genJet.DeltaR( corrJet );
+				LogWarning("genJets") << genJet.Pt() << " " << tmpDeltaR; 
+				if ( tmpDeltaR < minDeltaRGenJet ) {
+					LogWarning("mingenJets") << genJet.Pt() << " " << tmpDeltaR; 
+					minDeltaRGenJet = tmpDeltaR;
+					genJetP4 = genJet;
+				}
+			}
+			LogWarning("choosengenJets") << corrJet.Pt() << " " << genJet.Pt(); 
 
 			myJet tmpJET;
 			tmpJET.p4 = corrJet;

@@ -240,8 +240,8 @@ process.p = cms.Path()
 if 'Resolved' in options.version:
 	outputNAME = 'ResolvedAnalysis_'
 	process.p += process.ResolvedAnalysisPlots
-	process.p += process.ResolvedAnalysisPlotsMassPairing
-	process.p += process.ResolvedAnalysisPlotsChi2Pairing
+	#process.p += process.ResolvedAnalysisPlotsMassPairing
+	#process.p += process.ResolvedAnalysisPlotsChi2Pairing
 	if options.systematics:
 		process.p += process.ResolvedAnalysisPlotsJESUp
 		process.p += process.ResolvedAnalysisPlotsJESDown

@@ -944,113 +944,6 @@ void RUNBoostedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup) 
 			////////////////////////////////////////////////////////////////////////////////
 
 
-			/*/ Subjet variables
-			jet1SubjetsTLV.push_back( JETS[0].subjet0 );
-			jet1SubjetsTLV.push_back( JETS[0].subjet1 );
-			//LogWarning("subjet0") <<  jet1SubjetsTLV[0].M() << " " <<  jet1SubjetsTLV[1].M();
-			sort(jet1SubjetsTLV.begin(), jet1SubjetsTLV.end(), [](const TLorentzVector &p1, const TLorentzVector &p2) { return p1.M() > p2.M(); }); 
-			//LogWarning("subjet0") <<  jet1SubjetsTLV[0].M() << " " <<  jet1SubjetsTLV[1].M();
-			jet2SubjetsTLV.push_back( JETS[1].subjet0 );
-			jet2SubjetsTLV.push_back( JETS[1].subjet1 );
-			sort(jet2SubjetsTLV.begin(), jet2SubjetsTLV.end(), [](const TLorentzVector &p1, const TLorentzVector &p2) { return p1.M() > p2.M(); }); 
-			if( ( jet1SubjetsTLV.size() > 0 ) && ( jet2SubjetsTLV.size() > 0 ) ) {
-
-				// Subjet Pt ratio, subjet mass ratio 
-				//LogWarning("subjet0") <<  jet1SubjetsTLV[0].Pt() << " " <<  jet1SubjetsTLV[1].Pt();
-				jet1SubjetPtRatio = min( jet1SubjetsTLV[0].Pt(), jet1SubjetsTLV[1].Pt() ) / max( jet1SubjetsTLV[0].Pt(), jet1SubjetsTLV[1].Pt() );
-				jet1SubjetMass21Ratio =  jet1SubjetsTLV[1].M() / jet1SubjetsTLV[0].M() ;
-				jet1Subjet112MassRatio = jet1SubjetsTLV[0].M() / ( jet1SubjetsTLV[0] + jet1SubjetsTLV[1] ).M();
-				jet1Subjet1JetMassRatio = jet1SubjetsTLV[0].M() /JETS[0].mass;
-				jet1Subjet212MassRatio = jet1SubjetsTLV[1].M() / ( jet1SubjetsTLV[0] + jet1SubjetsTLV[1] ).M();
-				jet1Subjet2JetMassRatio = jet1SubjetsTLV[1].M() /JETS[0].mass;
-
-				jet2SubjetPtRatio = min( jet2SubjetsTLV[0].Pt(), jet2SubjetsTLV[1].Pt() ) / max( jet2SubjetsTLV[0].Pt(), jet2SubjetsTLV[1].Pt() );
-				jet2SubjetMass21Ratio =  jet2SubjetsTLV[1].M()/jet2SubjetsTLV[0].M();
-				jet2Subjet112MassRatio = jet2SubjetsTLV[0].M()/ ( jet2SubjetsTLV[0] + jet2SubjetsTLV[1] ).M();
-				jet2Subjet1JetMassRatio = jet2SubjetsTLV[0].M()/JETS[1].mass;
-				jet2Subjet212MassRatio = jet2SubjetsTLV[1].M()/ ( jet2SubjetsTLV[0] + jet2SubjetsTLV[1] ).M();
-				jet2Subjet2JetMassRatio = jet2SubjetsTLV[1].M()/JETS[1].mass;
-				//////////////////////////////////////////////////////////////////////////////////
-
-			
-				// SUbjet Polarization angle & dalitz variables
-				double m1 = jet1SubjetsTLV[0].M();
-				double m2 = jet1SubjetsTLV[1].M();
-				double m3 = jet2SubjetsTLV[0].M();
-				double m4 = jet2SubjetsTLV[1].M();
-
-				double m12 = ( jet1SubjetsTLV[0] + jet1SubjetsTLV[1] ).M() ;
-				double m34 = ( jet2SubjetsTLV[0] + jet2SubjetsTLV[1] ).M() ;
-				double m134 = ( jet1SubjetsTLV[0] + jet2SubjetsTLV[0] + jet2SubjetsTLV[1] ).M() ;
-				double m123 = ( jet1SubjetsTLV[0] + jet1SubjetsTLV[1] + jet2SubjetsTLV[0] ).M() ;
-				double m124 = ( jet1SubjetsTLV[0] + jet1SubjetsTLV[1] + jet2SubjetsTLV[1] ).M() ;
-				double m234 = ( jet1SubjetsTLV[1] + jet2SubjetsTLV[0] + jet2SubjetsTLV[1] ).M() ;
-				double m1234 = ( jet1SubjetsTLV[0] + jet1SubjetsTLV[1] + jet2SubjetsTLV[0] + jet2SubjetsTLV[1] ).M() ;
-				
-				// subjet polarization angles
-				double tmpX1 = pow(m1234,2) * ( ( 2 * ( pow(m12,2) + pow(m1,2) ) ) - pow(m2,2) ) ;
-				double tmpX2 = pow(m12,2) * ( pow(m134,2) - pow(m34,2) - pow(m1,2) );
-				double tmpX3 = pow(m1234,4) - ( pow(m12,2) * pow(m34,2) ) ; 
-				double tmpX4 = ( 2 * ( pow(m12,2) + pow(m1,2) ) ) - pow(m2,2);
-				double tmpX5 = pow(m12,2) * pow(m1,2);
-				double tmpx1 = tmpX1 - (tmpX2/2);
-				double tmpx2 = tmpX3 * ( pow(tmpX4,2) - tmpX5 );
-				cosPhi13412 = TMath::Abs( tmpx1 / TMath::Sqrt( tmpx2 ) );
-
-				double tmpY1 = pow(m1234,2) * ( ( 2 * ( pow(m34,2) + pow(m3,2) ) ) - pow(m4,2) ) ;
-				double tmpY2 = pow(m34,2) * ( pow(m123,2) - pow(m12,2) - pow(m3,2) );
-				double tmpY3 = pow(m1234,4) - ( pow(m12,2) * pow(m34,2) ) ; 
-				double tmpY4 = ( 2 * ( pow(m34,2) + pow(m3,2) ) ) - pow(m4,2);
-				double tmpY5 = pow(m34,2) * pow(m3,2);
-				double tmpy1 = tmpY1 - (tmpY2/2);
-				double tmpy2 = tmpY3 * ( pow(tmpY4,2) - tmpY5 );
-				cosPhi31234 = TMath::Abs( tmpy1 / TMath::Sqrt( tmpy2 ) );
-
-				// dalitz
-				double tmptilde1 = pow( m1, 2 ) + pow( m2, 2) + pow( m34, 2 ) + pow( m1234, 2);
-				double mtilde12 = pow( m12, 2 ) / tmptilde1;
-				double mtilde134 = pow( m134, 2 ) / tmptilde1;
-				double mtilde234 = pow( m234, 2 ) / tmptilde1;
-				//double tmpMtilde = mtilde12 + mtilde134 + mtilde234;
-				//LogWarning("dalitz0") << tmpMtilde << " " << mtilde12 << " " << mtilde134 << " " <<  mtilde234;
-				dalitz1.push_back( mtilde12 );
-				dalitz1.push_back( mtilde134 );
-				dalitz1.push_back( mtilde234 );
-				sort( dalitz1.begin(), dalitz1.end(), [](const double &p1, const double &p2) { return p1 > p2; }); 
-				//LogWarning("dalitz1") << dalitz1[0] << " " << dalitz1[1] << " " << dalitz1[2];
-
-				dalitzX1 = ( dalitz1[1] + ( 2 * dalitz1[0] ) ) / TMath::Sqrt(3);
-				//LogWarning("X1") << dalitzX1 << " " << dalitz1[1] ;
-				dalitzX2 = ( dalitz1[2] + ( 2 * dalitz1[0] ) ) / TMath::Sqrt(3);
-				//LogWarning("X2") << dalitzX2 << " " << dalitz1[2] ;
-				dalitzX3 = ( dalitz1[0] + ( 2 * dalitz1[1] ) ) / TMath::Sqrt(3);
-				//LogWarning("X3") << dalitzX3 << " " << dalitz1[0] ;
-				dalitzX4 = ( dalitz1[2] + ( 2 * dalitz1[1] ) ) / TMath::Sqrt(3);
-				//LogWarning("X4") << dalitzX4 << " " << dalitz1[2] ;
-				dalitzX5 = ( dalitz1[0] + ( 2 * dalitz1[2] ) ) / TMath::Sqrt(3);
-				//LogWarning("X5") << dalitzX5 << " " << dalitz1[0] ;
-				dalitzX6 = ( dalitz1[1] + ( 2 * dalitz1[2] ) ) / TMath::Sqrt(3);
-				//LogWarning("X6") << dalitzX6 << " " << dalitz1[1] ;
-
-
-				double tmptilde2 = pow( m3, 2 ) + pow( m4, 2) + pow( m12, 2 ) + pow( m1234, 2);
-				double mtilde34 = pow( m34, 2 ) / tmptilde2;
-				double mtilde123 = pow( m123, 2 ) / tmptilde2;
-				double mtilde124 = pow( m124, 2 ) / tmptilde2;
-				dalitz2.push_back( mtilde34 );
-				dalitz2.push_back( mtilde123 );
-				dalitz2.push_back( mtilde124 );
-				sort( dalitz2.begin(), dalitz2.end(), [](const double &p1, const double &p2) { return p1 > p2; }); 
-
-				dalitzY1 = ( dalitz2[1] + ( 2 * dalitz2[0] ) ) / TMath::Sqrt(3);
-				dalitzY2 = ( dalitz2[2] + ( 2 * dalitz2[0] ) ) / TMath::Sqrt(3);
-				dalitzY3 = ( dalitz2[0] + ( 2 * dalitz2[1] ) ) / TMath::Sqrt(3);
-				dalitzY4 = ( dalitz2[2] + ( 2 * dalitz2[1] ) ) / TMath::Sqrt(3);
-				dalitzY5 = ( dalitz2[0] + ( 2 * dalitz2[2] ) ) / TMath::Sqrt(3);
-				dalitzY6 = ( dalitz2[1] + ( 2 * dalitz2[2] ) ) / TMath::Sqrt(3);
-			}
-			//////////////////////////////////////////////////////////////////////////////////////*/
-
 
 			// Cut Pt
 			//if (( JETS[0].p4.Pt() > 500. ) && ( JETS[1].p4.Pt() > 450. ) ) cutJetPt = 1 ;
@@ -1326,10 +1219,6 @@ void RUNBoostedAnalysis::beginJob() {
 		RUNAtree->Branch( "jet2Tau21", &jet2Tau21, "jet2Tau21/F" );
 		RUNAtree->Branch( "jet2Tau31", &jet2Tau31, "jet2Tau31/F" );
 		RUNAtree->Branch( "jet2Tau32", &jet2Tau32, "jet2Tau32/F" );	
-		//RUNAtree->Branch( "jet1SubjetPtRatio", &jet1SubjetPtRatio, "jet1SubjetPtRatio/F" );
-		//RUNAtree->Branch( "jet2SubjetPtRatio", &jet2SubjetPtRatio, "jet2SubjetPtRatio/F" );
-		//RUNAtree->Branch( "cosPhi13412", &cosPhi13412, "cosPhi13412/F" );
-		//RUNAtree->Branch( "cosPhi31234", &cosPhi31234, "cosPhi31234/F" );
 		//RUNAtree->Branch( "scaleWeights", &scaleWeights );
 		//RUNAtree->Branch( "pdfWeights", &pdfWeights );
 		//RUNAtree->Branch( "alphaWeights", &alphaWeights );

@@ -72,6 +72,7 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 	allHistos[ "massAve_delta300_"+sample ] = TH1F( "massAve_delta300_"+sample, "massAve_delta300_"+sample, 3000, 0., 3000 )
 	allHistos[ "massAve_delta400_"+sample ] = TH1F( "massAve_delta400_"+sample, "massAve_delta400_"+sample, 3000, 0., 3000 )
 	allHistos[ "massAve_delta500_"+sample ] = TH1F( "massAve_delta500_"+sample, "massAve_delta500_"+sample, 3000, 0., 3000 )
+	allHistos[ ''+sample ] = TH2F( 'deltavsMassAve_n-1_'+sample, 'deltavsMassAve_n-1_'+sample, 1000, 0., 1000, 1000, 0., 1000. )
 
 	allHistos[ "massAsym_n-1_"+sample ] = TH1F( "massAsym_n-1_"+sample, "massAsym_n-1_"+sample, 20, 0., 1 )
 	allHistos[ "deltaEta_n-1_"+sample ] = TH1F( "deltaEta_n-1_"+sample, "deltaEta_n-1_"+sample, 50, 0., 5 )
@@ -430,8 +431,8 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 	"""docstring for myAnalyzer: creates new variables from tree """
 
-	outputFileName = 'Rootfiles/RUNMiniResolvedAnalysis_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p2.root' 
-	#outputFileName = 'Rootfiles/RUNMiniResolvedAnalysis_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p2_4jets.root' 
+	#outputFileName = 'Rootfiles/RUNMiniResolvedAnalysis_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p2.root' 
+	outputFileName = 'Rootfiles/RUNMiniResolvedAnalysis_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p2_4jets.root' 
 	outputFile = TFile( outputFileName, 'RECREATE' )
 
 	print '--- Sample ', sample
@@ -479,6 +480,9 @@ def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 	allHistos[ "massAve_minDeltaR_cutBestPair_"+sample ] = TH1F( "massAve_minDeltaR_cutBestPair_"+sample, "massAve_minDeltaR_cutBestPair_"+sample, 3000, 0., 3000 )
 	allHistos[ "deltaEta_minDeltaR_cutBestPair_"+sample ] = TH1F( "deltaEta_minDeltaR_cutBestPair_"+sample, "deltaEta_minDeltaR_cutBestPair_"+sample, 50, 0., 5)
 	allHistos[ "massAsym_minDeltaR_cutBestPair_"+sample ] = TH1F( "massAsym_minDeltaR_cutBestPair_"+sample, "massAsym_minDeltaR_cutBestPair_"+sample, 20, 0., 1 )
+	allHistos[ 'jet12vsjet34Mass_minDeltaR_cutBestPair_'+sample ] = TH2F( 'jet12vsjet34Mass_minDeltaR_cutBestPair_'+sample, 'jet12vsjet34Mass_minDeltaR_cutBestPair_'+sample, 1000, 0., 1000, 1000, 0., 1000. )
+	allHistos[ 'massAvevsjet34Mass_minDeltaR_cutBestPair_'+sample ] = TH2F( 'massAvevsjet34Mass_minDeltaR_cutBestPair_'+sample, 'massAvevsjet34Mass_minDeltaR_cutBestPair_'+sample, 1000, 0., 1000, 1000, 0., 1000. )
+	allHistos[ 'massAvevsjet12Mass_minDeltaR_cutBestPair_'+sample ] = TH2F( 'massAvevsjet12Mass_minDeltaR_cutBestPair_'+sample, 'massAvevsjet12Mass_minDeltaR_cutBestPair_'+sample, 1000, 0., 1000, 1000, 0., 1000. )
 	allHistos[ 'deltavsMassAve_minDeltaR_cutBestPair_'+sample ] = TH2F( 'deltavsMassAve_minDeltaR_cutBestPair_'+sample, 'deltavsMassAve_minDeltaR_cutBestPair_'+sample, 1000, 0., 1000, 2000, -1000., 1000. )
 	allHistos[ "cosThetaStar_minDeltaR_cutBestPair_"+sample ] = TH1F( "cosThetaStar_minDeltaR_cutBestPair_"+sample, "cosThetaStar_minDeltaR_cutBestPair_"+sample, 20, 0., 2)
 	allHistos[ 'massAveVscosThetaStar_minDeltaR_cutBestPair_'+sample ] = TH2F( 'massAveVscosThetaStar_minDeltaR_cutBestPair_'+sample, 'massAveVscosThetaStar_minDeltaR_cutBestPair_'+sample, 1000, 0., 1000, 20, 0., 2. )
@@ -496,6 +500,9 @@ def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 	allHistos[ 'massAveVscosThetaStar_minDeltaR_cutDelta_'+sample ] = TH2F( 'massAveVscosThetaStar_minDeltaR_cutDelta_'+sample, 'massAveVscosThetaStar_minDeltaR_cutDelta_'+sample, 1000, 0., 1000, 20, 0., 2. )
 	allHistos[ "xi_minDeltaR_cutDelta_"+sample ] = TH1F( "xi_minDeltaR_cutDelta_"+sample, "xi_minDeltaR_cutDelta_"+sample, 20, 0., 2)
 	allHistos[ 'massAveVsXi_minDeltaR_cutDelta_'+sample ] = TH2F( 'massAveVsXi_minDeltaR_cutDelta_'+sample, 'massAveVsXi_minDeltaR_cutDelta_'+sample, 1000, 0., 1000, 20, 0., 2. )
+	allHistos[ 'jet12vsjet34Mass_minDeltaR_cutDelta_'+sample ] = TH2F( 'jet12vsjet34Mass_minDeltaR_cutDelta_'+sample, 'jet12vsjet34Mass_minDeltaR_cutDelta_'+sample, 1000, 0., 1000, 1000, 0., 1000. )
+	allHistos[ 'massAvevsjet34Mass_minDeltaR_cutDelta_'+sample ] = TH2F( 'massAvevsjet34Mass_minDeltaR_cutDelta_'+sample, 'massAvevsjet34Mass_minDeltaR_cutDelta_'+sample, 1000, 0., 1000, 1000, 0., 1000. )
+	allHistos[ 'massAvevsjet12Mass_minDeltaR_cutDelta_'+sample ] = TH2F( 'massAvevsjet12Mass_minDeltaR_cutDelta_'+sample, 'massAvevsjet12Mass_minDeltaR_cutDelta_'+sample, 1000, 0., 1000, 1000, 0., 1000. )
 	allHistos[ "massAve_minDeltaR_cutXi_"+sample ] = TH1F( "massAve_minDeltaR_cutXi_"+sample, "massAve_minDeltaR_cutXi_"+sample, 3000, 0., 3000 )
 	allHistos[ "massAve_minDeltaR_cutMassAsym_"+sample ] = TH1F( "massAve_minDeltaR_cutMassAsym_"+sample, "massAve_minDeltaR_cutMassAsym_"+sample, 3000, 0., 3000 )
 
@@ -645,6 +652,9 @@ def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 			allHistos[ 'massAveVscosThetaStar_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[0], varDeltaR[10], SF )
 			allHistos[ 'xi_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[11], SF )
 			allHistos[ 'massAveVsXi_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[0], varDeltaR[11], SF )
+			allHistos[ 'jet12vsjet34Mass_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[12], varDeltaR[13], SF )
+			allHistos[ 'massAvevsjet34Mass_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[0], varDeltaR[13], SF )
+			allHistos[ 'massAvevsjet12Mass_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[0], varDeltaR[12], SF )
 			if len(listDeltaR)>1: 
 				allHistos[ 'secondMinDeltaR_'+sample ].Fill( listDeltaR[1], SF )
 				allHistos[ 'minVsSecondMinDeltaR_'+sample ].Fill( listDeltaR[0], listDeltaR[1], SF )
@@ -668,6 +678,9 @@ def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 						allHistos[ "massAve_minDeltaR_cutXi_"+sample ].Fill( varDeltaR[0], SF )
 					if ( varDeltaR[5] < .1 ):
 						allHistos[ "massAve_minDeltaR_cutMassAsym_"+sample ].Fill( varDeltaR[0], SF )
+						allHistos[ 'jet12vsjet34Mass_minDeltaR_cutDelta_'+sample ].Fill( varDeltaR[12], varDeltaR[13], SF )
+						allHistos[ 'massAvevsjet34Mass_minDeltaR_cutDelta_'+sample ].Fill( varDeltaR[0], varDeltaR[13], SF )
+						allHistos[ 'massAvevsjet12Mass_minDeltaR_cutDelta_'+sample ].Fill( varDeltaR[0], varDeltaR[12], SF )
 
 			############ Mass Asym
 			varMassAsym = dijetVar( listOfPairsMassAsym ) 
@@ -805,7 +818,7 @@ def dijetVar( listJets ):
 	#deltaRDijet1 = listJets[0].DeltaR( listJets[1] )
 	#deltaRDijet2 = listJets[2].DeltaR( listJets[3] )
 
-	return [ massAve, deltaEtaDijet1, deltaEtaDijet2, deltaEtaAveDijets, deltaEtaDijets, massAsymmetry, cosThetaStarDijet1, cosThetaStarDijet2, deltaDijet1, deltaDijet2, dijetCosTheta, dijetxi ]
+	return [ massAve, deltaEtaDijet1, deltaEtaDijet2, deltaEtaAveDijets, deltaEtaDijets, massAsymmetry, cosThetaStarDijet1, cosThetaStarDijet2, deltaDijet1, deltaDijet2, dijetCosTheta, dijetxi, (dijet1.M() if ( dijet1.M() > dijet2.M() ) else dijet2.M() ), (dijet1.M() if ( dijet1.M() < dijet2.M() ) else dijet2.M() )]
 
 
 #################################################################################

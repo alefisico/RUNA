@@ -240,14 +240,16 @@ def makeROCs( textFile, variables, bkgSamples, perVariable, cutsList, printVar, 
 				elif 'delta' in var[0]: dummyBin = 300.
 				else: dummyBin = 1
 				binsHisto = (dictVariablesNum[ var[0]+'_QCD'+args.qcd+'All_ROC' ][2])/dummyBin
+				'''
 				SOB = TGraphErrors( len(totalSig), 
 						binsHisto, 
 						sigOverSqrtSigBkg, 
 						array( 'd', [0]*len(sigOverSqrtSigBkg)), 
 						#totalErrSigOverSqrtBkg ) 
 						totalErrSigOverSqrtSigBkg ) 
+				'''
 
-				#SOB = TGraph( len(totalSig), (dictVariablesNum[ var[0]+'_QCD'+args.qcd+'All_ROC' ][2])/var[7], sigOverSqrtSigBkg ) 
+				SOB = TGraph( len(totalSig), binsHisto, sigOverSqrtSigBkg ) 
 				dictNumVar[ var[0] ] = SOB 
 				#if returnSOB in var[0]: return SOB
 				#else: continue
@@ -658,7 +660,7 @@ if __name__ == '__main__':
 		#[ 'Resolved', 'jetsQGL[2]', 50, 0., 1., False, 0., 0., 5, 1 ],
 		#[ 'Resolved', 'jetsQGL[3]', 50, 0., 1., False, 0., 0., 5, 1 ],
 		[ 'Resolved', 'deltaEta', 50, 0., 5., True, 0, 0., 5, 1 ],
-		[ 'Resolved', 'massAsym', 20, 0., 1., True, 0.1, 0., 1, 2 ],
+		[ 'Resolved', 'massAsym', 20, 0., 1., True, 0., 0., 1, 2 ],
 		#[ 'Resolved', 'cosThetaStar1', 20, 0., 1., True, 0., 0., 1, 3 ],
 		#[ 'Resolved', 'cosThetaStar2', 20, 0., 1., True, 0., 0., 1, 4 ],
 		[ 'Resolved', 'delta1', 300, 0, 300,  False, 0, 0., 300, 5 ],

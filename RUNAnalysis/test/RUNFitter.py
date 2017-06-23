@@ -612,9 +612,9 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		datacard.write("sigSigma\tparam\t"+str(SignalParameters[0]['gaus'][1])+'\t'+str(SignalParameters[1]['gaus'][1])+"\n")
 		datacard.write("sigMean\tparam\t"+str(SignalParameters[0]['gaus'][2])+'\t'+str(SignalParameters[1]['gaus'][2])+"\n")
 		#datacard.write("# SigNormPDF   lnN    1.0300       - \n")
-		datacard.write("SigNormJES\tlnN\t1.02\t-\n")
+		datacard.write("SigNormJES\tlnN\t1.03\t-\n")
 		datacard.write("SigNormJER\tlnN\t1.10\t-\n")
-		#datacard.write("# SigNormPU   lnN    1.0300        - \n")
+		datacard.write("# SigNormPU   lnN    1.0200        - \n")
 		#datacard.write("# SigNormISR   lnN    1.1000        - \n")
 		#datacard.write("# SigNormBtag   lnN    1.0000       - -\n")
 		datacard.close()
@@ -727,11 +727,17 @@ def drawBiasTest( listMasses, folderRootfiles ):
 		for t in [ 0, 1, 2, 3]:
 			dictTest[ mass+t ] = TChain( 'tree_fit_sb' )
 			dictTest[ mass+t ].Add( folderRootfiles+'mlfit_RPVStopStopToJets_'+args.decay+'_M-'+str(mass)+'_Resolved_'+args.cut+'_BiasTest_signal'+str(args.signalInj)+'_'+args.version+'_Index0ToIndex'+str(t)+'.root') 
-			dictTestHisto[ mass+t ] = TH1F( 'h'+str(mass)+str(t),  'h'+str(mass)+str(t), 32, (-4 if (args.signalInj==1) else -1), (4 if (args.signalInj==1) else 7))
+			dictTestHisto[ mass+t ] = TH1F( 'h'+str(mass)+str(t), 'h'+str(mass)+str(t), 
+							(16 if (args.signalInj==1) else 40), 
+							(-4 if (args.signalInj==1) else -10), 
+							(4 if (args.signalInj==1) else 10))
 			dictTest[ mass+t ].Draw( "(mu-"+str(args.signalInj)+")/muErr>>h"+str(mass)+str(t))
 			
 			dictTestHisto[ mass+t ].SetMarkerSize(2)
 			dictTestHisto[ mass+t ].SetLineWidth(2)
+			tmpMax = dictTestHisto[ mass+t ].GetMaximumBin()
+			print tmpMax
+			#sys.exit(0)
 			dictTestHisto[ mass+t ].SetStats(True)
 			dictTestHisto[ mass+t ].Fit("gaus")
 
@@ -1119,9 +1125,9 @@ if __name__ == '__main__':
 		listMass = [ args.mass ]
 	else: 
 		if '312' in args.decay: 
-			listMass = [ 200, 220, 240 ] + range( 300, 1050, 50 ) + range( 1100, 1300, 100 ) 
+			listMass = [ 200, 220, 240 ] + range( 300, 1050, 50 ) + range( 1100, 1200, 100 ) 
 			listMass.remove( 850 )
-		else: listMass = [ 200, 220, 240, 280, 300, 350 ] + range( 450, 900, 50 ) + [950, 1000, 1100, 1200, 1300] #+  range( 1100, 1600, 100 )
+		else: listMass = [ 200, 220, 240, 280, 300, 350 ] + range( 450, 900, 50 ) + [950, 1000, 1100 ] #, 1200, 1300] #+  range( 1100, 1600, 100 )
 
 
 	outputDir = "Plots/"
