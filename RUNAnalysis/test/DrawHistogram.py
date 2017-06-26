@@ -165,10 +165,11 @@ def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax
 		stackHisto.Draw('hist')
 		if args.final: labelAxis( name, stackHisto, args.grooming )
 		if 'massAve_deltaEtaDijet' in nameInRoot: 
-			stackHisto.SetMaximum( 7000 ) 
+			stackHisto.SetMaximum( 1000 ) 
 			stackHisto.SetMinimum( 1 )
 		if xmax: stackHisto.GetXaxis().SetRangeUser( xmin, xmax )
-		#stackHisto.SetMaximum( 70 ) 
+		#stackHisto.SetMaximum( 10 ) 
+		#stackHisto.SetMinimum( 0.1 ) 
 		#hBkg.SetFillStyle(0)
 		hBkg.SetLineColor(kBlack)
 		hBkg.SetLineStyle(1)
@@ -185,8 +186,10 @@ def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax
 			legend.SetNColumns(2)
 			for sample in signalHistos: 
 				if 'massAve_deltaEtaDijet' in nameInRoot: 
-					lowEdgeWindow = int(int(sample) - ( int( massWidthList[int(sample)])*3 ))
-					highEdgeWindow = int(int(sample) + ( int( massWidthList[int(sample)])*3 ))
+					#lowEdgeWindow = int(int(sample) - ( int( massWidthList[int(sample)])*3 ))
+					#highEdgeWindow = int(int(sample) + ( int( massWidthList[int(sample)])*3 ))
+					lowEdgeWindow = int(int(sample) - 15 )
+					highEdgeWindow = int(int(sample) + 15 )
 					signalHistos[ sample ].GetXaxis().SetRangeUser( lowEdgeWindow, highEdgeWindow )
 				signalHistos[ sample ].Draw("hist same")
 		else:  
@@ -1310,7 +1313,7 @@ if __name__ == '__main__':
 	
 	if 'Pt' in args.qcd: 
 		bkgLabel='(w QCD pythia8)'
-		QCDSF = ( 0.68 if 'Resolved' in args.boosted else (0.86 if 'Puppi' in args.grooming else 0.89) )  ### 0.54 with all data for resolved
+		QCDSF = ( 0.68 if 'Resolved' in args.boosted else ( 1 if 'Puppi' in args.grooming else 0.46) )  ### 0.54 with all data for resolved
 	else: 
 		bkgLabel='(w QCD madgraphMLM+pythia8)'
 		QCDSF = 0.85
@@ -1327,16 +1330,17 @@ if __name__ == '__main__':
 				'M_{#tilde{t}} = '+str(args.mass)+' GeV', 
 				kRed]
 		if 'Norm' in args.process: 
-			signalFiles[ '700' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-700_Moriond17_80X_V2p4_'+args.version+'.root'), 
+			otherMass = ( '180' if args.boosted else '700' )
+			signalFiles[ otherMass ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+otherMass+'_Moriond17_80X_V2p4_'+args.version+'.root'), 
 					args.lumi, 
-					'M_{#tilde{t}} = 700 GeV', 
+					'M_{#tilde{t}} = '+otherMass+' GeV', 
 					kRed+2]
 
 		if 'Boosted' in args.boosted: 
 			bkgFiles[ 'TT' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_TT_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 't #bar{t} + Jets', kGreen+2 ]
 			bkgFiles[ 'WJetsToQQ' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_WJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'W + Jets', 38 ]
-			#bkgFiles[ 'Dibosons' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_Dibosons_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'Dibosons', kMagenta+2 ]
-			#bkgFiles[ 'ZJetsToQQ' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_ZJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'Z + Jets', kOrange ]
+			bkgFiles[ 'Dibosons' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_Dibosons_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'Dibosons', kMagenta+2 ]
+			bkgFiles[ 'ZJetsToQQ' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_ZJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'Z + Jets', kOrange ]
 		bkgFiles[ 'QCD'+args.qcd+'All' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_QCD'+args.qcd+'All_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi*QCDSF, 'QCD'+args.qcd+'', kBlue-4 ]
 	else:
 		dataFile = TFile.Open(folder+'/RUNAnalysis_JetHT_Run2016_80X_V2p4_'+args.version+'.root')
@@ -1344,8 +1348,8 @@ if __name__ == '__main__':
 		if 'Boosted' in args.boosted: 
 			bkgFiles[ 'TTJets' ] = [ TFile.Open(folder+'/RUNAnalysis_TT_80X_V2p4_'+args.version+'.root'), args.lumi, 't #bar{t} + Jets', kGreen+2 ]
 			bkgFiles[ 'WJetsToQQ' ] = [ TFile.Open(folder+'/RUNAnalysis_WJetsToQQ_80X_V2p4_'+args.version+'.root'), args.lumi , 'W + Jets', 38 ]
-			#bkgFiles[ 'Dibosons' ] = [ TFile.Open(folder+'/RUNAnalysis_Dibosons_80X_V2p4_'+args.version+'.root'), args.lumi , 'Dibosons', kMagenta+2 ]
-			#bkgFiles[ 'ZJetsToQQ' ] = [ TFile.Open(folder+'/RUNAnalysis_ZJetsToQQ_80X_V2p4_'+args.version+'.root'), args.lumi, 'Z + Jets', kOrange ]
+			bkgFiles[ 'Dibosons' ] = [ TFile.Open(folder+'/RUNAnalysis_Dibosons_80X_V2p4_'+args.version+'.root'), args.lumi , 'Dibosons', kMagenta+2 ]
+			bkgFiles[ 'ZJetsToQQ' ] = [ TFile.Open(folder+'/RUNAnalysis_ZJetsToQQ_80X_V2p4_'+args.version+'.root'), args.lumi, 'Z + Jets', kOrange ]
 			#bkgFiles[ 'WWTo4Q' ] = [ TFile.Open(folder+'/RUNAnalysis_WWTo4Q_80X_V2p4_'+args.version+'.root'), args.lumi , 'WW (had)', kMagenta+2 ]
 			#bkgFiles[ 'ZZTo4Q' ] = [ TFile.Open(folder+'/RUNAnalysis_ZZTo4Q_80X_V2p4_'+args.version+'.root'), args.lumi, 'ZZ (had)', kOrange+2 ]
 			#bkgFiles[ 'WZ' ] = [ TFile.Open(folder+'/RUNAnalysis_WZ_80X_V2p4_'+args.version+'.root'), args.lumi, 'WZ', kCyan ]
@@ -1412,7 +1416,7 @@ if __name__ == '__main__':
 		[ '1D', 'Boosted', 'jet2Eta', -3, 3, 1, '', '', False],
 		[ '1D', 'Boosted', 'jet2Mass', 0, massMaxX, 1, '', '', False],
 		[ '1D', 'Boosted', 'massAve', 60, 350, 5, 0.92, 0.85, True, False],
-		[ '1DDATA', 'Boosted', 'massAve', 60, 350, 20, 0.92, 0.85, False, False],
+		[ '1DDATA', 'Boosted', 'massAve', 60, 350, 5, 0.92, 0.85, True, False],
 		#[ '1DData', 'Boosted', 'massAve', 60, 350, (1 if args.miniTree else 5), 0.92, 0.85, True, False],
 		#[ '1DDATA', 'Resolved', 'massAve', 0, 1000, 20, 0.92, 0.85, False, False],
 
@@ -1463,7 +1467,6 @@ if __name__ == '__main__':
 		[ 'qual', 'Boosted', 'jet1Tau21', '', '', 1, 0.9, 0.70, False, True],
 		[ 'qual', 'Boosted', 'jet2Tau21', '', '', 1, 0.9, 0.70, False, True],
 		[ 'qual', 'Boosted', 'massAve', 0, 400, 10, 0.90, 0.70, True, False],
-		[ 'qual', 'Boosted', 'HT', 700, 5000, 20, 0.90, 0.70, True, False],
 		[ 'qual', args.boosted, 'NPV', 0, 50, 2, 0.90, 0.70, False, True],
 		[ 'qual', args.boosted, 'jetNum', '', '', 1, 0.90, 0.70, True, False],
 		[ 'qual', 'Boosted', 'jet1NeutralHadronEnergyFrac', '', '', 5, 0.90, 0.70, True, False],
@@ -1619,7 +1622,6 @@ if __name__ == '__main__':
 		elif 'Norm' in args.process:
 			for cut1 in listCuts:
 				plotSignalBkg( signalFiles, bkgFiles, dataFile, i[0]+('_'+cut1 if cut1 else ''), i[0]+('_'+cut1 if cut1 else ''), i[1], i[2], i[3], i[4], i[5], i[6], i[7], True )
-				#plotSignalBkg( signalFiles, bkgFiles, dataFile, i[0]+'_'+cut1, i[0]+'_'+cut1, i[1], i[2], i[3], i[4], i[5], i[6], i[7], True )
 
 
 		elif 'simple' in args.process:

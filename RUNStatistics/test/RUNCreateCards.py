@@ -778,7 +778,7 @@ if __name__ == '__main__':
 		massList = range( 80, 360, 10 )
 		jesUncAcc = [1]*len(massList)
 	else: 
-		massList = [ 80, 100, 120, 140, 170, 180, 190, 230, 240 ]
+		massList = [ 80, 100, 120, 140, 170, 180, 190, 230, 240, 300 ]
 		#massList = [ 80, 90, 100, 110, 120, 130, 140, 150, 170, 180, 190, 210, 220, 230, 240, 300 ]
 		jesUncAcc = [1]*len(massList)
 		#massList = [ 90 ]
@@ -830,11 +830,11 @@ if __name__ == '__main__':
 		print mass
 		if isinstance( mass, int): signalSample = 'RPVStopStopToJets_UDD312_M-'+str(mass)
 		else: signalSample = str(mass)
-		dataFileHistos = currentDir+'/../../RUNAnalysis/test/Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_JetHT_Run2016_V2p1_'+args.version+'.root'
+		dataFileHistos = currentDir+'/../../RUNAnalysis/test/Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_JetHT_Run2016_80X_V2p4_'+args.version+'.root'
 		#bkgFileHistos = currentDir+'/../../RUNAnalysis/test/Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_QCDPtAll_'+RANGE+'_'+( 'v05' if 'v05p2' in args.version else args.version)+'.root'
 		bkgFileHistos = {}
-		bkgFileHistos[ 'TTJets' ] =  currentDir+'/../../RUNAnalysis/test/Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_TTJets_80X_V2p1_'+args.version+'.root'
-		bkgFileHistos[ 'WJetsToQQ' ] =  currentDir+'/../../RUNAnalysis/test/Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_WJetsToQQ_80X_V2p1_'+args.version+'.root'
+		bkgFileHistos[ 'TTJets' ] =  currentDir+'/../../RUNAnalysis/test/Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_TTJets_Moriond17_80X_V2p4_'+args.version+'.root'
+		bkgFileHistos[ 'WJetsToQQ' ] =  currentDir+'/../../RUNAnalysis/test/Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_WJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'
 
 		if args.unc: outputName = signalSample+'_'+args.grooming+'_Bin'+str(args.reBin)+'_'+args.version
 		else: outputName = signalSample+'_'+args.grooming+'_NOSys_'+args.version
@@ -847,7 +847,7 @@ if __name__ == '__main__':
 			outputName = outputName+'_GaussShape'
 			signalFileHistos = gausFunctList[ mass ] 
 		else: 
-			signalFileHistos = currentDir+'/../../RUNAnalysis/test/Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_RPVStopStopToJets_'+args.decay+'_M-'+str( mass )+'_80X_V2p1_'+args.version+'.root'
+			signalFileHistos = currentDir+'/../../RUNAnalysis/test/Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_RPVStopStopToJets_'+args.decay+'_M-'+str( mass )+'_Moriond17_80X_V2p4_'+args.version+'.root'
 
 		print '#'*50 
 		print ' |----> Creating datacard and workspace for '+( str(mass) if args.ttbarAsSignal else 'RPV St'+str( mass ) )
