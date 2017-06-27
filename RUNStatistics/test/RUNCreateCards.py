@@ -549,8 +549,8 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 		else:
 			signalHistosFile = TFile( signalFile )
 			hSignal = signalHistosFile.Get(hist+'_'+signalSample)
-			hSignal.Scale( args.lumi )
 			hSignal.Rebin( args.reBin )
+			hSignal.Scale( args.lumi )
 		hSignal.Scale ( twoProngSF )
 		hSigSyst = signalUnc( hSignal, signalMass ) 
 		if args.signalInjec and (signalMass == 100):
@@ -721,7 +721,7 @@ if __name__ == '__main__':
 	parser.add_argument('-i', '--injSig', dest='signalInjec', action="store_true", default=False, help='Signal injection test.' )
 	parser.add_argument('-t', '--ttbarAsSignal', dest='ttbarAsSignal', action="store_true", default=False, help='ttbar as signal' )
 	#parser.add_argument('-d', '--decay', action='store', default='jj', help='Decay, example: jj, bj.' )
-	parser.add_argument('-L', '--lumi', dest='lumi', action="store", default=1, help='Luminosity, example: 1.' )
+	parser.add_argument('-L', '--lumi', dest='lumi', action="store", default=1, type=int, help='Luminosity, example: 1.' )
 	parser.add_argument('-l', '--lumiUnc', dest='lumiUnc', action="store_true", default=False, help='Luminosity, example: 1.' )
 	parser.add_argument('-n', '--bkgUnc', dest='bkgUnc', action="store_true", default=False, help='Normalization unc.' )
 	parser.add_argument('-nV', '--bkgUncValue', dest='bkgUncValue', type=int, default=10, help='Value for bkg nomralization uncertainty.' )
@@ -853,7 +853,25 @@ if __name__ == '__main__':
 		print ' |----> Creating datacard and workspace for '+( str(mass) if args.ttbarAsSignal else 'RPV St'+str( mass ) )
 		print '#'*50  
 
-		if 'bin' in args.job: p = Process( target=binByBinCards, args=( dataFileHistos, bkgFileHistos, signalFileHistos, signalSample, 'massAve_deltaEtaDijet', mass, ( 0 if args.ttbarAsSignal else massWidthList[ mass ] ), jesUncAcc[ mass ], jerUncAcc[ mass ], minMass, maxMass, outputName ) )
-		else: p = Process( target=shapeCards, args=( dataFileHistos, TFile(bkgFileHistos), signalFileHistos, signalSample, 'massAve_deltaEtaDijet', mass, minMass, maxMass, outputName, outputFileTheta ) )
+		if 'bin' in args.job: 
+			p = Process( target=binByBinCards, 
+					args=( dataFileHistos, bkgFileHistos, signalFileHistos, 
+						signalSample, 
+						'massAve_deltaEtaDijet', 
+						mass, 
+						5, # ( 0 if args.ttbarAsSignal else massWidthList[ mass ] ), 
+						jesUncAcc[ mass ], 
+						jerUncAcc[ mass ], 
+						minMass, maxMass, 
+						outputName ) )
+
+		else: p = Process( target=shapeCards, 
+				args=( dataFileHistos, TFile(bkgFileHistos), signalFileHistos, 
+					signalSample, 
+					'massAve_deltaEtaDijet', 
+					mass, 
+					minMass, maxMass, 
+					outputName, 
+					outputFileTheta ) )
 		p.start()
 		p.join()
