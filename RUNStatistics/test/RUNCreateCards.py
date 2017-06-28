@@ -177,16 +177,16 @@ def shapeCards( datahistosFile, histosFile, signalFile, signalSample, hist, sign
 
 
 	#################################### Background
-	if args.withABCDTFunction:
+	if args.withABCDTFactor:
+		htmpBkg = dataFile.Get('massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016_ABCDProj')
+		htmpBkg.Rebin( args.reBin )
+	else: 
 		newBkgHistoFile = datahistosFile.replace( 'DATA', 'DATA_ABCDBkg' )
 		newBkgFile = TFile( newBkgHistoFile )
 		htmpBkg = newBkgFile.Get('massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016_ABCDProj' )
 		if (htmpBkg.GetBinWidth( 1 ) != args.reBin ): 
 			print '|----- Bin size in DATA_C histogram is different than rest.'
 			sys.exit(0)
-	else: 
-		htmpBkg = dataFile.Get('massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016_ABCDProj')
-		htmpBkg.Rebin( args.reBin )
 	#hBkg = histosFile.Get('massAve_prunedMassAsymVsdeltaEtaDijet_QCDPtAll_ABCDProj')
 	#hBkg = histosFile.Get(hist+'_QCDPtAll_BCD')
 	#htmpBkg = htmpBkg.Rebin( len( boostedMassAveBins )-1, htmpBkg.GetName(), boostedMassAveBins )
@@ -564,25 +564,19 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 	##### Bkg estimation
 	hDataC = dataFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016_C')
 	hDataC.Rebin ( args.reBin )
-	if args.withABCDTFunction:
-		newBkgHistoFile = datahistosFile.replace( 'JetHT_Run2016', 'JetHT_Run2016_ABCDBkg' )
-		newBkgFile = TFile( newBkgHistoFile )
-		hDataRatioBD = newBkgFile.Get('massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016_RatioBD' )
-		if (hDataRatioBD.GetBinWidth( 1 ) != args.reBin ): 
-			print '|----- Bin size in DATA_C histogram is different than rest.'
-			sys.exit(0)
-	else:
+	if args.withABCDTFactor:
 		hDataB = dataFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016_B')
 		hDataB.Rebin ( args.reBin )
 		hDataD = dataFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016_D')
 		hDataD.Rebin ( args.reBin )
+	else:
+		newBkgHistoFile = datahistosFile.replace( 'JetHT_Run2016', 'JetHT_Run2016_ABCDBkg' )
+		newBkgFile = TFile( newBkgHistoFile )
+		hDataRatioBD = newBkgFile.Get('massAve_prunedMassAsymVsdeltaEtaDijet_DATAMinusResBkg_RatioBD' )
+		if (hDataRatioBD.GetBinWidth( 1 ) != args.reBin ): 
+			print '|----- Bin size in DATA_C histogram is different than rest.'
+			sys.exit(0)
 
-	newBkgHistoFile = datahistosFile.replace( 'JetHT_Run2016', 'JetHT_Run2016_ABCDBkg' )
-	newBkgFile = TFile( newBkgHistoFile )
-	hDataRatioBD = newBkgFile.Get('massAve_prunedMassAsymVsdeltaEtaDijet_DATAMinusResBkg_RatioBD' )
-	if (hDataRatioBD.GetBinWidth( 1 ) != args.reBin ): 
-		print '|----- Bin size in DATA_C histogram is different than rest.'
-		sys.exit(0)
 
 	bkgHistos = OrderedDict()
 	for sample in bkghistosFile:
@@ -621,16 +615,16 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 
 		### bkg
 		contDataC = hDataC.GetBinContent( ibin )
-		if args.withABCDTFunction:
-			tf = hDataRatioBD.GetBinContent( ibin )
-			errBD = 1+ ( hDataRatioBD.GetBinError( ibin ) / tf )
-		else:
+		if args.withABCDTFactor:
 			contDataB = hDataB.GetBinContent( ibin )
 			contDataD = hDataD.GetBinContent( ibin )
 			try: tf = contDataB/contDataD
 			except ZeroDivisionError: tf = 0
 			try: errBD = 1 + (TMath.Sqrt( TMath.Power( TMath.Sqrt( contDataD ) / contDataD, 2 ) + TMath.Power( TMath.Sqrt( contDataB ) / contDataB, 2 ) ) / tf )
 			except ZeroDivisionError: errBD = 1
+		else:
+			tf = hDataRatioBD.GetBinContent( ibin )
+			errBD = 1+ ( hDataRatioBD.GetBinError( ibin ) / tf )
 		bkgAcc = tf * contDataC
 		accDict[ 'qcd' ] = [ round(bkgAcc,3), round(args.bkgUncValue,3) ]
 
@@ -709,8 +703,8 @@ if __name__ == '__main__':
 	parser.add_argument('-u', '--unc', dest='unc', action="store_true", default=False, help='Luminosity, example: 1.' )
 	parser.add_argument('-g', '--grom', action='store', default='pruned', dest='grooming', help='Grooming Algorithm, example: Pruned, Filtered.' )
 	parser.add_argument('-d', '--decay', action='store', default='UDD312', dest='decay', help='Decay, example: UDD312, UDD323.' )
-	parser.add_argument('-a', '--withABCDTFunction', action="store_true", default=False, help='Regular ABCD (False) or alternative ABCD (true).' )
-	parser.add_argument('-R', '--rebin', dest='reBin', type=int, default=1, help='Data: data or pseudoData.' )
+	parser.add_argument('-a', '--withABCDTFactor', action="store_true", default=False, help='Regular ABCD (False) or alternative ABCD (true).' )
+	parser.add_argument('-R', '--rebin', dest='reBin', type=int, default=5, help='Data: data or pseudoData.' )
     	parser.add_argument('-e', "--theta", dest="theta", action="store_true", default=False, help="Create theta file.")
 	parser.add_argument('-v', '--version', action='store', default='v05', dest='version', help='Version of rootfiles: v05.' )
 	parser.add_argument('-m', '--mass', dest='massValue', action="store", type=int, default=-1, help='To run in a mass point only' )
@@ -731,7 +725,7 @@ if __name__ == '__main__':
 	###### Input parameters
 	masses = OrderedDict()
 	minMass = 50 
-	maxMass = 350 #300 
+	maxMass = 400 #300 
 	jesValue = 0.02
 	jerValue = 0.11
 	puValue = 1.015
@@ -745,7 +739,7 @@ if __name__ == '__main__':
 	if args.theta:
 		outputFileTheta = currentDir+'/Rootfiles/theta_histos_Bin'+str(args.reBin)+'_low_'+args.version+'.root'
 		if 'gaus' in args.job: outputFileTheta = outputFileTheta.replace(args.version, args.version+'_GaussShape')
-		if args.withABCDTFunction:  outputFileTheta = outputFileTheta.replace(args.version, args.version+'_withABCDTFunction')
+		if args.withABCDTFactor:  outputFileTheta = outputFileTheta.replace(args.version, args.version+'_withABCDTFactor')
 		files = glob.glob(outputFileTheta)
 		for f in files: os.remove(f)
 
@@ -754,7 +748,7 @@ if __name__ == '__main__':
 		massList = range( 80, 360, 10 )
 		jesUncAcc = [1]*len(massList)
 	else: 
-		massList = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 300 ]
+		massList = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 300, 350 ]
 		#massList = [ 80, 90, 100, 110, 120, 130, 140, 150, 170, 180, 190, 210, 220, 230, 240, 300 ]
 		jesUncAcc = [1]*len(massList)
 		#massList = [ 90 ]
@@ -822,7 +816,7 @@ if __name__ == '__main__':
 		if args.signalInjec: 
 			outputName = outputName.replace( args.grooming, args.grooming+'_signalInjectionTest'+str(dummy0) )
 			dummy0 += 1
-		if args.withABCDTFunction: outputName = outputName.replace( args.grooming, args.grooming+'_withABCDTFunction' )
+		if args.withABCDTFactor: outputName = outputName.replace( args.grooming, args.grooming+'_withABCDTFactor' )
 		if args.addingMCbkg: outputName = outputName.replace( args.grooming, args.grooming+'_withMC' )
 		if 'gaus' in args.job: 
 			outputName = outputName+'_GaussShape'
@@ -840,7 +834,7 @@ if __name__ == '__main__':
 						signalSample, 
 						'massAve_deltaEtaDijet', 
 						mass, 
-						5, # ( 0 if args.ttbarAsSignal else massWidthList[ mass ] ), 
+						( 0 if args.ttbarAsSignal else 10 ), #massWidthList[ mass ] ), 
 						jesUncAcc[ mass ], 
 						jerUncAcc[ mass ], 
 						minMass, maxMass, 

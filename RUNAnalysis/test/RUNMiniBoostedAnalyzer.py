@@ -27,7 +27,7 @@ gROOT.SetBatch()
 ######################################
 def myPlotAnalyzer( fileSample, listCuts, signalName, UNC ):
 
-	outputFileName = 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_'+signalName+UNC+'_'+( '' if 'JetHT' in signalName else 'Moriond17_')+'80X_V2p4_'+args.version+'p1.root' 
+	outputFileName = 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_'+signalName+UNC+'_'+( '' if 'JetHT' in signalName else 'Moriond17_')+'80X_V2p4_'+args.version+'p2.root' 
 	outputFile = TFile( outputFileName, 'RECREATE' )
 
 
@@ -104,8 +104,8 @@ def myPlotAnalyzer( fileSample, listCuts, signalName, UNC ):
 	#lumiWeight = ( 1 if 'JetHT' in signalName else sf  )
 	#SF = 'puWeight*'+str(lumiWeight)
 	SF = TCut('lumiWeight * puWeight') # * '+str(args.lumi))
-	preselection = TCut('HT>900') * TCut("numJets==2") * TCut( SF )
-	#preselection = TCut('HT>900') * TCut( SF )
+	#preselection = TCut('HT>900') * TCut("numJets==2") * TCut( SF )
+	preselection = TCut('HT>900') * TCut( SF )
 	stringSel = '' 
 	for var in listCuts: stringSel = stringSel+'('+var[0]+('>' if '32' in var[0] else '<')+str(var[1])+')'
 	stringSel = stringSel.replace(')(',') * (')
@@ -172,6 +172,7 @@ def myPlotAnalyzer( fileSample, listCuts, signalName, UNC ):
 			preselection,
 			allHistos[ 'jet2Tau21_preSel_'+signalName ], 
 			( 0.10 if 'JetHT' in signalName else 1 ) ) 
+	'''
 	getHistoFromTree( fileSample, treeName,
 			'jet1Tau32', 
 			preselection,
@@ -182,7 +183,7 @@ def myPlotAnalyzer( fileSample, listCuts, signalName, UNC ):
 			preselection,
 			allHistos[ 'jet2Tau32_preSel_'+signalName ], 
 			( 0.10 if 'JetHT' in signalName else 1 ) ) 
-
+	'''
 
 	### All selection
 	getHistoFromTree( fileSample, treeName,
@@ -192,11 +193,13 @@ def myPlotAnalyzer( fileSample, listCuts, signalName, UNC ):
 			( 0.10 if 'JetHT' in signalName else 1 ) ) 
 
 	### ttbar selection inclusive
+	'''
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAve', 
 			preselection * TCut( stringSel.replace('(jet1Tau32>0.54)','(jet1Tau32<0.54)').replace('(jet2Tau32>0.54)','(jet2Tau32<0.54)') ), 
 			allHistos[ 'massAve_jet2Tau32_'+signalName ], 
 			( 0.10 if 'JetHT' in signalName else 1 ) ) 
+	'''
 
 	### n-1 selection
 	getHistoFromTree( fileSample, treeName,
@@ -220,6 +223,7 @@ def myPlotAnalyzer( fileSample, listCuts, signalName, UNC ):
 			preselection * TCut( stringSel.replace('&& (jet2Tau21<0.45)','') ), 
 			allHistos[ 'jet2Tau21_n-1_'+signalName ], 
 			( 0.10 if 'JetHT' in signalName else 1 ) ) 
+	'''
 	getHistoFromTree( fileSample, treeName,
 			'jet1Tau32', 
 			preselection * TCut( stringSel.replace('&& (jet1Tau32<0.54)','') ), 
@@ -230,7 +234,7 @@ def myPlotAnalyzer( fileSample, listCuts, signalName, UNC ):
 			preselection * TCut( stringSel.replace('&& (jet2Tau32<0.54)','') ), 
 			allHistos[ 'jet2Tau32_n-1_'+signalName ], 
 			( 0.10 if 'JetHT' in signalName else 1 ) ) 
-
+	'''
 
 	### ABCD plots
 	for region, selABCD in ABCDRegions.items():

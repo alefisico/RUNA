@@ -1,0 +1,8 @@
+universe = vanilla
+initialdir = /cms/gomez/Substructure/CMSSW_8_0_20/src/RUNA/RUNAnalysis/test/
+error = /cms/gomez/Substructure/CMSSW_8_0_20/src/RUNA/RUNAnalysis/test/condorlogs/condorlog$(Process)$(Cluster).error
+log = /cms/gomez/Substructure/CMSSW_8_0_20/src/RUNA/RUNAnalysis/test/condorlogs/condorlog$(Process)$(Cluster).log
+output = /cms/gomez/Substructure/CMSSW_8_0_20/src/RUNA/RUNAnalysis/test/condorlogs/condorlog$(Process)$(Cluster).out
+executable = /cms/gomez/Substructure/CMSSW_8_0_20/src/RUNA/RUNAnalysis/test/submit_condor_local.sh
+Notification=never
+queue 1

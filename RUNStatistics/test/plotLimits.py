@@ -85,7 +85,7 @@ def plotLimits( listMasses  ):
 	else:
 		for mass in listMasses:
 
-			XS =  search( dictXS, 'RPVStopStopToJets_'+args.decay+'_M-'+str(mass) )
+			XS = search( dictXS, 'RPVStopStopToJets_'+args.decay+'_M-'+str(mass) )
 			xs_theory.append( XS )
 
 			tmpFile, tmpTree, tmpEntries = getTree( "higgsCombine"+args.decay+"RPVSt_M-"+str(mass)+args.grooming+'_'+args.boosted+'_'+args.sys+'_'+args.version+'.'+args.method+".mH120.root", "limit" )
@@ -259,11 +259,11 @@ def plotLimits( listMasses  ):
         #shadow_graph_xs_th.Draw("L")
         graph_xs_th.Draw("L")
 	#graph_xs_cms13TeV2015.Draw("L")
-	#graph_obs.Draw("LP")
+	graph_obs.Draw("LP")
 
         #legend.AddEntry(graph_xs_th,"RPV #lambda_{312}^{''} (#tilde{t} #rightarrow qq) cross section","l")
         legend.AddEntry(graph_xs_th,"Top squark pair production #lambda_{"+("312" if '312' in args.decay else '323')+"}^{''} (#tilde{t} #rightarrow "+("qq)" if '312' in args.decay else 'bq)' ),"l")
-	#legend.AddEntry(graph_obs,"Observed limit","lp")
+	legend.AddEntry(graph_obs,"Observed limit","lp")
 	legend.AddEntry(graph_exp,"Expected limit","lp")
 	legend.AddEntry(graph_exp_1sigma,"Expected #pm 1#sigma","F")
 	legend.AddEntry(graph_exp_2sigma,"Expected #pm 2#sigma","F")
@@ -307,12 +307,12 @@ if __name__ == '__main__':
 	parser.add_argument('-p', '--proc', dest='process', action='store', default='1D', help='Process to draw, example: 1D, 2D, MC.' )
 	parser.add_argument('-d', '--decay', dest='decay', action='store', default='UDD312', help='Decay, example: UDD312, UDD323.' )
 	parser.add_argument('-b', '--boosted', dest='boosted', action='store', default='Boosted', help='Boosted or non version, example: Boosted' )
-	parser.add_argument('-g', '--grooming', dest='grooming', action='store', default='pruned', help='Grooming: pruned or puppi' )
+	parser.add_argument('-g', '--grooming', dest='grooming', action='store', default='_pruned', help='Grooming: pruned or puppi' )
 	parser.add_argument('-v', '--version', dest='version', action='store', default='v05', help='Version of the root files' )
 	parser.add_argument('-t', '--theta', dest='theta', action='store', type=float, default=False, help='Input from theta or not.' )
 	parser.add_argument('-l', '--lumi', dest='lumi', action='store', type=float, default=149.9, help='Luminosity, example: 1.' )
 	parser.add_argument('-e', '--extension', dest='ext', action='store', default='png', help='Extension of plots.' )
-	parser.add_argument('-s', '--sys', dest='sys', action='store', default='_NOSys', help='With systematics or not.' )
+	parser.add_argument('-s', '--sys', dest='sys', action='store', default='NOSys', help='With systematics or not.' )
 	parser.add_argument('-m', '--method', dest='method', action='store', default='Asymptotic', help='Limit method: Asymptotic, HybridNew' )
 	parser.add_argument('-a', '--addComparison', dest='addComparison', action='store', type=bool, default=False, help='Adding comparisons to plots.' )
 
@@ -336,6 +336,5 @@ if __name__ == '__main__':
 		else: listMass = [ 200, 220, 240, 280, 300, 350 ] + range( 450, 900, 50 ) + [950, 1000, 1100, ] #+  range( 1100, 1600, 100 )
 
 
-	#else: listMass = [ 80, 90, 100, 110, 120, 130, 140, 150, 170, 180, 190, 210, 220, 230, 240, 300]
-	else: listMass = [ 80, 100, 120, 140, 170, 180, 190, 230, 240 ]
+	else: listMass = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 300, 350 ]
 	plotLimits( listMass  )
