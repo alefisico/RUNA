@@ -562,17 +562,17 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 			hData = hPseudoData.Clone()
 
 	##### Bkg estimation
-	hDataC = dataFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016_C')
+	hDataC = dataFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016'+('_btag' if 'UDD323' in args.decay else '')+'_C')
 	hDataC.Rebin ( args.reBin )
 	if args.withABCDTFactor:
-		hDataB = dataFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016_B')
+		hDataB = dataFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016'+('_btag' if 'UDD323' in args.decay else '')+'_B')
 		hDataB.Rebin ( args.reBin )
-		hDataD = dataFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016_D')
+		hDataD = dataFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016'+('_btag' if 'UDD323' in args.decay else '')+'_D')
 		hDataD.Rebin ( args.reBin )
 	else:
-		newBkgHistoFile = datahistosFile.replace( 'JetHT_Run2016', 'JetHT_Run2016_ABCDBkg' )
+		newBkgHistoFile = datahistosFile.replace( 'V2p4', 'V2p4_ABCDEst' )
 		newBkgFile = TFile( newBkgHistoFile )
-		hDataRatioBD = newBkgFile.Get('massAve_prunedMassAsymVsdeltaEtaDijet_DATAMinusResBkg_RatioBD' )
+		hDataRatioBD = newBkgFile.Get('massAve_prunedMassAsymVsdeltaEtaDijet'+('_btag' if 'UDD323' in args.decay else '')+'_DATAMinusResBkg_RatioBD' )
 		if (hDataRatioBD.GetBinWidth( 1 ) != args.reBin ): 
 			print '|----- Bin size in DATA_C histogram is different than rest.'
 			sys.exit(0)
@@ -588,6 +588,8 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 	if not args.ttbarAsSignal:
 		lowEdgeWindow = int(signalMass/args.reBin - 2*( int( signalMassWidth )/args.reBin ))
 		highEdgeWindow = int(signalMass/args.reBin + 2*( int( signalMassWidth )/args.reBin ))
+		#lowEdgeWindow = int(signalMass/args.reBin - (1 if 'UDD323' in args.decay else 2 )*( int( signalMassWidth )/args.reBin ))
+		#highEdgeWindow = int(signalMass/args.reBin + (1 if 'UDD323' in args.decay else 2 )*( int( signalMassWidth )/args.reBin ))
 	else: 
 		lowEdgeWindow = 30
 		highEdgeWindow = 40
@@ -603,11 +605,15 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 		sigStatUnc = 1 + hSignal.GetBinError( ibin )/sigAcc  #1+ ( abs(hSignal.GetBinError( ibin )-sigAcc)/sigAcc) 
 		accDict[ 'signal' ] = [ round(sigAcc,3), round(sigStatUnc,3) ]
 		if args.jerUnc:
-			sigShapeJERDown = round(1/( hSigSyst['JERDown'].GetBinContent( ibin )/ sigAcc ), 3)
-			sigShapeJERUp = round(hSigSyst['JERUp'].GetBinContent( ibin )/ sigAcc , 3)
-		if args.jesUnc:
-			sigShapeJESDown = round(1/(hSigSyst['JESDown'].GetBinContent( ibin ) / sigAcc ), 3)  ### it has to be asymmetical: https://hypernews.cern.ch/HyperNews/CMS/get/higgs-combination/530/2.html
-			sigShapeJESUp = round(hSigSyst['JESUp'].GetBinContent( ibin )/ sigAcc , 3)
+			try: sigShapeJERDown = round(1/( hSigSyst['JERDown'].GetBinContent( ibin )/ sigAcc ), 3)
+			except ZeroDivisionError: sigShapeJERDown = 1.8 
+			try: sigShapeJERUp = round(1/( hSigSyst['JERUp'].GetBinContent( ibin )/ sigAcc ), 3)
+			except ZeroDivisionError: sigShapeJERUp = 1.8 
+		if args.jesUnc:   ### it has to be asymmetical: https://hypernews.cern.ch/HyperNews/CMS/get/higgs-combination/530/2.html
+			try: sigShapeJESDown = round(1/( hSigSyst['JESDown'].GetBinContent( ibin )/ sigAcc ), 3)
+			except ZeroDivisionError: sigShapeJESDown = 1.8 
+			try: sigShapeJESUp = round(( hSigSyst['JESUp'].GetBinContent( ibin )/ sigAcc ), 3)
+			except ZeroDivisionError: sigShapeJESUp = 1.8 
 		#print sigShapeJERDown, sigShapeJERUp, sigShapeJESDown, sigShapeJESUp
 
 		### data
@@ -748,8 +754,8 @@ if __name__ == '__main__':
 		massList = range( 80, 360, 10 )
 		jesUncAcc = [1]*len(massList)
 	else: 
-		massList = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 300, 350 ]
-		#massList = [ 80, 90, 100, 110, 120, 130, 140, 150, 170, 180, 190, 210, 220, 230, 240, 300 ]
+		if 'UDD312' in args.decay: massList = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 300, 350 ]
+		else:  massList = [ 120, 180, 200, 220, 240, 280, 300 ]
 		jesUncAcc = [1]*len(massList)
 		#massList = [ 90 ]
 		#massWidthList = [ 8.445039648677378 ]
@@ -769,6 +775,7 @@ if __name__ == '__main__':
 		jesUncAcc[ 220 ] =  0.039
 		jesUncAcc[ 230 ] =  0.013
 		jesUncAcc[ 240 ] =  0.012
+		jesUncAcc[ 280 ] =  0.012
 		jesUncAcc[ 300 ] =  0.019
 		jesUncAcc[ 350 ] =  0.019
 		jesUncAcc[ 'TT' ] =  0
@@ -790,6 +797,7 @@ if __name__ == '__main__':
 		jerUncAcc[ 220 ] =  0.027
 		jerUncAcc[ 230 ] =  0.029
 		jerUncAcc[ 240 ] =  0.016
+		jerUncAcc[ 280 ] =  0.016
 		jerUncAcc[ 300 ] =  0.042
 		jerUncAcc[ 350 ] =  0.042
 		jerUncAcc[ 'TT' ] =  0
@@ -801,7 +809,7 @@ if __name__ == '__main__':
 	dummy0 = 0
 	for mass in massList: #range( len(massList) ):
 		print mass
-		if isinstance( mass, int): signalSample = 'RPVStopStopToJets_UDD312_M-'+str(mass)
+		if isinstance( mass, int): signalSample = 'RPVStopStopToJets_'+args.decay+'_M-'+str(mass)
 		else: signalSample = str(mass)
 		dataFileHistos = currentDir+'/../../RUNAnalysis/test/Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_JetHT_Run2016_80X_V2p4_'+args.version+'.root'
 		#bkgFileHistos = currentDir+'/../../RUNAnalysis/test/Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_QCDPtAll_'+RANGE+'_'+( 'v05' if 'v05p2' in args.version else args.version)+'.root'
@@ -832,7 +840,7 @@ if __name__ == '__main__':
 			p = Process( target=binByBinCards, 
 					args=( dataFileHistos, bkgFileHistos, signalFileHistos, 
 						signalSample, 
-						'massAve_deltaEtaDijet', 
+						'massAve_'+( 'btag' if 'UDD323' in args.decay else 'deltaEtaDijet' ), 
 						mass, 
 						( 0 if args.ttbarAsSignal else 10 ), #massWidthList[ mass ] ), 
 						jesUncAcc[ mass ], 
@@ -843,7 +851,7 @@ if __name__ == '__main__':
 		else: p = Process( target=shapeCards, 
 				args=( dataFileHistos, TFile(bkgFileHistos), signalFileHistos, 
 					signalSample, 
-					'massAve_deltaEtaDijet', 
+					'massAve_'+( 'btag' if 'UDD323' in args.decay else 'deltaEtaDijet' ), 
 					mass, 
 					minMass, maxMass, 
 					outputName, 

@@ -259,11 +259,11 @@ def plotLimits( listMasses  ):
         #shadow_graph_xs_th.Draw("L")
         graph_xs_th.Draw("L")
 	#graph_xs_cms13TeV2015.Draw("L")
-	graph_obs.Draw("LP")
+	#graph_obs.Draw("LP")
 
         #legend.AddEntry(graph_xs_th,"RPV #lambda_{312}^{''} (#tilde{t} #rightarrow qq) cross section","l")
         legend.AddEntry(graph_xs_th,"Top squark pair production #lambda_{"+("312" if '312' in args.decay else '323')+"}^{''} (#tilde{t} #rightarrow "+("qq)" if '312' in args.decay else 'bq)' ),"l")
-	legend.AddEntry(graph_obs,"Observed limit","lp")
+	#legend.AddEntry(graph_obs,"Observed limit","lp")
 	legend.AddEntry(graph_exp,"Expected limit","lp")
 	legend.AddEntry(graph_exp_1sigma,"Expected #pm 1#sigma","F")
 	legend.AddEntry(graph_exp_2sigma,"Expected #pm 2#sigma","F")
@@ -336,5 +336,7 @@ if __name__ == '__main__':
 		else: listMass = [ 200, 220, 240, 280, 300, 350 ] + range( 450, 900, 50 ) + [950, 1000, 1100, ] #+  range( 1100, 1600, 100 )
 
 
-	else: listMass = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 300, 350 ]
+	else: 
+		if '312' in args.decay:  listMass = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 300, 350 ]
+		else: listMass = [ 120, 180, 200, 220, 240, 280, 300 ]
 	plotLimits( listMass  )

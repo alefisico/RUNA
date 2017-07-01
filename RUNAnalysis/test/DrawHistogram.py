@@ -44,7 +44,7 @@ jetMassHTlabY = 0.20
 jetMassHTlabX = 0.85
 
 
-def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax, rebinX, labX, labY, log, posLegend, Norm=False ):
+def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax, rebinX, labX, labY, log, posLegend, addRatioFit=False, Norm=False ):
 	"""docstring for plot"""
 
 	if 'DATA' in args.process: outputFileName = name+'_'+args.grooming+'_DATA_PlusBkgQCD'+args.qcd+'_'+args.boosted+'AnalysisPlots'+args.version+'.'+args.ext 
@@ -54,7 +54,7 @@ def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax
 	
 	#if args.final:  legend=TLegend(0.50,0.70,0.95,0.89)
 	if args.final:  legend=TLegend(0.15,0.70,0.55,0.89)
-	elif ( 'DATA' in args.process ) and ('massAve' in nameInRoot): legend=TLegend(0.18,0.70,0.70,0.89)
+	elif ( 'DATA' in args.process ) and ('massAve' in nameInRoot): legend=TLegend(0.55,0.70,0.95,0.89)
 	else:
 		if posLegend: legend=TLegend(0.15, 0.60, 0.4, 0.87 )
 		else: legend=TLegend(0.65,0.55,0.90,0.87)
@@ -81,9 +81,8 @@ def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax
 			#if 'mass' in nameInRoot: signalHistos[ sigSamples ] = signalHistos[ sigSamples ].Rebin( len( boostedMassAveBins )-1, signalHistos[ sigSamples ].GetName(), boostedMassAveBins )
 			if rebinX > 1: signalHistos[ sigSamples ] = signalHistos[ sigSamples ].Rebin( rebinX )
 			if signalFiles[ sigSamples ][1] != 1: signalHistos[ sigSamples ].Scale( signalFiles[ sigSamples ][1] ) 
-			legend.AddEntry( signalHistos[ sigSamples ], signalFiles[ sigSamples ][2], 'l' if Norm else 'f' )
+			if not 'Tau32' in args.cut: legend.AddEntry( signalHistos[ sigSamples ], signalFiles[ sigSamples ][2], 'l' if Norm else 'f' )
 			#if not 'DATA' in args.process: legend.AddEntry( signalHistos[ sigSamples ], signalFiles[ sigSamples ][2], 'l' if Norm else 'f' )
-			#legend.AddEntry( signalHistos[ sigSamples ], signalFiles[ sigSamples ][2], 'l' ) #if Norm else 'f' )
 			print sigSamples, round( signalHistos[ sigSamples ].Integral(), 2 )
 			print sigSamples, 'in mass window', round( signalHistos[ sigSamples ].Integral((args.mass-40)/rebinX, (args.mass+40)/rebinX), 2 )
 			if Norm:
@@ -164,9 +163,12 @@ def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax
 		#stackHisto.SetMaximum(0.5)
 		stackHisto.Draw('hist')
 		if args.final: labelAxis( name, stackHisto, args.grooming )
-		if 'massAve_deltaEtaDijet' in nameInRoot: 
-			stackHisto.SetMaximum( 1000 ) 
+		if 'massAve' in nameInRoot: 
 			stackHisto.SetMinimum( 1 )
+			if 'massAve_deltaEtaDijet' in nameInRoot: stackHisto.SetMaximum( 1000 ) 
+			elif 'massAve_jet2Tau32WOTau21' in nameInRoot: stackHisto.SetMaximum( 1000 ) 
+			elif ('massAve_btag' in nameInRoot) or ('massAve_jet2Tau32' in nameInRoot): stackHisto.SetMaximum( 1000 ) 
+			elif 'massAve_jet1Tau32' in nameInRoot: stackHisto.SetMaximum( 1000 ) 
 		if xmax: stackHisto.GetXaxis().SetRangeUser( xmin, xmax )
 		#stackHisto.SetMaximum( 10 ) 
 		#stackHisto.SetMinimum( 0.1 ) 
@@ -184,14 +186,15 @@ def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax
 			dataHistos[ 'DATA' ].Draw('same')
 			CMS_lumi.extraText = "Preliminary"
 			legend.SetNColumns(2)
-			for sample in signalHistos: 
-				if 'massAve_deltaEtaDijet' in nameInRoot: 
-					#lowEdgeWindow = int(int(sample) - ( int( massWidthList[int(sample)])*3 ))
-					#highEdgeWindow = int(int(sample) + ( int( massWidthList[int(sample)])*3 ))
-					lowEdgeWindow = int(int(sample) - 15 )
-					highEdgeWindow = int(int(sample) + 15 )
-					signalHistos[ sample ].GetXaxis().SetRangeUser( lowEdgeWindow, highEdgeWindow )
-				signalHistos[ sample ].Draw("hist same")
+			if not 'Tau32' in args.cut:
+				for sample in signalHistos: 
+					if 'massAve' in nameInRoot: 
+						#lowEdgeWindow = int(int(sample) - ( int( massWidthList[int(sample)])*3 ))
+						#highEdgeWindow = int(int(sample) + ( int( massWidthList[int(sample)])*3 ))
+						lowEdgeWindow = int(int(sample) - 15 )
+						highEdgeWindow = int(int(sample) + 15 )
+						signalHistos[ sample ].GetXaxis().SetRangeUser( lowEdgeWindow, highEdgeWindow )
+					signalHistos[ sample ].Draw("hist same")
 		else:  
 			tmpHisto = {}
 			for sample in signalHistos: 
@@ -223,14 +226,21 @@ def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax
 			
 			if 'DATA' in args.process:
 				hRatio = dataHistos[ 'DATA' ].Clone()
-				hRatio.Divide( hBkg ) 
-				ratioLabel = "Data / MC"
-				#hRatio.Add( bkgHistos[ 'QCDPtAll'], -1 )
-				#hRatio.Divide( bkgHistos[ 'TTJets'] ) 
-				#ratioLabel = "(DATA - MC QCD)/(MC ttbar)"
-				hRatio.SetMaximum(2.)
-				hRatio.SetMinimum(0.)
+				if 'Tau32' in args.cut:
+					hBkgMinusTT = hBkg.Clone()
+					hBkgMinusTT.Add( bkgHistos[ 'TT' ], -1 )
+					hRatio.Add( hBkgMinusTT, -1 )
+					hRatio.Divide( bkgHistos[ 'TT'] ) 
+					ratioLabel = "#splitline{Data-MC Res Bkg}{MC ttbar}"
+					hRatio.SetMaximum(4.)
+					hRatio.SetMinimum(-2.)
+				else: 
+					hRatio.Divide( hBkg ) 
+					ratioLabel = "Data / MC"
+					hRatio.SetMaximum(2.)
+					hRatio.SetMinimum(0.)
 				hRatio.SetMarkerStyle(8)
+				
 			else:
 				hRatio = signalHistos[ args.mass ].Clone()
 				hRatio.Reset()
@@ -260,19 +270,18 @@ def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax
 			hRatio.GetYaxis().CenterTitle()
 			#hRatio.SetMaximum(0.7)
 			if xmax: hRatio.GetXaxis().SetRangeUser( xmin, xmax )
-			#tmpFit = TF1( 'tmpFit', 'pol0', 60, 200 )
-			#hRatio.Fit( 'tmpFit', '', '', 60, 200 )
 			hRatio.Draw( ("PES" if 'DATA' in args.process else "hist" ) )
-			'''
-			tmpFit.SetLineColor( kGreen )
-			tmpFit.SetLineWidth( 2 )
-			tmpFit.Draw("sames")
-			chi2Test = TLatex( 0.7, 0.8, '#splitline{#chi^{2}/ndF = '+ str( round( tmpFit.GetChisquare(), 2 ) )+'/'+str( int( tmpFit.GetNDF() ) )+'}{p0 = '+ str( round( tmpFit.GetParameter( 0 ), 2 ) ) +' #pm '+str(  round( tmpFit.GetParError( 0 ), 2 ) )+'}' )
-			chi2Test.SetNDC()
-			chi2Test.SetTextFont(42) ### 62 is bold, 42 is normal
-			chi2Test.SetTextSize(0.10)
-			chi2Test.Draw('same')
-			'''
+			if addRatioFit:
+				tmpFit = TF1( 'tmpFit', 'pol0', 120, 240 )
+				hRatio.Fit( 'tmpFit', '', '', 120, 240 )
+				tmpFit.SetLineColor( kGreen )
+				tmpFit.SetLineWidth( 2 )
+				tmpFit.Draw("sames")
+				chi2Test = TLatex( 0.7, 0.8, '#splitline{#chi^{2}/ndF = '+ str( round( tmpFit.GetChisquare(), 2 ) )+'/'+str( int( tmpFit.GetNDF() ) )+'}{p0 = '+ str( round( tmpFit.GetParameter( 0 ), 2 ) ) +' #pm '+str(  round( tmpFit.GetParError( 0 ), 2 ) )+'}' )
+				chi2Test.SetNDC()
+				chi2Test.SetTextFont(42) ### 62 is bold, 42 is normal
+				chi2Test.SetTextSize(0.10)
+				chi2Test.Draw('same')
 
 			if 'DATA' in args.process: 
 				hRatio.GetYaxis().SetNdivisions(505)
@@ -1296,6 +1305,7 @@ if __name__ == '__main__':
 	parser.add_argument('-e', '--ext', action='store', default='png', help='Extension of plots.' )
 	parser.add_argument('-u', '--unc', action='store', default='JES', dest='unc',  help='Type of uncertainty' )
 	parser.add_argument('-f', '--final', action='store_true', default=False, dest='final',  help='If plot is final' )
+	parser.add_argument('-F', '--addFit', action='store_true', default=False, dest='addFit',  help='Plot fit in ratio plot.' )
 	parser.add_argument('-t', '--miniTree', action='store_true', default=False, help='miniTree: if plots coming from miniTree or RUNAnalysis.' )
 	parser.add_argument('-B', '--batchSys', action='store_true',  dest='batchSys', default=False, help='Process: all or single.' )
 
@@ -1416,7 +1426,7 @@ if __name__ == '__main__':
 		[ '1D', 'Boosted', 'jet2Eta', -3, 3, 1, '', '', False],
 		[ '1D', 'Boosted', 'jet2Mass', 0, massMaxX, 1, '', '', False],
 		[ '1D', 'Boosted', 'massAve', 60, 350, 5, 0.92, 0.85, True, False],
-		[ '1DDATA', 'Boosted', 'massAve', 60, 350, 5, 0.92, 0.85, True, False],
+		[ '1DDATA', 'Boosted', 'massAve', 60, 350, (5 if 'deltaEtaDijet' in args.cut else 20 ), 0.92, 0.85, True, False],
 		#[ '1DData', 'Boosted', 'massAve', 60, 350, (1 if args.miniTree else 5), 0.92, 0.85, True, False],
 		#[ '1DDATA', 'Resolved', 'massAve', 0, 1000, 20, 0.92, 0.85, False, False],
 
@@ -1609,7 +1619,11 @@ if __name__ == '__main__':
 
 		elif '1D' in args.process:
 			for cut1 in listCuts:
-				plotSignalBkg( signalFiles, bkgFiles, dataFile, i[0]+'_'+cut1, i[0]+'_'+cut1, i[1], i[2], i[3], i[4], i[5], i[6], i[7] )
+				plotSignalBkg( signalFiles, bkgFiles, dataFile, 
+						i[0]+'_'+cut1, 
+						i[0]+'_'+cut1, 
+						i[1], i[2], i[3], i[4], i[5], i[6], i[7], 
+						addRatioFit=args.addFit )
 		
 		elif ( 'qual' in args.process ):
 			for cut1 in listCuts:
@@ -1617,7 +1631,8 @@ if __name__ == '__main__':
 						args.grooming, 
 						( '' if args.miniTree else (args.boosted+'AnalysisPlots'+('' if 'pruned' in args.grooming else args.grooming)+'/'))+i[0]+'_'+cut1, 
 						i[0]+'_'+cut1, 
-						i[1], i[2], i[3], i[4], i[5], i[6], i[7] ) #, fitRatio=True )
+						i[1], i[2], i[3], i[4], i[5], i[6], i[7], 
+						fitRatio=args.addFit )
 		
 		elif 'Norm' in args.process:
 			for cut1 in listCuts:
