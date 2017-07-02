@@ -702,6 +702,7 @@ if __name__ == '__main__':
 	if 'pruned' in args.grooming: 
 		cuts = [ 
 				[ 'jet1Tau32', 0.67 ], [ 'jet2Tau32', 0.67 ],
+				#[ 'jet1Tau32', 0 ], [ 'jet2Tau32', 0 ],
 				[ 'jet1Tau21', 0.45 ], [ 'jet2Tau21', 0.45 ], 
 				[ 'prunedMassAsym', 0.10 ], 
 				[ 'deltaEtaDijet', 1.5 ]

@@ -244,7 +244,7 @@ def ABCDwithTF( histoB, function, fitResults ):
 ######################################################################
 
 
-def ABCDTFunctionCombined( nameInRoot, binning, minX, maxX, 
+def ABCDTFunctionCalculation( nameInRoot, binning, minX, maxX, 
 				hDataB, hrawDataC, hrawDataD, 
 				hqcdmcB, hqcdmcC, hqcdmcD, 
 				hDataMinusResonantBkgB, hDataMinusResonantBkgC, hDataMinusResonantBkgD, 
@@ -456,7 +456,7 @@ def ABCDTFunctionCombined( nameInRoot, binning, minX, maxX,
 			st3.SetTextColor(kRed)
 			canCD.Modified()
 
-		outputFileNameCD = nameInRoot+'_'+typePlot+'_CD_'+args.grooming+'_QCD'+args.qcd+'_bkgShapeEstimationBoostedPlots'+args.version+'.'+args.extension
+		outputFileNameCD = nameInRoot+'_'+typePlot+'_CD_'+args.grooming+'_QCD'+args.qcd+'_bkgEstimationPlots'+args.version+'.'+args.extension
 		canCD.SaveAs('Plots/'+outputFileNameCD)
 
 	
@@ -474,7 +474,6 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 	for bkgSamples in bkgFiles:
 		bkgNameHisto = ( nameInRoot+'_'+bkgSamples if args.miniTree else 'BoostedAnalysisPlots/'+nameInRoot )
 		scale = bkgFiles[ bkgSamples ][1] 
-		print bkgNameHisto
 		for side in [ '_A', '_B', '_C', '_D' ]:
 			MCBkgHistos[ bkgSamples+side ] = bkgFiles[ bkgSamples ][0].Get( bkgNameHisto+side )
 			unbinnedMCBkgHistos[ bkgSamples+side ] = MCBkgHistos[ bkgSamples+side ].Clone()
@@ -491,7 +490,8 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 
 		MCBkgHistos[ bkgSamples+'_'+cutTop ] = bkgFiles[ bkgSamples ][0].Get( 'massAve_'+cutTop+'_'+bkgSamples )
 		MCBkgHistos[ bkgSamples+'_'+cutTop ] = rebin( MCBkgHistos[ bkgSamples+'_'+cutTop ], rebinTopX )
-		MCBkgHistos[ bkgSamples+'_'+cutTop ].Scale( scale )
+		MCBkgHistos[ bkgSamples+'_'+cutTop ].Scale( scale*10 )
+		MCBkgHistos[ bkgSamples+'_'+cutTop ].SetFillColor( bkgFiles[ bkgSamples ][3] )
 	#######################################
 	
 	##### Opening signal histograms, rebin, clone unbinned histo
@@ -525,8 +525,53 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 		dataHistos[ 'DATA_btag'+a ] = dataFile.Get( dataNameHisto+'_btag'+a )
 		dataHistos[ 'DATA_btag'+a ] = rebin( dataHistos[ 'DATA_btag'+a ], ( rebinX*2 if 'simple' in args.binning else args.binning ) )
 		unbinnedDataHistos[ 'DATA'+a ] = dataFile.Get( dataNameHisto+a )
+
 	dataHistos[ 'DATA_'+cutTop ] = dataFile.Get( 'massAve_'+cutTop+'_JetHT_Run2016' )
 	dataHistos[ 'DATA_'+cutTop ] = rebin( dataHistos[ 'DATA_'+cutTop ], rebinTopX  )
+	#######################################
+
+	#### Top region Bkg estimation
+	print '|---> bkg Estimation top region'
+	hBkgsMinusTTbarTopRegion = dataHistos[ 'DATA_'+cutTop ].Clone()  #### all bkgs for Top region
+	hBkgsMinusTTbarTopRegion.Reset()
+
+	for isamples in MCBkgHistos:
+		if cutTop in isamples:
+			if not 'TT' in isamples: hBkgsMinusTTbarTopRegion.Add( MCBkgHistos[ isamples ].Clone() )
+
+	stackTopRegion = THStack( 'stackTopRegion', 'stackTopRegion' )
+	stackTopRegion.Add( MCBkgHistos[ 'Dibosons_'+cutTop ].Clone() )
+	stackTopRegion.Add( MCBkgHistos[ 'ZJetsToQQ_'+cutTop ].Clone() )
+	stackTopRegion.Add( MCBkgHistos[ 'WJetsToQQ_'+cutTop ].Clone() )
+	stackTopRegion.Add( MCBkgHistos[ 'TT_'+cutTop ].Clone() )
+	stackTopRegion.Add( MCBkgHistos[ 'QCD'+args.qcd+'All_'+cutTop ].Clone() )
+
+	hDataMinusBkgTopRegion = dataHistos[ 'DATA_'+cutTop ].Clone()
+	hDataMinusBkgTopRegion.Add( hBkgsMinusTTbarTopRegion, -1 )
+
+	ttbarSF = makePlots( 'massAve_'+cutTop, 
+			dataHistos[ 'DATA_'+cutTop ], 'DATA', 
+			stackTopRegion, 'Bkg prediction', 
+			rebinTopX, xmin, xmax, 
+			ratioPlots(hDataMinusBkgTopRegion, MCBkgHistos[ 'TT_'+cutTop ]), "(Data-bkgs)/MCttbar", 
+			'', 'TopRegion_'+cutTop, 
+			True, 
+			stackHistos=[ 
+				[ MCBkgHistos[ 'QCD'+args.qcd+'All_'+cutTop ].Clone(), 'MC QCD' ], 
+				[ MCBkgHistos[ 'TT_'+cutTop ].Clone(), 't #bar{t} + Jets' ], 
+				[ MCBkgHistos[ 'WJetsToQQ_'+cutTop ].Clone(), 'W + Jets'], 
+				[ MCBkgHistos[ 'ZJetsToQQ_'+cutTop ].Clone(), 'Z + Jets'], 
+				[ MCBkgHistos[ 'Dibosons_'+cutTop ].Clone(), 'Dibosons' ] ],
+			addHisto=MCBkgHistos[ 'TT_'+cutTop ], 
+			addUncBand=False,
+			topRegion=True,
+			doFit=True,
+			)
+
+	### Applying SF to ttbar
+	for isamples in MCBkgHistos:
+		if 'TT' in isamples: MCBkgHistos[ isamples ].Scale( ttbarSF[0] )
+		if cutTop in isamples: del MCBkgHistos[ isamples ]
 	#######################################
 
 	##### adding MC bkgs 
@@ -547,13 +592,8 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 	hBkgBtagMinusResonantBkgA.Reset()
 	hDataBtagMinusResonantBkgC = dataHistos[ 'DATA_btag_C' ].Clone()
 	
-	hBkgsMinusTTbarTopRegion = dataHistos[ 'DATA_'+cutTop ].Clone()  #### all bkgs for Top region
-	hBkgsMinusTTbarTopRegion.Reset()
-
 	for isamples in MCBkgHistos:
-		if cutTop in isamples:
-			if not 'TT' in isamples: hBkgsMinusTTbarTopRegion.Add( MCBkgHistos[ isamples ].Clone() )
-		elif 'btag' in isamples:
+		if 'btag' in isamples:
 			if '_A' in isamples: 
 				allBkgHistos[ 'allBkg_btag_A' ].Add( MCBkgHistos[ isamples ].Clone() )
 				if not 'QCD' in isamples: hBkgBtagMinusResonantBkgA.Add( MCBkgHistos[ isamples ].Clone() )
@@ -596,7 +636,7 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 				dataHistos[ 'DATA_'+q ], 'DATA Region '+q, 
 				binWidth, xmin, xmax, 
 				ratioPlots( dataHistos[ 'DATA_'+q ], allBkgHistos[ 'allBkg_'+q ] ),
-				"DATA/MC", '', q, True)
+				"DATA/MC", '', q+'_'+cutTop, True)
 	#########################################################
 
 	#### Make plot simple ABCD
@@ -605,11 +645,11 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 			hDataCR, 'DATA ABCD Pred', 
 			binWidth, xmin, xmax, 
 			ratioPlots( allBkgHistos[ 'allBkg_A' ], hDataCR ), 
-			"MC SR/ABCD Pred", '', 'DATA_Bkg')
+			"MC SR/ABCD Pred", '', 'DATA_Bkg'+'_'+cutTop)
 	###########################################################
 
 	##### Calculating transfer function
-	hDataBCD, hQCDMCBCD, hQCDMCHybridTFunctionBCD, hDataWOResBkgBCD, hQCDMCHybridTFactorBCD, hDataBtagWOResBkgBCD,  hQCDMCBtagHybridTFunctionBCD = ABCDTFunctionCombined( 
+	hDataBCD, hQCDMCBCD, hQCDMCHybridTFunctionBCD, hDataWOResBkgBCD, hQCDMCHybridTFactorBCD, hDataBtagWOResBkgBCD,  hQCDMCBtagHybridTFunctionBCD = ABCDTFunctionCalculation( 
 			nameInRoot, 
 			25, xmin, xmax, 
 			dataHistos[ 'DATA_C' ], 
@@ -623,7 +663,7 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 			hDataMinusResonantBkgD, 
 			hDataBtagMinusResonantBkgC,  				## for btag
 			MCBkgHistos[ 'QCD'+args.qcd+'All_btag_C' ].Clone(), 	## for btag
-			'combined', 
+			'combined'+'_'+cutTop, 
 			rootFile=True )
 
 	#### Plot QCD compared with ABCD Hybrid using Transfer function
@@ -633,7 +673,7 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 			binWidth, xmin, xmax, 
 			ratioPlots( MCBkgHistos[ 'QCD'+args.qcd+'All_A' ], hQCDMCHybridTFunctionBCD ),
 			"MC SR/ABCD Pred", '', 
-			'QCD'+args.qcd+'All_Log_HybridTFunction', 
+			'QCD'+args.qcd+'All_Log_HybridTFunction_'+cutTop, 
 			True, addUncBand=False )
 
 	makePlots( nameInRoot, 
@@ -642,7 +682,7 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 			binWidth, xmin, xmax, 
 			ratioPlots( MCBkgHistos[ 'QCD'+args.qcd+'All_A' ], hQCDMCHybridTFactorBCD ),
 			"MC SR/ABCD Pred", '', 
-			'QCD'+args.qcd+'All_Log_HybridTFactor', 
+			'QCD'+args.qcd+'All_Log_HybridTFactor_'+cutTop, 
 			True, addUncBand=False )
 	############################################
 
@@ -683,14 +723,14 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 			stackABCD, 'Bkg prediction', 
 			binWidth, xmin, xmax, 
 			ratioPlots(dataHistos[ 'DATA_A' ], addAllBkg), "Data/Bkg", 
-			'', 'Log_BCDPlusMCbkgs', 
+			'', 'Log_BCDPlusMCbkgs_'+cutTop, 
 			True, 
 			addHisto=addAllBkg, 
 			stackHistos=[ [ hABCDOnly, 'QCD from ABCD'], 
 				[ MCBkgHistos[ 'TT_A' ].Clone(), 't #bar{t} + Jets' ], 
 				[ MCBkgHistos[ 'WJetsToQQ_A' ].Clone(), 'W + Jets'], 
 				[ MCBkgHistos[ 'ZJetsToQQ_A' ].Clone(), 'Z + Jets'], 
-				[ MCBkgHistos[ 'Dibosons_A' ], 'Dibosons' ], 
+				[ MCBkgHistos[ 'Dibosons_A' ].Clone(), 'Dibosons' ], 
 				[ hABCDOnlySys, 'Bkg. uncertainty' ] ], 
 			addUncBand=[ hABCDOnlySys, hRatioSys ], 
 			signalHistos=sigHistos)
@@ -715,14 +755,14 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 			stackMCABCD , 'MC Bkg prediction', 
 			binWidth, xmin, xmax, 
 			ratioPlots( allBkgHistos[ 'allBkg_A' ], hQCDMCBCD ), "#frac{All SM Bkg}{All Bkgs with QCD ABCD}", 
-			'', 'MCBkg_Log_BCD', 
+			'', 'MCBkg_Log_BCD_'+cutTop, 
 			True, 
 			addHisto=hQCDMCBCD, 
-			stackHistos=[ [ hQCDMCBCD, 'QCD Hybrid ABCD from MC'], 
+			stackHistos=[ [ hQCDMCBCD, 'QCD ABCD from MC'], 
 				[ MCBkgHistos[ 'TT_A' ].Clone(), 't #bar{t} + Jets' ], 
 				[ MCBkgHistos[ 'WJetsToQQ_A' ].Clone(), 'W + Jets'], 
 				[ MCBkgHistos[ 'ZJetsToQQ_A' ].Clone(), 'Z + Jets'], 
-				[ MCBkgHistos[ 'Dibosons_A' ], 'Dibosons' ] ] 
+				[ MCBkgHistos[ 'Dibosons_A' ].Clone(), 'Dibosons' ] ] 
 			)
 	###########################################
 
@@ -745,14 +785,14 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 			stackMCABCD , 'MC Bkg prediction', 
 			binWidth, xmin, xmax, 
 			ratioPlots( allBkgHistos[ 'allBkg_A' ], hQCDMCHybridTFunctionBCD ), "#frac{All SM Bkg}{All Bkgs with QCD ABCD}", 
-			'', 'HybridBkg_Log_BCD', 
+			'', 'HybridBkg_Log_BCD_'+cutTop, 
 			True, 
 			addHisto=hQCDMCHybridTFunctionBCD, 
-			stackHistos=[ [ hQCDMCHybridTFunctionBCD, 'QCD ABCD from MC'], 
+			stackHistos=[ [ hQCDMCHybridTFunctionBCD, 'QCD Hybrid ABCD from MC'], 
 				[ MCBkgHistos[ 'TT_A' ].Clone(), 't #bar{t} + Jets' ], 
 				[ MCBkgHistos[ 'WJetsToQQ_A' ].Clone(), 'W + Jets'], 
 				[ MCBkgHistos[ 'ZJetsToQQ_A' ].Clone(), 'Z + Jets'], 
-				[ MCBkgHistos[ 'Dibosons_A' ], 'Dibosons' ] ] 
+				[ MCBkgHistos[ 'Dibosons_A' ].Clone(), 'Dibosons' ] ] 
 			)
 	###########################################
 
@@ -794,14 +834,14 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 			stackBtagABCD, 'Bkg prediction', 
 			2*binWidth, xmin, xmax, 
 			ratioPlots(dataHistos[ 'DATA_btag_A' ], addAllBkgBtag), "Data/Bkg", 
-			'', 'btag_Log_BCDPlusMCbkgs', 
+			'', 'btag_Log_BCDPlusMCbkgs_'+cutTop, 
 			True, 
 			addHisto=addAllBkgBtag, 
 			stackHistos=[ [ hBtagABCDOnly, 'QCD from ABCD'], 
 				[ MCBkgHistos[ 'TT_btag_A' ].Clone(), 't #bar{t} + Jets' ], 
 				[ MCBkgHistos[ 'WJetsToQQ_btag_A' ].Clone(), 'W + Jets'], 
 				[ MCBkgHistos[ 'ZJetsToQQ_btag_A' ].Clone(), 'Z + Jets'], 
-				[ MCBkgHistos[ 'Dibosons_btag_A' ], 'Dibosons' ], 
+				[ MCBkgHistos[ 'Dibosons_btag_A' ].Clone(), 'Dibosons' ], 
 				[ hBtagABCDOnlySys, 'Bkg. uncertainty' ] ], 
 			addUncBand=[ hBtagABCDOnlySys, hBtagRatioSys ], 
 			signalHistos=sigHistosBtag)
@@ -826,7 +866,7 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 			stackBtagHybridMCABCD , 'MC Bkg prediction', 
 			2*binWidth, xmin, xmax, 
 			ratioPlots( allBkgHistos[ 'allBkg_btag_A' ], hQCDMCBtagHybridTFunctionBCD ), "#frac{All SM Bkg}{All Bkgs with QCD ABCD}", 
-			'', 'btag_HybridBkg_Log_BCD', 
+			'', 'btag_HybridBkg_Log_BCD_'+cutTop, 
 			True, 
 			addHisto=hQCDMCBtagHybridTFunctionBCD, 
 			stackHistos=[ [ hQCDMCBtagHybridTFunctionBCD, 'QCD Hybrid ABCD from MC'], 
@@ -840,7 +880,6 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 ##############################################################
 
 
-
 def makePlots( nameInRoot, 
 		tmphisto1, labelh1, 
 		tmphisto2, labelh2, 
@@ -852,7 +891,8 @@ def makePlots( nameInRoot,
 		addHisto='', 
 		stackHistos='', 
 		doFit=False, 
-		signalHistos='' ):
+		signalHistos='',
+		topRegion=False ):
 	"""docstring for makePlots"""
 
 	histo1 = tmphisto1.Clone()
@@ -876,7 +916,6 @@ def makePlots( nameInRoot,
 	histo1.GetYaxis().SetTitle('Events / '+(str(int(binWidth)) if 'simple' in args.binning else binWidth )+' GeV')
 	histo1.GetYaxis().SetTitleOffset( 0.9 )
 	histo1.GetXaxis().SetRangeUser( xmin, xmax )
-	histo1.SetMaximum( 2.5* max( histo1.GetMaximum(), histo2.GetMaximum() ) )
 	if 'MC' in labelh1: 
 		histo1.SetLineColor(kRed-4)
 		histo1.SetLineWidth(2)
@@ -901,7 +940,8 @@ def makePlots( nameInRoot,
 	pad1.SetBottomMargin(0)
 	if log: 
 		pad1.SetLogy() 	
-		#if not 'Region' in labelh1: histo1.SetMaximum( 500 )
+		if 'Region' in labelh1: histo1.SetMaximum( 2.5* max( histo1.GetMaximum(), histo2.GetMaximum() ) )
+		else: histo1.SetMaximum( 5000 )
 		histo1.SetMinimum( 0.5 )
 	else: 
 		pad1.SetGrid()
@@ -948,6 +988,7 @@ def makePlots( nameInRoot,
 
 	CMS_lumi.extraText = ("Preliminary" if 'DATA' in labelh1 else "Simulation Preliminary")
 	CMS_lumi.relPosX = 0.13
+	if topRegion: CMS_lumi.lumi_13TeV = str( round( (args.lumi*10/1000.), 1 ) )+" fb^{-1}"
 	CMS_lumi.CMS_lumi(pad1, 4, 0)
 	legend.Draw()
 	pad1.RedrawAxis()
@@ -998,13 +1039,14 @@ def makePlots( nameInRoot,
 		addUncBand[1].SetFillStyle(3005)
 		addUncBand[1].Draw( 'same E2' )
 		ratio.Draw('same P')
-	else:
+	elif not topRegion:
 		line11.Draw("same")
 		line09.Draw("same")
+		line.Draw("same")
 
 	if doFit:
-		tmpFit = TF1( 'tmpFit', 'pol0', 60, 300 )
-		ratio.Fit( 'tmpFit', '', '', 60, 300 )
+		tmpFit = TF1( 'tmpFit', 'pol0', 100, 250 )
+		ratio.Fit( 'tmpFit', '', '', 100, 250 )
 		tmpFit.SetLineColor( kGreen )
 		tmpFit.SetLineWidth( 2 )
 		tmpFit.Draw("same")
@@ -1018,15 +1060,18 @@ def makePlots( nameInRoot,
 		ratio2.SetFillStyle(3004)
 		ratio2.SetFillColor( kRed )
 		ratio2.Draw('same E2')
-	line.Draw("same")
 
-	outputFileName = nameInRoot+'_'+typePlot+'_'+args.grooming+'_QCD'+args.qcd+'_bkgShapeEstimationBoostedPlots'+args.version+'.'+args.extension
+	outputFileName = nameInRoot+'_'+typePlot+'_'+args.grooming+'_QCD'+args.qcd+'_bkgEstimationPlots'+args.version+'.'+args.extension
 	if not 'simple' in args.binning: outputFileName = outputFileName.replace( typePlot, typePlot+'_ResoBasedBin' )
 	print 'Processing.......', outputFileName
 	can.SaveAs( 'Plots/'+ outputFileName )
 	del can
 
+	if topRegion: return [ tmpFit.GetParameter(0), tmpFit.GetParError(0) ]
+
 #######################################################################
+
+
 
 def tmpPlotBkgEstimation( dataFile, nameInRoot, xmin, xmax, rebinX, labX, labY, log, Norm=False ):
 	"""docstring for tmpPlotBkgEstimation"""
@@ -1110,15 +1155,18 @@ def tmpPlotBkgEstimation( dataFile, nameInRoot, xmin, xmax, rebinX, labX, labY, 
 	tmphSignalCR.Draw()
 	line.Draw("same")
 
-	outputFileName = nameInRoot+'_BkgPlusRPVSt'+str(args.mass)+'_'+args.grooming+'_QCD'+args.qcd+'_bkgShapeEstimationBoostedPlots'+args.version+'.'+args.extension
+	outputFileName = nameInRoot+'_BkgPlusRPVSt'+str(args.mass)+'_'+args.grooming+'_QCD'+args.qcd+'_bkgEstimationPlots'+args.version+'.'+args.extension
 	print 'Processing.......', outputFileName
 	can.SaveAs( 'Plots/'+ outputFileName )
 	del can
+##############################################################
+
+
 
 def plotSimpleBkgEstimation( rootFile, bkg, nameInRoot, xmin, xmax, rebinX, labX, labY, log, Norm=False ):
 	"""docstring for plotSimpleBkgEstimation"""
 
-	outputFileName = nameInRoot+'_'+bkg+'_pruned_bkgShapeEstimationBoostedPlots'+args.version+'.'+args.extension
+	outputFileName = nameInRoot+'_'+bkg+'_pruned_bkgEstimationPlots'+args.version+'.'+args.extension
 	print 'Processing.......', outputFileName
 
 	bkgHistos = OrderedDict()
@@ -1136,14 +1184,15 @@ def plotSimpleBkgEstimation( rootFile, bkg, nameInRoot, xmin, xmax, rebinX, labX
 
 	hRatiohBkg = ratioPlots( bkgHistos[ nameInRoot+'_'+bkg+'_A' ], histoBCD ) 
 	makePlots( nameInRoot, bkgHistos[ nameInRoot+'_'+bkg+'_A' ], bkg+' SR', histoBCD, bkg+' MC ABCD Pred.', 5, xmin, xmax, hRatiohBkg, "MC SR/ABCD Pred", '', bkg+'Bkg_Log', True)
+##############################################################
 
 
 
 
-def plot2DBkgEstimation( rootFile, dataFile, sample, nameInRoot, titleXAxis, titleXAxis2, Xmin, Xmax, rebinx, Ymin, Ymax, rebiny, legX, legY ):
+def plot2DBkgEstimation( rootFile, dataFile, sample, nameInRoot, scale, titleXAxis, titleXAxis2, Xmin, Xmax, rebinx, Ymin, Ymax, rebiny, legX, legY ):
 	"""docstring for plot"""
 
-	outputFileName = nameInRoot+'_'+sample+'_'+(args.decay+'_' if 'UDD323' in args.decay else '' )+args.grooming+'_bkgShapeEstimationBoostedPlots'+args.version+'.'+args.extension
+	outputFileName = nameInRoot+'_'+sample+'_'+(args.decay+'_' if 'UDD323' in args.decay else '' )+args.grooming+'_bkgEstimationPlots'+args.version+'.'+args.extension
 	print 'Processing.......', outputFileName
 
 	bkgHistos = OrderedDict()
@@ -1157,7 +1206,7 @@ def plot2DBkgEstimation( rootFile, dataFile, sample, nameInRoot, titleXAxis, tit
 		hBkg = bkgHistos[ bkg+'_B' ].Clone()
 		hBkg.Reset()
 		for samples in bkgHistos:
-			print samples
+			bkgHistos[ samples ].Scale( scale )
 			hBkg.Add( bkgHistos[ samples ].Clone() )
 	else: 
 		bkgHistos[ sample+'_A' ] = Rebin2D( rootFile.Get( nameInRoot+'_'+sample+('_btag' if 'UDD323' in args.decay else '')+'_A' ), rebinx, rebiny )
@@ -1166,9 +1215,12 @@ def plot2DBkgEstimation( rootFile, dataFile, sample, nameInRoot, titleXAxis, tit
 		bkgHistos[ sample+'_D' ] = Rebin2D( rootFile.Get( nameInRoot+'_'+sample+('_btag' if 'UDD323' in args.decay else '')+'_D' ), rebinx, rebiny )
 
 		hBkg = bkgHistos[ sample+'_B' ].Clone()
-		for samples in bkgHistos:
-			if sample+'_B' not in samples: hBkg.Add( bkgHistos[ samples ].Clone() )
+		hBkg.Reset()
+		for samples in bkgHistos: 
+			bkgHistos[ samples ].Scale( scale )
+			hBkg.Add( bkgHistos[ samples ].Clone() )
 
+	'''
 	if isinstance( dataFile, TFile ):
 
 		bkgHistos[ 'DATA_A' ] = Rebin2D( dataFile.Get( nameInRoot+'_DATA_A' ), rebinx, rebiny )
@@ -1190,7 +1242,9 @@ def plot2DBkgEstimation( rootFile, dataFile, sample, nameInRoot, titleXAxis, tit
 		hBkg.Reset()
 		for samples in bkgHistos:
 			if '_A' not in samples: 
+				print samples
 				if 'DATA' in samples: hBkg.Add( bkgHistos[ samples ].Clone() )
+	'''
 
 	if 'DATA' in sample: CMS_lumi.extraText = "Preliminary"
 	else: CMS_lumi.extraText = "Simulation Preliminary"
@@ -1260,6 +1314,7 @@ if __name__ == '__main__':
 	parser.add_argument('-e', '--extension', action='store', default='png', help='Extension of plots.' )
 	parser.add_argument('-B', '--bkgPlots', action='store_true', default=False, help='Binning: resoBased or simple' )
 	parser.add_argument('-f', '--final', action='store_true', default=False, help='Final distributions.' )
+	parser.add_argument('-c', '--cutTop', action='store', default='jet2Tau32', help='Cut for ttbar SF.' )
 
 	try:
 		args = parser.parse_args()
@@ -1290,7 +1345,7 @@ if __name__ == '__main__':
 	#signalFiles[ '170' ] = [ TFile.Open(filePrefix+'_RPVStopStopToJets_'+args.decay+'_M-170_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = 170 GeV', kMagenta]
 	#signalFiles[ '240' ] = [ TFile.Open(filePrefix+'_RPVStopStopToJets_'+args.decay+'_M-240_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = 240 GeV', 28]
 	signalFiles[ 120 ] = [ TFile.Open(filePrefix+'_RPVStopStopToJets_UDD323_M-120_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = 120 GeV', kRed]
-	bkgFiles[ 'TT' ] = [ TFile.Open(filePrefix+'_TT_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi*0.89, 't #bar{t} + Jets', kGreen+2 ]
+	bkgFiles[ 'TT' ] = [ TFile.Open(filePrefix+'_TT_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 't #bar{t} + Jets', kGreen+2 ]
     	bkgFiles[ 'ZJetsToQQ' ] = [ TFile.Open(filePrefix+'_ZJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'Z + Jets', kOrange]
     	bkgFiles[ 'WJetsToQQ' ] = [ TFile.Open(filePrefix+'_WJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'W + Jets', 38]
 	bkgFiles[ 'Dibosons' ] = [ TFile.Open(filePrefix+'_Dibosons_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'WW (had)', kMagenta+2 ]
@@ -1310,11 +1365,13 @@ if __name__ == '__main__':
 			plot2DBkgEstimation( 
 					bkgFiles[ bkg ][0], '', bkg, 
 					('' if args.miniTree else 'BoostedAnalysisPlots/')+'prunedMassAsymVsdeltaEtaDijet', 
+					bkgFiles[ bkg ][1],
 					'Mass Asymmetry', '| #eta_{j1} - #eta_{j2} |', 
 					0, 1, 1, 0, 5, 1, jetMassHTlabX, jetMassHTlabY)
 		plot2DBkgEstimation( 
 				dataFile, '', 'JetHT_Run2016', 
 				('' if args.miniTree else 'BoostedAnalysisPlots/')+'prunedMassAsymVsdeltaEtaDijet', 
+				1,
 				'Mass Asymmetry', '| #eta_{j1} - #eta_{j2} |', 
 				0, 1, 1, 0, 5, 1, jetMassHTlabX, jetMassHTlabY)
 		#plot2DBkgEstimation( bkgFiles, dataFile, 'DATAMinusResBkg', 'prunedMassAsymVsdeltaEtaDijet', 'Mass Asymmetry', '| #eta_{j1} - #eta_{j2} |', 0, 1, 1, 0, 5, 1, jetMassHTlabX, jetMassHTlabY)
@@ -1333,8 +1390,6 @@ if __name__ == '__main__':
 	else: 
 		bkgEstimation( dataFile, bkgFiles, signalFiles, 
 				args.grooming+'MassAsymVsdeltaEtaDijet', 
-				massMinX, massMaxX, 
-				5, 
-				'jet2Tau32',
-				20,
+				massMinX, massMaxX, 5, 
+				args.cutTop, 20,
 				'', '', False )
