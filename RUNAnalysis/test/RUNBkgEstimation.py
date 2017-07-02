@@ -231,8 +231,8 @@ def ABCDwithTF( histoB, function, fitResults ):
 		listFitErrors.append( err[0] )
 		listBinCenter.append( binCenter )
 
-		if contB != 0: errBCD = contBCD* TMath.Sqrt( TMath.Power( err[0]/factorCD, 2 ) + TMath.Power( errorB/contB, 2 ) )
-		else: errBCD = 1.8
+		try: errBCD = contBCD* TMath.Sqrt( TMath.Power( err[0]/factorCD, 2 ) + TMath.Power( errorB/contB, 2 ) )
+		except ZeroDivisionError: errBCD = 1.8
 
 		histoBCD.SetBinContent( ibin, contBCD )
 		histoBCD.SetBinError( ibin, errBCD )
@@ -423,7 +423,7 @@ def ABCDTFunctionCalculation( nameInRoot, binning, minX, maxX,
 			legend=TLegend(0.15,0.65,0.55,0.85)
 			legend.SetTextSize(0.04)
 		else: 
-			legend=TLegend(0.35,0.15,0.70,0.35)
+			legend=TLegend(0.50,0.15,0.95,0.35)
 			legend.SetTextSize(0.035)
 		legend.SetFillStyle(0)
 		legend.AddEntry( hDataCD, 'Data (uncorrected)', 'pl' )
@@ -482,8 +482,10 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 			unbinnedMCBkgHistos[ bkgSamples+side ].Scale( scale )
 
 			MCBkgHistos[ bkgSamples+'_btag'+side ] = bkgFiles[ bkgSamples ][0].Get( bkgNameHisto+'_btag'+side )
+			unbinnedMCBkgHistos[ bkgSamples+'_btag'+side ] = MCBkgHistos[ bkgSamples+'_btag'+side ].Clone()
 			MCBkgHistos[ bkgSamples+'_btag'+side ] = rebin( MCBkgHistos[ bkgSamples+'_btag'+side ], ( rebinX*2 if 'simple' in args.binning else args.binning ) )
 			MCBkgHistos[ bkgSamples+'_btag'+side ].Scale( scale )
+			unbinnedMCBkgHistos[ bkgSamples+'_btag'+side ].Scale( scale )
 		if 'simple' in args.binning: 
 			MCBkgHistos[ bkgSamples+'_A' ].SetFillColor( bkgFiles[ bkgSamples ][3] )
 			MCBkgHistos[ bkgSamples+'_btag_A' ].SetFillColor( bkgFiles[ bkgSamples ][3] )
@@ -525,6 +527,7 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 		dataHistos[ 'DATA_btag'+a ] = dataFile.Get( dataNameHisto+'_btag'+a )
 		dataHistos[ 'DATA_btag'+a ] = rebin( dataHistos[ 'DATA_btag'+a ], ( rebinX*2 if 'simple' in args.binning else args.binning ) )
 		unbinnedDataHistos[ 'DATA'+a ] = dataFile.Get( dataNameHisto+a )
+		unbinnedDataHistos[ 'DATA_btag'+a ] = dataFile.Get( dataNameHisto+'_btag'+a )
 
 	dataHistos[ 'DATA_'+cutTop ] = dataFile.Get( 'massAve_'+cutTop+'_JetHT_Run2016' )
 	dataHistos[ 'DATA_'+cutTop ] = rebin( dataHistos[ 'DATA_'+cutTop ], rebinTopX  )
@@ -578,7 +581,8 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 	allBkgHistos = OrderedDict()
 	for k in [ '_A', '_B', '_C', '_D' ]:
 		allBkgHistos[ 'allBkg'+k ] = dataHistos[ 'DATA'+k ].Clone()
-		allBkgHistos[ 'allBkg'+k ].Reset()
+		allBkgHistos[ 'allBkg_btag'+k ] = dataHistos[ 'DATA_btag'+k ].Clone()
+	for h in allBkgHistos: allBkgHistos[ h ].Reset()
 
 	hBkgMinusResonantBkgA = dataHistos[ 'DATA_A' ].Clone()	
 	hBkgMinusResonantBkgA.Reset()
@@ -586,20 +590,29 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 	hDataMinusResonantBkgC = dataHistos[ 'DATA_C' ].Clone()
 	hDataMinusResonantBkgD = unbinnedDataHistos[ 'DATA_D' ].Clone()
 
-	allBkgHistos[ 'allBkg_btag_A' ] = dataHistos[ 'DATA_btag_A' ].Clone()
-	allBkgHistos[ 'allBkg_btag_A' ].Reset()
 	hBkgBtagMinusResonantBkgA = dataHistos[ 'DATA_btag_A' ].Clone()	
 	hBkgBtagMinusResonantBkgA.Reset()
+	hDataBtagMinusResonantBkgB = unbinnedDataHistos[ 'DATA_btag_B' ].Clone()
 	hDataBtagMinusResonantBkgC = dataHistos[ 'DATA_btag_C' ].Clone()
+	hDataBtagMinusResonantBkgD = unbinnedDataHistos[ 'DATA_btag_D' ].Clone()
 	
 	for isamples in MCBkgHistos:
 		if 'btag' in isamples:
 			if '_A' in isamples: 
 				allBkgHistos[ 'allBkg_btag_A' ].Add( MCBkgHistos[ isamples ].Clone() )
 				if not 'QCD' in isamples: hBkgBtagMinusResonantBkgA.Add( MCBkgHistos[ isamples ].Clone() )
+
+			if '_B' in isamples: 
+				allBkgHistos[ 'allBkg_btag_B' ].Add( MCBkgHistos[ isamples ].Clone() )
+				if not 'QCD' in isamples: hDataBtagMinusResonantBkgB.Add( unbinnedMCBkgHistos[ isamples ].Clone(), -1 )
+
 			elif '_C' in isamples: 
-				if not 'QCD' in isamples: 
-					hDataBtagMinusResonantBkgC.Add( MCBkgHistos[ isamples ].Clone(), -1 )
+				allBkgHistos[ 'allBkg_btag_C' ].Add( MCBkgHistos[ isamples ].Clone() )
+				if not 'QCD' in isamples: hDataBtagMinusResonantBkgC.Add( MCBkgHistos[ isamples ].Clone(), -1 )
+
+			elif '_D' in isamples: 
+				allBkgHistos[ 'allBkg_btag_D' ].Add( MCBkgHistos[ isamples ].Clone() )
+				if not 'QCD' in isamples: hDataBtagMinusResonantBkgD.Add( unbinnedMCBkgHistos[ isamples ].Clone(), -1 )
 
 		else:
 			if '_A' in isamples: 
@@ -612,9 +625,7 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 
 			elif '_C' in isamples: 
 				allBkgHistos[ 'allBkg_C' ].Add( MCBkgHistos[ isamples ].Clone() )
-				if not 'QCD' in isamples: 
-					hDataMinusResonantBkgC.Add( MCBkgHistos[ isamples ].Clone(), -1 )
-					if 'btag' in isamples: hDataBtagMinusResonantBkgC.Add( MCBkgHistos[ isamples ].Clone(), -1 )
+				if not 'QCD' in isamples: hDataMinusResonantBkgC.Add( MCBkgHistos[ isamples ].Clone(), -1 )
 
 			elif '_D' in isamples: 
 				allBkgHistos[ 'allBkg_D' ].Add( MCBkgHistos[ isamples ].Clone() )
@@ -876,6 +887,24 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 				[ MCBkgHistos[ 'Dibosons_btag_A' ].Clone(), 'Dibosons' ] ] 
 			)
 	###########################################
+	
+	##### Calculating transfer function for btagging
+	hBtagOnlyDataBCD, hBtagOnlyQCDMCBCD, hBtagOnlyQCDMCHybridTFunctionBCD, hBtagOnlyDataWOResBkgBCD, hBtagOnlyQCDMCHybridTFactorBCD, hBtagOnlyDataBtagWOResBkgBCD,  hBtagOnlyQCDMCBtagHybridTFunctionBCD = ABCDTFunctionCalculation( 
+			nameInRoot, 
+			25, xmin, xmax, 
+			dataHistos[ 'DATA_btag_C' ], 
+			unbinnedDataHistos[ 'DATA_btag_B' ], 
+			unbinnedDataHistos[ 'DATA_btag_D' ], 
+			MCBkgHistos[ 'QCD'+args.qcd+'All_btag_C' ].Clone(), 
+			unbinnedMCBkgHistos[ 'QCD'+args.qcd+'All_btag_B' ].Clone(), 
+			unbinnedMCBkgHistos[ 'QCD'+args.qcd+'All_btag_D' ].Clone(), 
+			hDataBtagMinusResonantBkgC, 
+			hDataBtagMinusResonantBkgB, 
+			hDataBtagMinusResonantBkgD, 
+			hDataBtagMinusResonantBkgC,  				## for btag
+			MCBkgHistos[ 'QCD'+args.qcd+'All_btag_C' ].Clone(), 	## for btag
+			'combinedBtag'+'_'+cutTop, 
+			rootFile=False )
 
 ##############################################################
 
@@ -990,6 +1019,7 @@ def makePlots( nameInRoot,
 	CMS_lumi.relPosX = 0.13
 	if topRegion: CMS_lumi.lumi_13TeV = str( round( (args.lumi*10/1000.), 1 ) )+" fb^{-1}"
 	CMS_lumi.CMS_lumi(pad1, 4, 0)
+	if topRegion: CMS_lumi.lumi_13TeV = str( round( (args.lumi/1000.), 1 ) )+" fb^{-1}"
 	legend.Draw()
 	pad1.RedrawAxis()
 
