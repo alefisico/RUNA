@@ -348,7 +348,7 @@ def ABCDTFunctionCalculation( nameInRoot, binning, minX, maxX,
 
 	#### Create rootfile for limit setting
 	if rootFile:
-		tmpFileName = dataFileName.replace('V2p4', 'V2p4_ABCDEst')
+		tmpFileName = dataFileName.replace('V2p4', 'V2p4_'+args.cutTop+'_ABCDEst')
 		tmpFile = TFile(tmpFileName, 'recreate' )
 		#hDataBCD.SetName( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016_ABCDProj' )
 		#hDataBCD.Write()

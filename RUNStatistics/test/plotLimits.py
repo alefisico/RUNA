@@ -88,7 +88,7 @@ def plotLimits( listMasses  ):
 			XS = search( dictXS, 'RPVStopStopToJets_'+args.decay+'_M-'+str(mass) )
 			xs_theory.append( XS )
 
-			tmpFile, tmpTree, tmpEntries = getTree( "higgsCombine"+args.decay+"RPVSt_M-"+str(mass)+args.grooming+'_'+args.boosted+'_'+args.sys+'_'+args.version+'.'+args.method+".mH120.root", "limit" )
+			tmpFile, tmpTree, tmpEntries = getTree( "higgsCombineRPVStopStopToJets_"+args.decay+"_M-"+str(mass)+args.grooming+'_'+args.sys+'_'+args.version+'.'+args.method+".mH120.root", "limit" )
 			for i in xrange(tmpEntries):
 				tmpTree.GetEntry(i)
 				tmp = round( tmpTree.quantileExpected, 2)
@@ -338,5 +338,5 @@ if __name__ == '__main__':
 
 	else: 
 		if '312' in args.decay:  listMass = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 300, 350 ]
-		else: listMass = [ 120, 180, 200, 220, 240, 280, 300 ]
+		else: listMass = [ 120, 180, 200, 220, 240, 280, 300, 350 ]
 	plotLimits( listMass  )
