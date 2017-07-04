@@ -76,8 +76,11 @@ else:
 			#'/store/user/jsomalwa/B2GAnaFW_80X_V2p1/RPVStopStopToJets_UDD312_M-100_TuneCUETP8M1_13TeV-madgraph-pythia8/RunIISpring16MiniAODv2/RPVStopStopToJets_UDD312_M-100_TuneCUETP8M1_13TeV-madgraph-pythia8/RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1_B2GAnaFW_80X_V2p1/161018_211211/0000/B2GEDMNtuple_1.root',
 			#'/store/user/algomez/RPVStopStopToJets_UDD323_M-120_TuneCUETP8M1_13TeV-madgraph-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4/170131_140142/0000/B2GEDMNtuple_5.root',
 			#'/store/group/phys_b2g/B2GAnaFW_80X_V2p3/JetHT/Run2016C/JetHT/Run2016C-23Sep2016-v1_B2GAnaFW_80X_V2p3/161216_220503/0000/B2GEDMNtuple_10.root',
-			#'/store/group/phys_b2g/B2GAnaFW_80X_V2p4/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/RunIISummer16MiniAODv2/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4/161222_110143/0000/B2GEDMNtuple_736.root',
-			'/store/group/phys_b2g/B2GAnaFW_80X_V2p4/QCD_Pt_800to1000_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2/QCD_Pt_800to1000_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1_B2GAnaFW_80X_V2p4/161222_105211/0000/B2GEDMNtuple_146.root',
+			'/store/group/phys_b2g/B2GAnaFW_80X_V2p4/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/RunIISummer16MiniAODv2/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4/161222_110143/0000/B2GEDMNtuple_736.root',
+			#'/store/group/phys_b2g/B2GAnaFW_80X_V2p4/QCD_Pt_800to1000_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2/QCD_Pt_800to1000_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1_B2GAnaFW_80X_V2p4/161222_105211/0000/B2GEDMNtuple_146.root',
+			#'/store/group/phys_b2g/B2GAnaFW_80X_V2p4/ZZTo4Q_13TeV_amcatnloFXFX_madspin_pythia8/RunIISummer16MiniAODv2/ZZTo4Q_13TeV_amcatnloFXFX_madspin_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4/170109_171416/0000/B2GEDMNtuple_448.root',
+			#'/store/group/phys_b2g/B2GAnaFW_80X_V2p4/WZ_TuneCUETP8M1_13TeV-pythia8/B2GAnaFW_Spring16MiniAODv2_Moriond17_v80x_ext1_v2p4/170122_181324/0000/B2GEDMNtuple_109.root',
+			#'/store/group/phys_b2g/B2GAnaFW_80X_V2p4/ZJetsToQQ_HT600toInf_13TeV-madgraph/RunIISummer16MiniAODv2/ZJetsToQQ_HT600toInf_13TeV-madgraph/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4/170624_000639/0000/B2GEDMNtuple_22.root',
 
 			#'/store/group/phys_b2g/B2GAnaFW_80X_V2p4/QCD_Pt_3200toInf_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2/QCD_Pt_3200toInf_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v3_B2GAnaFW_80X_V2p4/161222_105345/0000/B2GEDMNtuple_20.root',
 			#'/store/group/phys_b2g/B2GAnaFW_80X_V2p4/QCD_Pt_3200toInf_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2/QCD_Pt_3200toInf_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v3_B2GAnaFW_80X_V2p4/161222_105345/0000/B2GEDMNtuple_21.root',
@@ -119,7 +122,7 @@ process.ResolvedAnalysisPlots = cms.EDAnalyzer('RUNResolvedAnalysis',
 		jecVersion		= cms.string( options.jecVersion ),
 		btagCSVFile		= cms.string( options.CSVFile  ),
 		isData			= cms.bool( isData ),
-		LHEcont			= cms.bool( True if 'QCD_Pt' in NAME else False ), ## logic is oposite
+		LHEcont			= cms.bool( True if (('QCD_Pt' in NAME) or ('WZ' in NAME)) else False ), ## logic is oposite
 		pairingMethod		= cms.string( "deltaR" ),
 		mkTree			= cms.bool( True ),
 )
@@ -128,6 +131,8 @@ process.ResolvedAnalysisPlots = cms.EDAnalyzer('RUNResolvedAnalysis',
 #process.ResolvedAnalysisPlotsMassPairing = process.ResolvedAnalysisPlots.clone( pairingMethod = cms.string( "mass" ), mkTree = cms.bool( False ) )
 #process.ResolvedAnalysisPlotsChi2Pairing = process.ResolvedAnalysisPlots.clone( pairingMethod = cms.string( "chi2" ), mkTree = cms.bool( False ) )
 
+process.ResolvedAnalysisPlotsBtagUp = process.ResolvedAnalysisPlots.clone( systematics = cms.string( 'BtagUp' ), mkTree = cms.bool( False ) )
+process.ResolvedAnalysisPlotsBtagDown = process.ResolvedAnalysisPlots.clone( systematics = cms.string( 'BtagDown' ), mkTree = cms.bool( False ) )
 process.ResolvedAnalysisPlotsJESUp = process.ResolvedAnalysisPlots.clone( systematics = cms.string( 'JESUp' ), mkTree = cms.bool( False ) )
 process.ResolvedAnalysisPlotsJESDown = process.ResolvedAnalysisPlots.clone( systematics = cms.string( 'JESDown' ), mkTree = cms.bool( False ) )
 process.ResolvedAnalysisPlotsJERUp = process.ResolvedAnalysisPlots.clone( systematics = cms.string( 'JERUp' ), mkTree = cms.bool( False ) )
@@ -163,7 +168,7 @@ process.BoostedAnalysisPlots = cms.EDAnalyzer('RUNBoostedAnalysis',
 		isTTbar			= cms.bool( True if 'TTJets' in NAME else False ),
 		btagCSVFile		= cms.string( options.CSVFile  ),
 		btagMVAFile		= cms.string( options.cMVAFile  ),
-		LHEcont			= cms.bool( True if 'QCD_Pt' in NAME else False ), ## logic is oposite
+		LHEcont			= cms.bool( True if (('QCD_Pt' in NAME) or ('WZ' in NAME)) else False ), ## logic is oposite
 		scale 			= cms.double( SF ),
 		mkTree			= cms.bool( True ),
 )
@@ -171,6 +176,8 @@ process.BoostedAnalysisPlots = cms.EDAnalyzer('RUNBoostedAnalysis',
 #process.BoostedAnalysisPlotsSortInMass = process.BoostedAnalysisPlots.clone( sortInMass = cms.bool( True ), mkTree = cms.bool( False ) )
 #process.BoostedAnalysisPlotsSortInTau21 = process.BoostedAnalysisPlots.clone( sortInTau21 = cms.bool( True ), mkTree = cms.bool( False ) )
 
+process.BoostedAnalysisPlotsBtagUp = process.BoostedAnalysisPlots.clone( systematics = cms.string( 'BtagUp' ), mkTree = cms.bool( False ) )
+process.BoostedAnalysisPlotsBtagDown = process.BoostedAnalysisPlots.clone( systematics = cms.string( 'BtagDown' ), mkTree = cms.bool( False ) )
 process.BoostedAnalysisPlotsJESUp = process.BoostedAnalysisPlots.clone( systematics = cms.string( 'JESUp' ), mkTree = cms.bool( False ) )
 process.BoostedAnalysisPlotsJESDown = process.BoostedAnalysisPlots.clone( systematics = cms.string( 'JESDown' ), mkTree = cms.bool( False ) )
 process.BoostedAnalysisPlotsJERUp = process.BoostedAnalysisPlots.clone( systematics = cms.string( 'JERUp' ), mkTree = cms.bool( False ) )
@@ -243,6 +250,8 @@ if 'Resolved' in options.version:
 	#process.p += process.ResolvedAnalysisPlotsMassPairing
 	#process.p += process.ResolvedAnalysisPlotsChi2Pairing
 	if options.systematics:
+		process.p += process.ResolvedAnalysisPlotsBtagUp
+		process.p += process.ResolvedAnalysisPlotsBtagDown
 		process.p += process.ResolvedAnalysisPlotsJESUp
 		process.p += process.ResolvedAnalysisPlotsJESDown
 		process.p += process.ResolvedAnalysisPlotsJERUp
@@ -255,6 +264,8 @@ elif 'Boosted' in options.version:
 	#process.p += process.BoostedAnalysisPlotsSortInMass
 	#process.p += process.BoostedAnalysisPlotsSortInTau21
 	if options.systematics:
+		process.p += process.BoostedAnalysisPlotsBtagUp
+		process.p += process.BoostedAnalysisPlotsBtagDown
 		process.p += process.BoostedAnalysisPlotsJESUp
 		process.p += process.BoostedAnalysisPlotsJESDown
 		process.p += process.BoostedAnalysisPlotsJERUp
@@ -273,12 +284,16 @@ else:
 	process.p += process.BoostedAnalysisPlotsPuppi
 
 	if options.systematics:
+		process.p += process.BoostedAnalysisPlotsBtagUp
+		process.p += process.BoostedAnalysisPlotsBtagDown
 		process.p += process.BoostedAnalysisPlotsJESUp
 		process.p += process.BoostedAnalysisPlotsJESDown
 		process.p += process.BoostedAnalysisPlotsJERUp
 		process.p += process.BoostedAnalysisPlotsJERDown
 		process.p += process.BoostedAnalysisPlotsPUUp
 		process.p += process.BoostedAnalysisPlotsPUDown
+		process.p += process.ResolvedAnalysisPlotsBtagUp
+		process.p += process.ResolvedAnalysisPlotsBtagDown
 		process.p += process.ResolvedAnalysisPlotsJESUp
 		process.p += process.ResolvedAnalysisPlotsJESDown
 		process.p += process.ResolvedAnalysisPlotsJERUp

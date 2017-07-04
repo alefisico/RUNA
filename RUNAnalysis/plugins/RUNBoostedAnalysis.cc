@@ -108,7 +108,7 @@ class RUNBoostedAnalysis : public EDAnalyzer {
 		int numJets = 0, numPV = 0, numEle = 0, numMuon = 0;
 		unsigned int lumi = 0, run=0;
 		float AK4HT = 0, HT = 0, trimmedMass = -999, 
-		      puWeight = -999, genWeight = -999, lumiWeight = -999, pdfWeight = -999, MET = -999,
+		      puWeight = -999, genWeight = -999, lumiWeight = -999, pdfWeight = -999, btagWeight = -999, MET = -999,
 		      jet1Pt = -999, jet1Eta = -999, jet1Phi = -999, jet1E = -999, jet1M = -999, jet1btagCSVv2 = -9999, jet1btagCMVAv2 = -9999, jet1btagDoubleB = -9999,
 		      jet2Pt = -999, jet2Eta = -999, jet2Phi = -999, jet2E = -999, jet2M = -999, jet2btagCSVv2 = -9999, jet2btagCMVAv2 = -9999, jet2btagDoubleB = -9999,
 		      jet1btagCSVv2SF = 1, jet2btagCSVv2SF = 1, jet1btagCMVAv2SF = 1, jet2btagCMVAv2SF = 1,
@@ -599,7 +599,7 @@ void RUNBoostedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup) 
 	///////////////////////////////////////////////////*/
 	
 	
-	////// TTbar genInfo (all this piece of code is SPECIFIC for ttbar
+	/*///// TTbar genInfo (all this piece of code is SPECIFIC for ttbar
 	if (isTTbar) {
 
 		for( const auto & p : *genParticles ) {  
@@ -920,11 +920,15 @@ void RUNBoostedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup) 
 				string measurementTypeCSV = "comb";
 				string measurementTypeCMVA = "ttbar";
 
-				jet1btagCSVv2SF = btagSF(btagCSVFile, JETS[0].p4.Pt(), JETS[0].p4.Eta(), JETS[0].hadronFlavour, sysType, measurementTypeCSV );
-				jet2btagCSVv2SF = btagSF(btagCSVFile, JETS[1].p4.Pt(), JETS[1].p4.Eta(), JETS[1].hadronFlavour, sysType, measurementTypeCSV );
-				jet1btagCMVAv2SF = btagSF(btagMVAFile, JETS[0].p4.Pt(), JETS[0].p4.Eta(), JETS[0].hadronFlavour, sysType, measurementTypeCMVA );
-				jet2btagCMVAv2SF = btagSF(btagMVAFile, JETS[1].p4.Pt(), JETS[1].p4.Eta(), JETS[1].hadronFlavour, sysType, measurementTypeCMVA );
+				jet1btagCSVv2SF = btagSF(btagCSVFile, JETS[0].p4.Pt(), JETS[0].p4.Eta(), JETS[0].hadronFlavour, sysType, measurementTypeCSV, 1 );
+				jet2btagCSVv2SF = btagSF(btagCSVFile, JETS[1].p4.Pt(), JETS[1].p4.Eta(), JETS[1].hadronFlavour, sysType, measurementTypeCSV, 1 );
+				jet1btagCMVAv2SF = btagSF(btagMVAFile, JETS[0].p4.Pt(), JETS[0].p4.Eta(), JETS[0].hadronFlavour, sysType, measurementTypeCMVA, 1 );
+				jet2btagCMVAv2SF = btagSF(btagMVAFile, JETS[1].p4.Pt(), JETS[1].p4.Eta(), JETS[1].hadronFlavour, sysType, measurementTypeCMVA, 1 );
 			}
+
+			//// btag event weight from https://github.com/ferencek/cms-MyAnalyzerDijetCode/blob/master/MyAnalyzer_MainAnalysis_DijetBBTag_2011.cc#L1295-L1356
+			btagWeight = btagEventWeightBoosted( ( jet1btagCSVv2 > 0.8484 ), ( jet2btagCSVv2 > 0.8484 ), jet1btagCSVv2SF, jet2btagCSVv2SF );
+			//LogWarning("btag") << jet1btagCSVv2 << " " << jet2btagCSVv2 << " " btagWeight;
 			///////////////////////////////////////////
 
 			// Dijet eta
@@ -1045,10 +1049,10 @@ void RUNBoostedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup) 
 				histos1D_[ "deltaEtaDijet_cutEffTrigger" ]->Fill( deltaEtaDijet, totalWeight );
 				histos1D_[ "prunedMassAsym_cutEffTrigger" ]->Fill( prunedMassAsym, totalWeight );
 				histos1D_[ "massAve_cutEffTrigger" ]->Fill( prunedMassAve, totalWeight );
-				histos1D_[ "jet1btagCSVv2_cutEffTrigger" ]->Fill( jet1btagCSVv2, totalWeight );
-				histos1D_[ "jet2btagCSVv2_cutEffTrigger" ]->Fill( jet2btagCSVv2, totalWeight );
+				histos1D_[ "jet1btagCSVv2_cutEffTrigger" ]->Fill( jet1btagCSVv2, totalWeight*btagWeight );
+				histos1D_[ "jet2btagCSVv2_cutEffTrigger" ]->Fill( jet2btagCSVv2, totalWeight*btagWeight );
 
-				if ( ( jet1Tau21 < cutTau21 ) && ( jet2Tau21 < cutTau21 ) ) {
+				/*if ( ( jet1Tau21 < cutTau21 ) && ( jet2Tau21 < cutTau21 ) ) {
 
 					cutmap["Tau21"] += 1;
 					histos1D_[ "jet1Tau21_cutTau21" ]->Fill( jet1Tau21, totalWeight );
@@ -1095,7 +1099,7 @@ void RUNBoostedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup) 
 
 					
 					///// Regular ABCD
-					if ( ( jet1btagCSVv2 > 0.8 ) && ( jet2btagCSVv2 > 0.8 ) ) {
+					if ( ( jet1btagCSVv2 > 0.8484 ) && ( jet2btagCSVv2 > 0.8484 ) ) {
 						if ( ( prunedMassAsym < cutAK8MassAsym ) && ( deltaEtaDijet < cutDeltaEtaDijet ) ) {
 							histos1D_[ "massAve_prunedMassAsymVsdeltaEtaDijet_btag_A" ]->Fill( prunedMassAve, totalWeight );
 							histos2D_[ "prunedMassAsymVsdeltaEtaDijet_btag_A" ]->Fill( prunedMassAsym, deltaEtaDijet, totalWeight );
@@ -1119,7 +1123,7 @@ void RUNBoostedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup) 
 				if ( ( prunedMassAsym < cutAK8MassAsym ) && ( deltaEtaDijet < cutDeltaEtaDijet ) ) {
 					histos1D_[ "jet1Tau21_n-1" ]->Fill( jet1Tau21, totalWeight );
 					histos1D_[ "jet2Tau21_n-1" ]->Fill( jet2Tau21, totalWeight );
-				}
+				}*/
 			}
 		}
 	}
@@ -1148,6 +1152,7 @@ void RUNBoostedAnalysis::beginJob() {
 		RUNAtree->Branch( "lumiWeight", &lumiWeight, "lumiWeight/F" );
 		RUNAtree->Branch( "pdfWeight", &pdfWeight, "pdfWeight/F" );
 		RUNAtree->Branch( "genWeight", &genWeight, "genWeight/F" );
+		RUNAtree->Branch( "btagWeight", &btagWeight, "btagWeight/F" );
 		RUNAtree->Branch( "HT", &HT, "HT/F" );
 		RUNAtree->Branch( "MET", &MET, "MET/F" );
 		//RUNAtree->Branch( "AK4HT", &AK4HT, "AK4HT/F" );

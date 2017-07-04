@@ -29,8 +29,8 @@ dictXS = {
 		'WJetsToQQ_HT-600ToInf' : 95.14,
 		'WWTo4Q_13TeV-powheg' : 51.723,
 		#### Z
-		'ZJetsToQQ' : 5.67,
-		'ZZTo4Q' : 6.842,
+		'ZJetsToQQ_HT600toInf_13TeV-madgraph' : 5.67,
+		'ZZTo4Q_13TeV_amcatnloFXFX_madspin_pythia8' : 6.842,
 		'WZ' : 22.82,
 		#### RPV
 		'RPVStopStopToJets_UDD312_M-80' : 3746.,
@@ -162,8 +162,8 @@ dictEvents = {
 #		'TTJets_HT-2500toInf' :	[  	507842. 	 ],
 		'WJetsToQQ_HT-600ToInf' : 	[ 1026587., 	1025005 ],
 		'WWTo4Q_13TeV-powheg' : 	[ 1998400., 	1813904 ],
-		#'ZJetsToQQ' : 	[ 992590 ],
-		'ZZTo4Q' : 	[ 30454227., 	29948451 ],
+		'ZJetsToQQ_HT600toInf_13TeV-madgraph' : 	[ 996000 ],
+		'ZZTo4Q_13TeV_amcatnloFXFX_madspin_pythia8' : 	[ 30454227., 	29948451 ],
 		'WZ' : 	[ 2995828  		],
 
 		#### RPV Stop
