@@ -131,35 +131,35 @@ dictEvents = {
 
 		#### QCD in Pt (TuneCUETP8M1)
 		'120to170' :	[ 651406. ],
-		'170to300' :	[ 699973. ],
-		'300to470' :	[ 2482816. ], 
-		'470to600' :	[ 1998648. ],
-		'600to800' :   	[ 1329648. ],
-		'800to1000' :  	[ 395328. ],
-		'1000to1400' : 	[ 299967. ],
-		'1400to1800' : 	[ 38848. ],
-		'1800to2400' : 	[ 39975. ],
-		'2400to3200' : 	[ 39990. ],
-		'3200toInf' : 	[ 39988. ],
+		'170to300' :	[ 7838066., 	699973. ],
+		'300to470' :	[ 18253032., 	2482816. ], 
+		'470to600' :	[ 15458074., 	 1998648. ],
+		'600to800' :   	[ 19324269., 	1329648. ],
+		'800to1000' :  	[ 15704980., 	395328. ],
+		'1000to1400' : 	[ 6982586., 	299967. ],
+		'1400to1800' : 	[ 2477018., 	38848. ],
+		'1800to2400' : 	[ 1552064., 	39975. ],
+		'2400to3200' : 	[ 596904., 	39990. ],
+		'3200toInf' : 	[ 391735., 	39988. ],
 		#### QCD in HT
-		'300to500' :  	[ 36337866.  	],
-		'500to700' :  	[ 44138665.  	],
-		'700to1000' :  	[ 15621634.	],
-		'1000to1500' :  [ 15415011.	],
-		'1500to2000' :  [ 3846616.	],
-		'2000toInf' : 	[ 1960245.	],
+		'300to500' :  	[ 17035891., 	36337866.  	],
+		'500to700' :  	[ 18929951., 	44138665.  	],
+		'700to1000' :  	[ 15629253., 	15621634.	],
+		'1000to1500' :  [ 4767100., 	15415011.	],
+		'1500to2000' :  [ 3970819., 	3846616.	],
+		'2000toInf' : 	[ 1991645., 	1960245.	],
 		#### QCD powheg
-		'15to7000' :  	[ 9765576],
+		'15to7000' :  	[ 8754164., 	9765576],
 
-		'TT' 	: [  187626200. ],
+		'TT' 	: [  77229341., 	187626200. ],
 #		'TTJets_HT-600to800' :	[  	5119009. 	 ],
 #		'TTJets_HT-800to1200' :	[  	3510897. 	 ],
 #		'TTJets_HT-1200to2500' :	[  	1014678. 	 ],
 #		'TTJets_HT-2500toInf' :	[  	507842. 	 ],
-		'WJetsToQQ' : 	[ 1025005 ],
-		'WWTo4Q' : 	[ 1813904 ],
+		'WJetsToQQ' : 	[ 1026587., 	1025005 ],
+		'WWTo4Q' : 	[ 1998400., 	1813904 ],
 		'ZJetsToQQ' : 	[ 992590 ],
-		'ZZTo4Q' : 	[ 29948451 ],
+		'ZZTo4Q' : 	[ 30454227., 	29948451 ],
 		'WZ' : 	[  		],
 
 		#### RPV Stop
@@ -202,11 +202,44 @@ dictEvents = {
 		'RPVStopStopToJets_UDD312_M-1300' :	[ 10566  ],
 		'RPVStopStopToJets_UDD312_M-1400' :	[  ],
 		'RPVStopStopToJets_UDD312_M-1500' :	[  ],
+
+		
+		'RPVStopStopToJets_UDD323_M-80' :	[  ],
+		'RPVStopStopToJets_UDD323_M-100' :	[  ],
+		'RPVStopStopToJets_UDD323_M-120' :	[ 44763915 ],
+		'RPVStopStopToJets_UDD323_M-140' :	[  ],
+		'RPVStopStopToJets_UDD323_M-160' :	[  ],
+		'RPVStopStopToJets_UDD323_M-180' :	[ 5621057 ],
+		'RPVStopStopToJets_UDD323_M-200' :	[ 3758101 ],
+		'RPVStopStopToJets_UDD323_M-220' :	[ 2710151 ],
+		'RPVStopStopToJets_UDD323_M-240' :	[ 1988346 ],
+		'RPVStopStopToJets_UDD323_M-260' :	[  ],
+		'RPVStopStopToJets_UDD323_M-280' :	[ 1700035 ],
+		'RPVStopStopToJets_UDD323_M-300' :	[ 4425463 ],
+		'RPVStopStopToJets_UDD323_M-350' :	[ 1967050 ],
+		'RPVStopStopToJets_UDD323_M-400' :	[  ],
+		'RPVStopStopToJets_UDD323_M-450' :	[ 464421 ],
+		'RPVStopStopToJets_UDD323_M-500' :	[ 508119 ],
+		'RPVStopStopToJets_UDD323_M-550' :	[ 524684 ],
+		'RPVStopStopToJets_UDD323_M-600' :	[ 506788 ],
+		'RPVStopStopToJets_UDD323_M-650' :	[ 244634 ],
+		'RPVStopStopToJets_UDD323_M-700' :	[ 270885 ],
+		'RPVStopStopToJets_UDD323_M-750' :	[ 103214 ],
+		'RPVStopStopToJets_UDD323_M-800' :	[ 100636 ],
+		'RPVStopStopToJets_UDD323_M-850' :	[  ],
+		'RPVStopStopToJets_UDD323_M-900' :	[  ],
+		'RPVStopStopToJets_UDD323_M-950' :	[ 109200 ],
+		'RPVStopStopToJets_UDD323_M-1000' :	[ 128773 ],
+		'RPVStopStopToJets_UDD323_M-1100' :	[ 79649 ],
+		'RPVStopStopToJets_UDD323_M-1200' :	[ 92000 ],
+		'RPVStopStopToJets_UDD323_M-1300' :	[ 109887 ],
+		'RPVStopStopToJets_UDD323_M-1400' :	[  ],
+		'RPVStopStopToJets_UDD323_M-1500' :	[ 76160 ],
 		}
 
 def search(DICT, searchFor):
 	for k in DICT:
-		if k in searchFor:
+		if searchFor == k:
 			return DICT[k]
 	return None
 

@@ -17,6 +17,8 @@
 <use   name="PhysicsTools/UtilAlgos"/>
 <use   name="HLTrigger/HLTcore"/>
 <use   name="CondFormats/DataRecord"/>
+<use   name="CondFormats/BTauObjects"/>
+<use   name="CondTools/BTau"/>
 <use   name="CommonTools/Utils"/>
 <use   name="PhysicsTools/FWLite"/>
 <use   name="PhysicsTools/Utilities"/>

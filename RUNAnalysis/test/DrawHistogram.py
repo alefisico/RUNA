@@ -10,7 +10,7 @@ Description: My Draw histograms. Check for options at the end.
 from ROOT import *
 import time, os, math, sys
 from array import array
-import argparse, argcomplete
+import argparse
 from collections import OrderedDict
 try:
 	from RUNA.RUNAnalysis.histoLabels import labels, labelAxis, finalLabels, setSelection
@@ -47,8 +47,8 @@ jetMassHTlabX = 0.85
 def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax, rebinX, labX, labY, log, posLegend, Norm=False ):
 	"""docstring for plot"""
 
-	if 'DATA' in args.process: outputFileName = name+'_'+args.grooming+'_DATA_PlusBkgQCD'+args.qcd+'_'+args.RANGE+'_'+args.boosted+'AnalysisPlots'+args.version+'.'+args.ext 
-	else: outputFileName = name+'_'+args.grooming+'_'+args.decay+'RPVSt'+args.mass+'_PlusBkgQCD'+args.qcd+'_'+args.RANGE+'_'+args.boosted+'AnalysisPlots'+args.version+'.'+args.ext 
+	if 'DATA' in args.process: outputFileName = name+'_'+args.grooming+'_DATA_PlusBkgQCD'+args.qcd+'_'+args.boosted+'AnalysisPlots'+args.version+'.'+args.ext 
+	else: outputFileName = name+'_'+args.grooming+'_'+args.decay+'RPVSt'+args.mass+'_PlusBkgQCD'+args.qcd+'_'+args.boosted+'AnalysisPlots'+args.version+'.'+args.ext 
 	if log: outputFileName = outputFileName.replace('Plots','Plots_Log')
 	print 'Processing.......', outputFileName
 	
@@ -607,7 +607,7 @@ def plotCutFlow( signalFiles, bkgFiles, Groom, name, xmax, log, Norm=False ):
 def plotSignalCutFlow( runaFile, miniRunaFile, xmax, log, Norm=False ):
 	"""docstring for plot"""
 
-	outputFileName = 'signalCutFlow_'+args.grooming+'_'+args.decay+'RPVSt'+args.mass+'_Bkg_'+args.RANGE+'_AnalysisPlots'+args.version+'.'+args.ext 
+	outputFileName = 'signalCutFlow_'+args.grooming+'_'+args.decay+'RPVSt'+args.mass+'_Bkg_AnalysisPlots'+args.version+'.'+args.ext 
 	print 'Processing.......', outputFileName
 
 	if 'low' in args.RANGE: massList = [ 90, 100, 110, 120, 130, 140, 150 ] 
@@ -674,7 +674,7 @@ def plotSignalCutFlow( runaFile, miniRunaFile, xmax, log, Norm=False ):
 def plotSignalShape( miniRunaFile, nameInRoot, rebinX, log ):
 	"""docstring for plot"""
 
-	outputFileName = 'signalShape_'+nameInRoot+'_'+args.grooming+'_'+args.decay+'RPVSt_'+args.RANGE+'_AnalysisPlots'+args.version+'.'+args.ext 
+	outputFileName = 'signalShape_'+nameInRoot+'_'+args.grooming+'_'+args.decay+'RPVSt_AnalysisPlots'+args.version+'.'+args.ext 
 	print 'Processing.......', outputFileName
 
 	legend=TLegend(0.65,(0.4 if 'Tau21' in nameInRoot else 0.50),0.90,0.87)
@@ -745,7 +745,7 @@ def plotSignalShape( miniRunaFile, nameInRoot, rebinX, log ):
 def plotSignalAcceptance( miniRunaFile, nameInRoot, log ):
 	"""docstring for plot acceptance"""
 
-	outputFileName = 'signalAcceptance_'+nameInRoot+'_'+args.grooming+'_'+args.decay+'RPVSt_'+args.RANGE+'_AnalysisPlots_diffVersions.'+args.ext 
+	outputFileName = 'signalAcceptance_'+nameInRoot+'_'+args.grooming+'_'+args.decay+'RPVSt_AnalysisPlots_diffVersions.'+args.ext 
 	print 'Processing.......', outputFileName
 
 	legend=TLegend(0.60,(0.5 if 'Tau21' in nameInRoot else 0.67),0.90,0.87)
@@ -980,7 +980,7 @@ def plotDiffSample( inFileSample1, inFileSample2, sample1, sample2, name, xmax, 
 def plotQuality( dataFile, bkgFiles, Groom, nameInRoot, name, xmin, xmax, rebinX, labX, labY, log, moveCMSlogo=False, fitRatio=False ):
 	"""docstring for plot"""
 
-	outputFileName = name+'_'+Groom+'_QCD'+args.qcd+'_'+args.RANGE+'_dataQuality'+args.boosted+'Plots'+args.version+'.'+args.ext
+	outputFileName = name+'_'+Groom+'_QCD'+args.qcd+'_dataQuality'+args.boosted+'Plots'+args.version+'.'+args.ext
 	print 'Processing.......', outputFileName
 
 	histos = {}
@@ -1194,7 +1194,7 @@ def tmpplotDiffSample( qcdFile, ttbarFile, signalFile, name, reBin, xmax, labX, 
 if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-p', '--proc', action='store', default='1D', dest='process', help='Process to draw, example: 1D, 2D, MC.' ). #completer = choicesCompleter(('1D', '2D'))
+	parser.add_argument('-p', '--proc', action='store', default='1D', dest='process', help='Process to draw, example: 1D, 2D, MC.' )
 	parser.add_argument('-d', '--decay', action='store', default='UDD312', dest='decay', help='Decay, example: UDD312, UDD323.' )
 	parser.add_argument('-b', '--boosted', action='store', default='Boosted', help='Boosted or non boosted, example: Boosted' )
 	parser.add_argument('-v', '--version', action='store', default='v00', help='Version: v01, v02.' )
@@ -1212,7 +1212,6 @@ if __name__ == '__main__':
 	parser.add_argument('-t', '--miniTree', action='store_true', default=False, help='miniTree: if plots coming from miniTree or RUNAnalysis.' )
 
 	try:
-		argcomplete.autocomplete(parser)
 		args = parser.parse_args()
 	except:
 		parser.print_help()
@@ -1226,7 +1225,7 @@ if __name__ == '__main__':
 	
 	if 'Pt' in args.qcd: 
 		bkgLabel='(w QCD pythia8)'
-		QCDSF = 0.66 #( 0.75 if 'Resolved' in args.boosted else (0.86 if 'Puppi' in args.grooming else 0.89) )
+		QCDSF = 0.75 #1 #0.66 #( 0.75 if 'Resolved' in args.boosted else (0.86 if 'Puppi' in args.grooming else 0.89) )
 	else: 
 		bkgLabel='(w QCD madgraphMLM+pythia8)'
 		QCDSF = 1
@@ -1235,16 +1234,13 @@ if __name__ == '__main__':
 
 	if args.miniTree:
 		dataFile = TFile.Open('Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_JetHT_Run2016_V2p1_'+args.version+'.root')
-		signalFiles[ args.mass ] = [ TFile.Open('Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_80X_V2p1_'+args.version+'.root'), 1, 'M_{#tilde{t}} = '+str(args.mass)+' GeV', kRed]
+		signalFiles[ args.mass ] = [ TFile.Open('Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_80X_V2p1_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = '+str(args.mass)+' GeV', kRed]
 		if 'Boosted' in args.boosted: 
-			bkgFiles[ 'TTJets' ] = [ TFile.Open('Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_TTJets_80X_V2p1_'+args.version+'.root'), 1, 't #bar{t} + Jets', kGreen+2 ]
-			bkgFiles[ 'WJetsToQQ' ] = [ TFile.Open('Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_WJetsToQQ_80X_V2p1_'+args.version+'.root'), 1 , 'W + Jets', 38 ]
-			bkgFiles[ 'Dibosons' ] = [ TFile.Open('Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_Dibosons_80X_V2p1_'+args.version+'.root'), 1 , 'Dibosons', kMagenta+2 ]
-			bkgFiles[ 'ZJetsToQQ' ] = [ TFile.Open('Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_ZJetsToQQ_80X_V2p1_'+args.version+'.root'), 1, 'Z + Jets', kOrange ]
-			#bkgFiles[ 'WWTo4Q' ] = [ TFile.Open('Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_WWTo4Q_'+args.version+'.root'), 1 , 'WW (had)', kMagenta+2 ]
-			#bkgFiles[ 'ZZTo4Q' ] = [ TFile.Open('Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_ZZTo4Q_'+args.version+'.root'), 1, 'ZZ (had)', kOrange+2 ]
-			#bkgFiles[ 'WZ' ] = [ TFile.Open('Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_WZ_'+args.version+'.root'), 1, 'WZ', kCyan ]
-		bkgFiles[ 'QCD'+args.qcd+'All' ] = [ TFile.Open('Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_QCD'+args.qcd+'All_80X_V2p1_'+args.version+'.root'), QCDSF, 'QCD'+args.qcd+'', kBlue-4 ]
+			bkgFiles[ 'TTJets' ] = [ TFile.Open('Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_TTJets_80X_V2p1_'+args.version+'.root'), args.lumi, 't #bar{t} + Jets', kGreen+2 ]
+			bkgFiles[ 'WJetsToQQ' ] = [ TFile.Open('Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_WJetsToQQ_80X_V2p1_'+args.version+'.root'), args.lumi, 'W + Jets', 38 ]
+			bkgFiles[ 'Dibosons' ] = [ TFile.Open('Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_Dibosons_80X_V2p1_'+args.version+'.root'), args.lumi, 'Dibosons', kMagenta+2 ]
+			bkgFiles[ 'ZJetsToQQ' ] = [ TFile.Open('Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_ZJetsToQQ_80X_V2p1_'+args.version+'.root'), args.lumi, 'Z + Jets', kOrange ]
+		bkgFiles[ 'QCD'+args.qcd+'All' ] = [ TFile.Open('Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_QCD'+args.qcd+'All_80X_V2p1_'+args.version+'.root'), args.lumi*QCDSF, 'QCD'+args.qcd+'', kBlue-4 ]
 	else:
 		dataFile = TFile.Open('Rootfiles/RUNAnalysis_JetHT_Run2016C_V2p1_'+args.version+'.root')
 		signalFiles[ args.mass ] = [ TFile.Open('Rootfiles/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_80X_V2p1_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = '+str(args.mass)+' GeV', kRed]
@@ -1311,6 +1307,7 @@ if __name__ == '__main__':
 		[ '1D', 'Boosted', 'massAve', 60, 350, 5, 0.92, 0.85, True, False],
 		[ '1DDATA', 'Boosted', 'massAve', 60, 350, 20, 0.92, 0.85, False, False],
 		#[ '1DData', 'Boosted', 'massAve', 60, 350, (1 if args.miniTree else 5), 0.92, 0.85, True, False],
+		[ '1DDATA', 'Resolved', 'massAve', 0, 1000, 20, 0.92, 0.85, False, False],
 
 		[ '1D', 'Resolved', 'HT', 700, 5000, 2, '', '', True, False],
 		[ '1D', 'Resolved', 'jet1Pt', 100, 1500, 2, '', '', True, False],
@@ -1348,7 +1345,7 @@ if __name__ == '__main__':
 		[ 'qual', 'Resolved', 'jet2Pt', 0, 1500, 1, 0.90, 0.70, True, False],
 		[ 'qual', 'Resolved', 'jet3Pt', 0, 500, 1, 0.90, 0.70, True, False],
 		[ 'qual', 'Resolved', 'jet4Pt', 0, 300, 1, 0.90, 0.70, True, False],
-		[ 'qual', 'Resolved', 'HT', 700, 2000, 1, 0.90, 0.70, True, False],
+		[ 'qual', 'Resolved', 'HT', 700, 2000, 20, 0.90, 0.70, True, False],
 		[ 'qual', 'Resolved', 'jetNum', '', '', 1, 0.90, 0.70, True, False],
 		[ 'qual', 'Resolved', 'massAve', 0, 1000, 2, '', '', True, False],
 
@@ -1485,13 +1482,13 @@ if __name__ == '__main__':
 	if 'CF' in args.process:
 		plotCutFlow( signalFiles, bkgFiles, args.grooming, 'cutflow_scaled', 8, True, True )
 	if 'Scf' in args.process:
-		plotSignalCutFlow('Rootfiles/RUNAnalysis_RPVStopStopToJets_UDD312_M-100_RunIIFall15MiniAODv2_v76x_v2p0_'+args.version+'.root', 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_RPVStopStopToJets_UDD312_M-100_'+args.RANGE+'_'+args.version+'.root', (10 if 'high' in args.RANGE else 12), True, True )
+		plotSignalCutFlow('Rootfiles/RUNAnalysis_RPVStopStopToJets_UDD312_M-100_RunIIFall15MiniAODv2_v76x_v2p0_'+args.version+'.root', 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_RPVStopStopToJets_UDD312_M-100_'+args.version+'.root', (10 if 'high' in args.RANGE else 12), True, True )
 	if 'signal' in args.process:
-		plotSignalShape('Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_RPVStopStopToJets_UDD312_M-100_'+args.RANGE+'_'+args.version+'.root', 'massAve'+args.cut, 5, False)
-		#plotSignalShape('Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_RPVStopStopToJets_UDD312_M-100_'+args.RANGE+'_'+args.version+'.root', 'jet2Tau21'+args.cut, 1, False)
-		#plotSignalShape('Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_RPVStopStopToJets_UDD312_M-100_'+args.RANGE+'_'+args.version+'.root', 'jet2Pt'+args.cut, 20, False)
+		plotSignalShape('Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_RPVStopStopToJets_UDD312_M-100_'+args.version+'.root', 'massAve'+args.cut, 5, False)
+		#plotSignalShape('Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_RPVStopStopToJets_UDD312_M-100_'+args.version+'.root', 'jet2Tau21'+args.cut, 1, False)
+		#plotSignalShape('Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_RPVStopStopToJets_UDD312_M-100_'+args.version+'.root', 'jet2Pt'+args.cut, 20, False)
 	if 'acc' in args.process:
-		plotSignalAcceptance('Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_RPVStopStopToJets_UDD312_M-100_'+args.RANGE+'_'+args.version+'.root', 'massAve'+args.cut, False)
+		plotSignalAcceptance('Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_RPVStopStopToJets_UDD312_M-100_'+args.version+'.root', 'massAve'+args.cut, False)
 	if 'tmp' in args.process:
 		tmpplotDiffSample( bkgFiles[ 'QCD'+args.qcd+'All' ][0], bkgFiles[ 'QCD'+args.qcd+'All' ][0], signalFiles[ args.mass ][0], 'massAve', 10, 1000, '', '', True)
 #		tmpplotDiffSample( bkgFiles[ 'QCD'+args.qcd+'All' ][0], bkgFiles[ 'TTJets' ][0], signalFiles[ args.mass ][0], 'massAve'+args.cut, 5, 400, '', '', True)

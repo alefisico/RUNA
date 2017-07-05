@@ -1,8 +1,8 @@
 if [ "$1" == "all" ]
 then
-	if [ $2 == "Resolved" ]
+	if [ $2 == "Resolved" ] || [ $2 == "Bias" ]
 	then
-		masses="300 350 400 450 500 550 600 650 700 750 800"
+		masses="300 350 400 450 500 550 600 650"
 	else
 		#masses="80 90 100 110 120 130 140 150 170 180 190 210 220 230 240 300"
 		masses="80 100 120 140 170 180 190 230 240 "
@@ -14,11 +14,22 @@ fi
 
 for mass in $masses
 do
-	echo "======= Running datacard_RPVStopStopToJets_UDD312_M-${mass}_v05.txt"
+	echo "======= Running datacard_RPVStopStopToJets_UDD312_M-${mass}"
 
 	if [ $2 == "Resolved" ]
 	then
-		combine -M Asymptotic Datacards/datacard_RPVStopStopToJets_UDD312_M-${mass}_Resolved_v02p1.txt -n UDD312RPVSt_M-${mass}_Resolved_v02
+		combine -M Asymptotic Datacards/datacard_RPVStopStopToJets_UDD312_M-${mass}_Resolved_${3}_v02p1.txt -n UDD312RPVSt_M-${mass}_Resolved_${3}_v02p1
+		#combine -M Asymptotic Datacards/datacard_RPVStopStopToJets_UDD312_M-${mass}_Resolved_${3}_v02.txt -n UDD312RPVSt_M-${mass}_Resolved_${3}_v02
+
+	elif [ $2 == "Bias" ]
+	then
+		combine Datacards/datacard_RPVStopStopToJets_UDD312_M-${mass}_Resolved_delta_BiasTest_v02p1.txt -M GenerateOnly --setPhysicsModelParameters pdf_index=0 --toysFrequentist -t 10000 --expectSignal 1 --saveToys -n UDD312RPVSt_M-${mass}_Resolved_delta_v02p1_Index0_10k --freezeNuisances pdf_index
+		for ind in 1 2 3
+		do
+			echo "======= Running Index ${ind} for mass ${mass}"
+			combine Datacards/datacard_RPVStopStopToJets_UDD312_M-${mass}_Resolved_delta_BiasTest_v02p1.txt -M MaxLikelihoodFit  --setPhysicsModelParameters pdf_index=${ind} --toysFile higgsCombineUDD312RPVSt_M-${mass}_Resolved_delta_v02p1_Index0_10k.GenerateOnly.mH120.123456.root  -t 10000 --rMin -10 --rMax 10 --freezeNuisances pdf_index
+			mv mlfit.root mlfit_RPVStopStopToJets_UDD312_M-${mass}_Resolved_delta_BiasTest_v02p1_Index0ToIndex${ind}.root 
+		done
 
 	elif [ $2 == "fullCLs" ]
 	then

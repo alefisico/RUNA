@@ -88,9 +88,7 @@ def plotLimits( listMasses  ):
 			XS =  search( dictXS, 'RPVStopStopToJets_UDD312_M-'+str(mass) )
 			xs_theory.append( XS )
 
-			if 'Resolved' in args.boosted: XS = 1
-
-			tmpFile, tmpTree, tmpEntries = getTree( "higgsCombineUDD312RPVSt_M-"+str(mass)+'_'+args.grooming+'_'+args.boosted+'_'+args.sys+'_'+args.version+'.'+args.method+".mH120.root", "limit" )
+			tmpFile, tmpTree, tmpEntries = getTree( "higgsCombineUDD312RPVSt_M-"+str(mass)+args.grooming+'_'+args.boosted+'_'+args.sys+'_'+args.version+'.'+args.method+".mH120.root", "limit" )
 			for i in xrange(tmpEntries):
 				tmpTree.GetEntry(i)
 				tmp = round( tmpTree.quantileExpected, 2)
@@ -244,7 +242,7 @@ def plotLimits( listMasses  ):
 
 	c.SetLogy()
 	#fileName = 'xs_limit_%s_%s.%s'%(args.method,args.final_state + ( ('_' + args.postfix) if args.postfix != '' else '' ), args.fileFormat.lower())
-	fileName = 'xs_limit_RPVStop_UDD312_'+args.grooming+'_'+args.boosted+'_'+args.sys+'_'+args.method+'_'+args.version+'.'+args.ext
+	fileName = 'xs_limit_RPVStop_UDD312'+args.grooming+'_'+args.boosted+'_'+args.sys+'_'+args.method+'_'+args.version+'.'+args.ext
 	if args.theta: fileName = fileName.replace('limit', 'limit_theta')
 	if 'gaus' in args.process: fileName = fileName.replace('limit', 'limit_gaus')
 	if args.addComparison: fileName = fileName.replace('limit', 'limit_comparison')
@@ -276,7 +274,7 @@ if __name__ == '__main__':
 	CMS_lumi.extraText = "Preliminary"
 	CMS_lumi.lumi_13TeV = str( round( (args.lumi/1000.), 1 ) )+" fb^{-1}"
 	if 'gaus' in args.process: massList = range( 80, 360, 10 )
-	elif 'Resolved' in args.boosted: massList = range( 300, 800, 50 )
+	elif 'Resolved' in args.boosted: massList = range( 300, 700, 50 )
 	#else: massList = [ 80, 90, 100, 110, 120, 130, 140, 150, 170, 180, 190, 210, 220, 230, 240, 300]
 	else: massList = [ 80, 100, 120, 140, 170, 180, 190, 230, 240 ]
 	plotLimits( massList  )

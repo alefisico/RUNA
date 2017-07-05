@@ -36,6 +36,8 @@
 #include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
 
+#include "CondFormats/BTauObjects/interface/BTagCalibration.h"
+#include "CondTools/BTau/interface/BTagCalibrationReader.h"
 
 using namespace edm;
 using namespace std;
@@ -81,6 +83,7 @@ class myJet {
 		double btagCSVv2;
 		double btagCMVAv2;
 		double btagDoubleB;
+		double hadronFlavour;
 		double nhf;
 		double nEMf;
 		double chf;
@@ -288,4 +291,29 @@ inline void getWeights( Handle<LHEEventProduct> lheEvtInfo, int lha_pdf_id_, vec
 		alphaWeights.push_back(weightsTemp[109].wgt/lheOrigWeight);
 		alphaWeights.push_back(weightsTemp[110].wgt/lheOrigWeight);
 	}
+}
+
+//// Btagging scale factors
+inline double btagSF( string csvFile, double jetPt, double jetEta, double flavour, string sysType, string measurementType ){
+
+	double jetSF = 1;
+        BTagCalibration calib("csv", csvFile );
+	BTagCalibrationReader reader(BTagEntry::OP_LOOSE,	// operating point
+			"central",				// central sys type
+			{"up", "down"});			// other sys types
+
+	if ( TMath::Abs( flavour ) == 5 ) { 
+		reader.load( calib, BTagEntry::FLAV_B, measurementType);
+		jetSF = reader.eval_auto_bounds( sysType, BTagEntry::FLAV_B, jetEta, jetPt );  
+
+	} else if ( TMath::Abs( flavour ) == 4 ) { 
+		reader.load( calib, BTagEntry::FLAV_C, measurementType);
+		jetSF = reader.eval_auto_bounds( sysType, BTagEntry::FLAV_C, jetEta, jetPt ); 
+
+	} else if ( TMath::Abs( flavour ) == 0 ) {
+		reader.load( calib, BTagEntry::FLAV_UDSG, "incl");
+		jetSF = reader.eval_auto_bounds( sysType, BTagEntry::FLAV_UDSG, jetEta, jetPt );  
+	}
+
+	return jetSF;
 }

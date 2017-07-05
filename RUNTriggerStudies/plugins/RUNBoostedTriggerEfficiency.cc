@@ -1243,9 +1243,9 @@ void RUNBoostedTriggerEfficiency::fillDescriptions(edm::ConfigurationDescription
 	desc.add<InputTag>("jetPhi", 	InputTag("jetsAK8CHS:jetAK8CHSPhi"));
 	desc.add<InputTag>("jetE", 	InputTag("jetsAK8CHS:jetAK8CHSE"));
 	desc.add<InputTag>("jetArea", 	InputTag("jetsAK8CHS:jetAK8CHSjetArea"));
-	desc.add<InputTag>("jetPrunedMass", 	InputTag("jetsAK8CHS:jetAK8CHSprunedMass"));
-	desc.add<InputTag>("jetSoftDropMass", 	InputTag("jetsAK8CHS:jetAK8CHSsoftDropMass"));
-	desc.add<InputTag>("jetTrimmedMass", 	InputTag("jetsAK8CHS:jetAK8CHStrimmedMass"));
+	desc.add<InputTag>("jetPrunedMass", 	InputTag("jetsAK8CHS:jetAK8CHSprunedMassCHS"));
+	desc.add<InputTag>("jetSoftDropMass", 	InputTag("jetsAK8CHS:jetAK8CHSsoftDropMassCHS"));
+	desc.add<InputTag>("jetTrimmedMass", 	InputTag("jetsAK8CHS:jetAK8CHStrimmedMassCHS"));
 	desc.add<InputTag>("jetCSVv2", 	InputTag("jetsAK8CHS:jetAK8CHSCSVv2"));
 	// JetID
 	desc.add<InputTag>("jecFactor", 		InputTag("jetsAK8CHS:jetAK8CHSjecFactor0"));

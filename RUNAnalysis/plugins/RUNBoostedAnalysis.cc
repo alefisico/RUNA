@@ -26,6 +26,7 @@
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHERunInfoProduct.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
@@ -38,6 +39,7 @@
 
 using namespace edm;
 using namespace std;
+using namespace reco;
 
 //
 // constants, enums and typedefs
@@ -76,6 +78,7 @@ class RUNBoostedAnalysis : public EDAnalyzer {
 		map< string, double > cutmap;
 
 		bool isData;
+		bool isTTbar;
 		bool LHEcont;
 		bool mkTree;
 		bool sortInTau21;
@@ -88,6 +91,8 @@ class RUNBoostedAnalysis : public EDAnalyzer {
 		double cutDeltaEtaDijet;
 		string dataPUFile;
 		string jecVersion;
+		string btagCSVFile;
+		string btagMVAFile;
 		TString systematics;
 
 		vector<string> triggerPass, triggerNamesList;
@@ -97,17 +102,22 @@ class RUNBoostedAnalysis : public EDAnalyzer {
 		FactorizedJetCorrector * massJECAK8;
 		JetCorrectionUncertainty *jetCorrUnc;
 
+		vector<float> *muonsPt = new std::vector<float>();
+		vector<float> *elesPt  = new std::vector<float>();
 		ULong64_t event = 0;
-		int numJets = 0, numPV = 0;
+		int numJets = 0, numPV = 0, numEle = 0, numMuon = 0;
 		unsigned int lumi = 0, run=0;
 		float AK4HT = 0, HT = 0, trimmedMass = -999, 
 		      puWeight = -999, genWeight = -999, lumiWeight = -999, pdfWeight = -999, MET = -999,
 		      jet1Pt = -999, jet1Eta = -999, jet1Phi = -999, jet1E = -999, jet1btagCSVv2 = -9999, jet1btagCMVAv2 = -9999, jet1btagDoubleB = -9999,
 		      jet2Pt = -999, jet2Eta = -999, jet2Phi = -999, jet2E = -999, jet2btagCSVv2 = -9999, jet2btagCMVAv2 = -9999, jet2btagDoubleB = -9999,
+		      jet1btagCSVv2SF = 1, jet2btagCSVv2SF = 1, jet1btagCMVAv2SF = 1, jet2btagCMVAv2SF = 1,
 		      subjet11Pt = -999, subjet11Eta = -999, subjet11Phi = -999, subjet11E = -999, subjet11btagCSVv2 = -9999, subjet11btagCMVAv2 = -9999, 
 		      subjet12Pt = -999, subjet12Eta = -999, subjet12Phi = -999, subjet12E = -999, subjet12btagCSVv2 = -9999, subjet12btagCMVAv2 = -9999, 
 		      subjet21Pt = -999, subjet21Eta = -999, subjet21Phi = -999, subjet21E = -999, subjet21btagCSVv2 = -9999, subjet21btagCMVAv2 = -9999, 
 		      subjet22Pt = -999, subjet22Eta = -999, subjet22Phi = -999, subjet22E = -999, subjet22btagCSVv2 = -9999, subjet22btagCMVAv2 = -9999,
+		      genPartonPt1 = -999, genPartonMass1 = -999, genPartonDau11ID = -999, genPartonDau12ID = -999, 
+		      genPartonPt2 = -999, genPartonMass2 = -999, genPartonDau21ID = -999, genPartonDau22ID = -999, 
 		      //massAve = -9999, massAsym = -9999, 
 		      jet1PrunedMass = -9999, jet2PrunedMass = -9999,
 		      jet1SoftDropMass = -9999, jet2SoftDropMass = -9999,
@@ -126,6 +136,8 @@ class RUNBoostedAnalysis : public EDAnalyzer {
 		      //dalitzX1 = -9999, dalitzX2 = -9999, dalitzX3 = -9999, dalitzX4 = -9999, dalitzX5 = -9999, dalitzX6 = -9999;
 		vector<float> scaleWeights, pdfWeights, alphaWeights;
 
+
+		/// Jets
 		EDGetTokenT<vector<float>> jetAK4Pt_;
 		EDGetTokenT<vector<float>> jetAK4Eta_;
 		EDGetTokenT<vector<float>> jetAK4Phi_;
@@ -155,6 +167,9 @@ class RUNBoostedAnalysis : public EDAnalyzer {
 		EDGetTokenT<vector<float>> jetGenEta_;
 		EDGetTokenT<vector<float>> jetGenPhi_;
 		EDGetTokenT<vector<float>> jetGenE_;
+		EDGetTokenT<vector<float>> jetHadronFlavour_;
+
+		/// Event variables
 		EDGetTokenT<vector<float>> metPt_;
 		EDGetTokenT<int> NPV_;
 		EDGetTokenT<int> trueNInt_;
@@ -165,6 +180,7 @@ class RUNBoostedAnalysis : public EDAnalyzer {
 		EDGetTokenT<unsigned int> run_;
 		EDGetTokenT<ULong64_t> event_;
 		EDGetTokenT<GenEventInfoProduct> generator_;
+		EDGetTokenT<GenParticleCollection> genParticles_;
 		EDGetTokenT<LHEEventProduct> extLHEProducer_;
 
 		// Trigger
@@ -191,6 +207,17 @@ class RUNBoostedAnalysis : public EDAnalyzer {
 		EDGetTokenT<vector<float>> subjetMass_;
 		EDGetTokenT<vector<float>> subjetCSVv2_;
 		EDGetTokenT<vector<float>> subjetCMVAv2_;
+
+		/// Muons
+		EDGetTokenT<vector<float>> muonPt_;
+		EDGetTokenT<vector<float>> muonEta_;
+		EDGetTokenT<vector<float>> muonIsLoose_;
+		EDGetTokenT<vector<float>> muonIsGlobal_;
+
+		/// Electrons
+		EDGetTokenT<vector<float>> elePt_;
+		EDGetTokenT<vector<float>> eleEta_;
+		EDGetTokenT<vector<float>> eleLoose_;
 
 };
 
@@ -231,6 +258,7 @@ RUNBoostedAnalysis::RUNBoostedAnalysis(const ParameterSet& iConfig):
 	jetGenEta_(consumes<vector<float>>(iConfig.getParameter<InputTag>("jetGenEta"))),
 	jetGenPhi_(consumes<vector<float>>(iConfig.getParameter<InputTag>("jetGenPhi"))),
 	jetGenE_(consumes<vector<float>>(iConfig.getParameter<InputTag>("jetGenE"))),
+	jetHadronFlavour_(consumes<vector<float>>(iConfig.getParameter<InputTag>("jetHadronFlavour"))),
 	metPt_(consumes<vector<float>>(iConfig.getParameter<InputTag>("metPt"))),
 	NPV_(consumes<int>(iConfig.getParameter<InputTag>("NPV"))),
 	trueNInt_(consumes<int>(iConfig.getParameter<InputTag>("trueNInt"))),
@@ -241,6 +269,7 @@ RUNBoostedAnalysis::RUNBoostedAnalysis(const ParameterSet& iConfig):
 	run_(consumes<unsigned int>(iConfig.getParameter<InputTag>("Run"))),
 	event_(consumes<ULong64_t>(iConfig.getParameter<InputTag>("Event"))),
 	generator_(consumes<GenEventInfoProduct>(iConfig.getParameter<InputTag>("generator"))),
+	genParticles_(consumes<GenParticleCollection>(iConfig.getParameter<InputTag>("genParticles"))),
 	extLHEProducer_(consumes<LHEEventProduct>(iConfig.getParameter<InputTag>("extLHEProducer"))),
 	// Trigger
 	triggerPrescale_(consumes<vector<int>>(iConfig.getParameter<InputTag>("triggerPrescale"))),
@@ -262,7 +291,16 @@ RUNBoostedAnalysis::RUNBoostedAnalysis(const ParameterSet& iConfig):
 	subjetE_(consumes<vector<float>>(iConfig.getParameter<InputTag>("subjetE"))),
 	subjetMass_(consumes<vector<float>>(iConfig.getParameter<InputTag>("subjetMass"))),
 	subjetCSVv2_(consumes<vector<float>>(iConfig.getParameter<InputTag>("subjetCSVv2"))),
-	subjetCMVAv2_(consumes<vector<float>>(iConfig.getParameter<InputTag>("subjetCMVAv2")))
+	subjetCMVAv2_(consumes<vector<float>>(iConfig.getParameter<InputTag>("subjetCMVAv2"))),
+	// Muons
+	muonPt_(consumes<vector<float>>(iConfig.getParameter<InputTag>("muonPt"))), 
+	muonEta_(consumes<vector<float>>(iConfig.getParameter<InputTag>("muonEta"))), 
+	muonIsLoose_(consumes<vector<float>>(iConfig.getParameter<InputTag>("muonIsLoose"))), 
+	muonIsGlobal_(consumes<vector<float>>(iConfig.getParameter<InputTag>("muonIsGlobal"))),
+	//Electrons
+	elePt_(consumes<vector<float>>(iConfig.getParameter<InputTag>("elePt"))), 
+	eleEta_(consumes<vector<float>>(iConfig.getParameter<InputTag>("eleEta"))), 
+	eleLoose_(consumes<vector<float>>(iConfig.getParameter<InputTag>("eleLoose"))) 
 {
 	consumes<LHERunInfoProduct,edm::InRun> (edm::InputTag("externalLHEProducer"));
 	scale 		= iConfig.getParameter<double>("scale");
@@ -272,6 +310,7 @@ RUNBoostedAnalysis::RUNBoostedAnalysis(const ParameterSet& iConfig):
 	cutTau21 	= iConfig.getParameter<double>("cutTau21");
 	cutDeltaEtaDijet= iConfig.getParameter<double>("cutDeltaEtaDijet");
 	isData 		= iConfig.getParameter<bool>("isData");
+	isTTbar 	= iConfig.getParameter<bool>("isTTbar");
 	LHEcont 	= iConfig.getParameter<bool>("LHEcont");
 	mkTree 		= iConfig.getParameter<bool>("mkTree");
 	sortInTau21	= iConfig.getParameter<bool>("sortInTau21");
@@ -279,6 +318,8 @@ RUNBoostedAnalysis::RUNBoostedAnalysis(const ParameterSet& iConfig):
 	dataPUFile 	= iConfig.getParameter<string>("dataPUFile");
 	PUMethod 	= iConfig.getParameter<string>("PUMethod");
 	jecVersion 	= iConfig.getParameter<string>("jecVersion");
+	btagCSVFile 	= iConfig.getParameter<string>("btagCSVFile");
+	btagMVAFile 	= iConfig.getParameter<string>("btagMVAFile");
 	systematics 	= iConfig.getParameter<string>("systematics");
 	triggerPass 	= iConfig.getParameter<vector<string>>("triggerPass");
 
@@ -423,6 +464,9 @@ void RUNBoostedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup) 
 	Handle<vector<float> > jetGenE;
 	iEvent.getByToken(jetGenE_, jetGenE);
 
+	Handle<vector<float> > jetHadronFlavour;
+	iEvent.getByToken(jetHadronFlavour_, jetHadronFlavour);
+
 	Handle<vector<float> > metPt;
 	iEvent.getByToken(metPt_, metPt);
 
@@ -504,6 +548,86 @@ void RUNBoostedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup) 
 	Handle<vector<float> > subjetCMVAv2;
 	iEvent.getByToken(subjetCMVAv2_, subjetCMVAv2);
 
+	/// Muons 
+	Handle<vector<float> > muonPt;
+	iEvent.getByToken(muonPt_, muonPt);
+
+	Handle<vector<float> > muonEta;
+	iEvent.getByToken(muonEta_, muonEta);
+
+	Handle<vector<float> > muonIsLoose;
+	iEvent.getByToken(muonIsLoose_, muonIsLoose);
+
+	Handle<vector<float> > muonIsGlobal;
+	iEvent.getByToken(muonIsGlobal_, muonIsGlobal);
+
+	/// Electrons
+	Handle<vector<float> > elePt;
+	iEvent.getByToken(elePt_, elePt);
+
+	Handle<vector<float> > eleEta;
+	iEvent.getByToken(eleEta_, eleEta);
+
+	Handle<vector<float> > eleLoose;
+	iEvent.getByToken(eleLoose_, eleLoose);
+
+	Handle< GenParticleCollection > genParticles;
+	iEvent.getByToken( genParticles_, genParticles );
+
+	////// Muon veto
+	if ( muonPt->size() > 0 ) {
+		for (size_t m = 0; m < muonPt->size(); m++) {
+			if( ( (*muonIsLoose)[m] ) && ( (*muonPt)[m] > 10 ) && ( TMath::Abs((*muonEta)[m]) < 2.5 ) ) {
+				//LogWarning("muon") << (*muonPt)[m] << " " << (*muonEta)[m] << " " << (*muonIsLoose)[m] << " " << (*muonIsGlobal)[m] ;
+				muonsPt->push_back( (*muonPt)[m] );
+				numMuon++;
+			}
+		}
+	}
+	///////////////////////////////////////////////////*/
+	
+	////// Electron veto
+	if ( elePt->size() > 0 ) {
+		for (size_t m = 0; m < elePt->size(); m++) {
+			if( ( (*eleLoose)[m] ) && ( (*elePt)[m] > 10 ) && ( TMath::Abs((*eleEta)[m]) < 2.5 ) ){
+				//LogWarning("ele") << (*elePt)[m] << " " << (*eleEta)[m] << " " << (*eleLoose)[m] ;
+				elesPt->push_back( (*elePt)[m] );
+				numEle++;
+			}
+		}
+	}
+	///////////////////////////////////////////////////*/
+	
+	
+	////// TTbar genInfo (all this piece of code is SPECIFIC for ttbar
+	if (isTTbar) {
+
+		for( const auto & p : *genParticles ) {  
+
+			if( p.status() == 22 ) {
+
+				const reco::Candidate * mother = p.mother();
+				if( p.pdgId() == 6 ) { 
+					genPartonPt1 = p.pt();
+					genPartonMass1 = p.mass();
+				}
+				if( p.pdgId() == -6 ) { 
+					genPartonPt2 = p.pt();
+					genPartonMass2 = p.mass();
+				}
+				if( (mother->pdgId() == 6) && ( TMath::Abs(p.pdgId()) == 24 )){
+					//LogWarning("pat") << p.pdgId();
+					genPartonDau11ID = p.pdgId();
+				}
+				if( (mother->pdgId() == 6) && ( TMath::Abs(p.pdgId()) == 5 )) genPartonDau12ID = p.pdgId();
+				if( (mother->pdgId() == -6) && ( TMath::Abs(p.pdgId()) == 24 )) genPartonDau21ID = p.pdgId();
+				if( (mother->pdgId() == -6) && ( TMath::Abs(p.pdgId()) == 5 )) genPartonDau22ID = p.pdgId();
+			}
+		}
+	}
+	///////////////////////////////////////////////////*/
+
+	///// LHE content
 	if ( !isData && !LHEcont ) {
 
 		// all this section is based on https://github.com/jkarancs/B2GTTrees/blob/master/plugins/B2GEdmExtraVarProducer.cc#L215-L281
@@ -685,6 +809,7 @@ void RUNBoostedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup) 
 			tmpJET.cEMf = (*chargedEmEnergyFrac)[i] * jec;
 			tmpJET.numConst = (*chargedMultiplicity)[i] + (*neutralMultiplicity)[i];
 			tmpJET.chm = (*chargedMultiplicity)[i] * jec;
+			tmpJET.hadronFlavour = (*jetHadronFlavour)[i];
 			JETS.push_back( tmpJET );
 	   
 		}
@@ -782,6 +907,22 @@ void RUNBoostedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup) 
 			jet2btagCMVAv2 = JETS[1].btagCMVAv2;
 			jet1btagDoubleB = JETS[0].btagDoubleB;
 			jet2btagDoubleB = JETS[1].btagDoubleB;
+
+			/// btag scale factors
+			if ( !isData ) {
+				string sysType;
+				if ( systematics.Contains("BtagUp") ) sysType = "up";
+				else if ( systematics.Contains("BtagDown") ) sysType = "down";
+				else sysType = "central";
+				string measurementTypeCSV = "comb";
+				string measurementTypeCMVA = "ttbar";
+
+				jet1btagCSVv2SF = btagSF(btagCSVFile, JETS[0].p4.Pt(), JETS[0].p4.Eta(), JETS[0].hadronFlavour, sysType, measurementTypeCSV );
+				jet2btagCSVv2SF = btagSF(btagCSVFile, JETS[1].p4.Pt(), JETS[1].p4.Eta(), JETS[1].hadronFlavour, sysType, measurementTypeCSV );
+				jet1btagCMVAv2SF = btagSF(btagMVAFile, JETS[0].p4.Pt(), JETS[0].p4.Eta(), JETS[0].hadronFlavour, sysType, measurementTypeCMVA );
+				jet2btagCMVAv2SF = btagSF(btagMVAFile, JETS[1].p4.Pt(), JETS[1].p4.Eta(), JETS[1].hadronFlavour, sysType, measurementTypeCMVA );
+			}
+			///////////////////////////////////////////
 
 			// Dijet eta
 			deltaEtaDijet = deltaValue( JETS[0].p4.Eta(), JETS[1].p4.Eta() );
@@ -1122,6 +1263,8 @@ void RUNBoostedAnalysis::beginJob() {
 		RUNAtree->Branch( "jet1btagCSVv2", &jet1btagCSVv2, "jet1btagCSVv2/F" );
 		RUNAtree->Branch( "jet1btagCMVAv2", &jet1btagCMVAv2, "jet1btagCMVAv2/F" );
 		RUNAtree->Branch( "jet1btagDoubleB", &jet1btagDoubleB, "jet1btagDoubleB/F" );
+		RUNAtree->Branch( "jet1btagCSVv2SF", &jet1btagCSVv2SF, "jet1btagCSVv2SF/F" );
+		RUNAtree->Branch( "jet1btagCMVAv2SF", &jet1btagCMVAv2SF, "jet1btagCMVAv2SF/F" );
 		RUNAtree->Branch( "jet2Pt", &jet2Pt, "jet2Pt/F" );
 		RUNAtree->Branch( "jet2Eta", &jet2Eta, "jet2Eta/F" );
 		RUNAtree->Branch( "jet2Phi", &jet2Phi, "jet2Phi/F" );
@@ -1131,6 +1274,8 @@ void RUNBoostedAnalysis::beginJob() {
 		RUNAtree->Branch( "jet2btagCSVv2", &jet2btagCSVv2, "jet2btagCSVv2/F" );
 		RUNAtree->Branch( "jet2btagCMVAv2", &jet2btagCMVAv2, "jet2btagCMVAv2/F" );
 		RUNAtree->Branch( "jet2btagDoubleB", &jet2btagDoubleB, "jet2btagDoubleB/F" );
+		RUNAtree->Branch( "jet2btagCSVv2SF", &jet2btagCSVv2SF, "jet2btagCSVv2SF/F" );
+		RUNAtree->Branch( "jet2btagCMVAv2SF", &jet2btagCMVAv2SF, "jet2btagCMVAv2SF/F" );
 		RUNAtree->Branch( "subjet11Pt", &subjet11Pt, "subjet11Pt/F" );
 		RUNAtree->Branch( "subjet11Eta", &subjet11Eta, "subjet11Eta/F" );
 		RUNAtree->Branch( "subjet11Phi", &subjet11Phi, "subjet11Phi/F" );
@@ -1181,6 +1326,10 @@ void RUNBoostedAnalysis::beginJob() {
 		//RUNAtree->Branch( "scaleWeights", &scaleWeights );
 		//RUNAtree->Branch( "pdfWeights", &pdfWeights );
 		//RUNAtree->Branch( "alphaWeights", &alphaWeights );
+		RUNAtree->Branch( "muonsPt", "vector<float>", &muonsPt);
+		RUNAtree->Branch( "numMuon", &numMuon, "numMuon/I" );
+		RUNAtree->Branch( "elesPt", "vector<float>", &elesPt);
+		RUNAtree->Branch( "numEle", &numEle, "numEle/I" );
 	}
 
 
@@ -1363,12 +1512,15 @@ void RUNBoostedAnalysis::fillDescriptions(edm::ConfigurationDescriptions & descr
 	edm::ParameterSetDescription desc;
 
 	desc.add<bool>("isData", false);
+	desc.add<bool>("isTTbar", false);
 	desc.add<bool>("LHEcont", false);
 	desc.add<bool>("mkTree", false);
 	desc.add<bool>("sortInTau21", false);
 	desc.add<bool>("sortInMass", false);
 	desc.add<string>("dataPUFile", "supportFiles/PileupData2015D_JSON_latest.root");
 	desc.add<string>("jecVersion", "supportFiles/Fall15_25nsV2");
+	desc.add<string>("btagCSVFile", "supportFiles/CSVv2_Moriond17_B_H.csv");
+	desc.add<string>("btagMVAFile", "supportFiles/cMVAv2_Moriond17_B_H.csv");
 	desc.add<string>("systematics", "None");
 	desc.add<string>("PUMethod", "chs");
 	desc.add<double>("scale", 1);
@@ -1384,8 +1536,9 @@ void RUNBoostedAnalysis::fillDescriptions(edm::ConfigurationDescriptions & descr
 	desc.add<InputTag>("Lumi", 	InputTag("eventInfo:evtInfoLumiBlock"));
 	desc.add<InputTag>("Run", 	InputTag("eventInfo:evtInfoRunNumber"));
 	desc.add<InputTag>("Event", 	InputTag("eventInfo:evtInfoEventNumber"));
-	desc.add<InputTag>("generator", 	InputTag("generator"));
+	desc.add<InputTag>("generator", InputTag("generator"));
 	desc.add<InputTag>("extLHEProducer", 	InputTag("externalLHEProducer"));
+	desc.add<InputTag>("genParticles", 	InputTag("filteredPrunedGenParticles"));
 	desc.add<InputTag>("bunchCross", 	InputTag("eventUserData:puBX"));
 	desc.add<InputTag>("rho", 	InputTag("vertexInfo:rho"));
 	desc.add<InputTag>("puNumInt", 	InputTag("eventUserData:puNInt"));
@@ -1399,13 +1552,13 @@ void RUNBoostedAnalysis::fillDescriptions(edm::ConfigurationDescriptions & descr
 	desc.add<InputTag>("jetEta", 	InputTag("jetsAK8CHS:jetAK8CHSEta"));
 	desc.add<InputTag>("jetPhi", 	InputTag("jetsAK8CHS:jetAK8CHSPhi"));
 	desc.add<InputTag>("jetE", 	InputTag("jetsAK8CHS:jetAK8CHSE"));
-	desc.add<InputTag>("jetTrimmedMass", 	InputTag("jetsAK8CHS:jetAK8CHStrimmedMass"));
-	desc.add<InputTag>("jetPrunedMass", 	InputTag("jetsAK8CHS:jetAK8CHSprunedMass"));
-	desc.add<InputTag>("jetFilteredMass", 	InputTag("jetsAK8CHS:jetAK8CHSfilteredMass"));
-	desc.add<InputTag>("jetSoftDropMass", 	InputTag("jetsAK8CHS:jetAK8CHSsoftDropMass"));
-	desc.add<InputTag>("jetTau1", 	InputTag("jetsAK8CHS:jetAK8CHStau1"));
-	desc.add<InputTag>("jetTau2", 	InputTag("jetsAK8CHS:jetAK8CHStau2"));
-	desc.add<InputTag>("jetTau3", 	InputTag("jetsAK8CHS:jetAK8CHStau3"));
+	desc.add<InputTag>("jetTrimmedMass", 	InputTag("jetsAK8CHS:jetAK8CHStrimmedMassCHS"));
+	desc.add<InputTag>("jetPrunedMass", 	InputTag("jetsAK8CHS:jetAK8CHSprunedMassCHS"));
+	desc.add<InputTag>("jetFilteredMass", 	InputTag("jetsAK8CHS:jetAK8CHSfilteredMassCHS"));
+	desc.add<InputTag>("jetSoftDropMass", 	InputTag("jetsAK8CHS:jetAK8CHSsoftDropMassCHS"));
+	desc.add<InputTag>("jetTau1", 	InputTag("jetsAK8CHS:jetAK8CHStau1CHS"));
+	desc.add<InputTag>("jetTau2", 	InputTag("jetsAK8CHS:jetAK8CHStau2CHS"));
+	desc.add<InputTag>("jetTau3", 	InputTag("jetsAK8CHS:jetAK8CHStau3CHS"));
 	desc.add<InputTag>("jetNSubjets", 	InputTag("jetsAK8CHS:jetAK8CHSnSubjets"));
 	desc.add<InputTag>("jetSubjetIndex0", 	InputTag("jetsAK8CHS:jetAK8CHSvSubjetIndex0"));
 	desc.add<InputTag>("jetSubjetIndex1", 	InputTag("jetsAK8CHS:jetAK8CHSvSubjetIndex1"));
@@ -1420,6 +1573,7 @@ void RUNBoostedAnalysis::fillDescriptions(edm::ConfigurationDescriptions & descr
 	desc.add<InputTag>("jetGenEta", 	InputTag("jetsAK8CHS:jetAK8CHSGenJetEta"));
 	desc.add<InputTag>("jetGenPhi", 	InputTag("jetsAK8CHS:jetAK8CHSGenJetPhi"));
 	desc.add<InputTag>("jetGenE", 	InputTag("jetsAK8CHS:jetAK8CHSGenJetE"));
+	desc.add<InputTag>("jetHadronFlavour", 	InputTag("jetsAK8CHS:jetAK8CHSHadronFlavour"));
 	desc.add<InputTag>("metPt", 	InputTag("metFull:metFullPt"));
 	// JetID
 	desc.add<InputTag>("jecFactor", 		InputTag("jetsAK8CHS:jetAK8CHSjecFactor0"));
@@ -1442,6 +1596,15 @@ void RUNBoostedAnalysis::fillDescriptions(edm::ConfigurationDescriptions & descr
 	desc.add<InputTag>("subjetMass", 	InputTag("subjetsAK8CHS:subjetAK8CHSMass"));
 	desc.add<InputTag>("subjetCSVv2", 	InputTag("subjetsAK8CHS:subjetAK8CHSCSVv2"));
 	desc.add<InputTag>("subjetCMVAv2", 	InputTag("subjetsAK8CHS:subjetAK8CHSCMVAv2"));
+	// Muons
+	desc.add<InputTag>("muonPt", 		InputTag("muons:muPt"));
+	desc.add<InputTag>("muonEta", 		InputTag("muons:muEta"));
+	desc.add<InputTag>("muonIsLoose", 		InputTag("muons:muIsLooseMuon"));
+	desc.add<InputTag>("muonIsGlobal", 		InputTag("muons:muIsGlobalMuon"));
+	// Electrons
+	desc.add<InputTag>("elePt", 		InputTag("electrons:elPt"));
+	desc.add<InputTag>("eleEta", 		InputTag("electrons:elEta"));
+	desc.add<InputTag>("eleLoose", 		InputTag("electrons:elvidLoose"));
 	descriptions.addDefault(desc);
 }
       

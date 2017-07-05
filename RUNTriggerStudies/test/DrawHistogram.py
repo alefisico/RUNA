@@ -34,16 +34,16 @@ tdrstyle.setTDRStyle()
 gStyle.SetOptStat(0)
 
 
-def plotTriggerEfficiency( inFileSample, sample, triggerDenom, name, cut, xmin, xmax, rebin, labX, labY, log, PU ):
+def plotTriggerEfficiency( inFileSample, sample, triggerSel, triggerDenom, name, cut, xmin, xmax, rebin, labX, labY, log, PU ):
 	"""docstring for plot"""
 
-	outputFileName = name+'_'+cut+'_'+triggerDenom+"_"+args.trigger+'_'+sample+'_'+args.boosted+'_TriggerEfficiency.'+args.extension
+	outputFileName = name+'_'+cut+'_'+triggerDenom+"_"+triggerSel+'_'+sample+'_'+args.boosted+'_TriggerEfficiency.'+args.extension
 	print 'Processing.......', outputFileName
 
-	DenomOnly = inFileSample.Get( args.boosted+'TriggerEfficiency'+args.trigger+'/'+name+'Denom_'+cut ) #cutDijet' ) #+cut )
+	DenomOnly = inFileSample.Get( args.boosted+'TriggerEfficiency'+triggerSel+'/'+name+'Denom_'+cut ) #cutDijet' ) #+cut )
 	DenomOnly.Rebin(rebin)
 	Denom = DenomOnly.Clone()
-	PassingOnly = inFileSample.Get( args.boosted+'TriggerEfficiency'+args.trigger+'/'+name+'Passing_'+cut ) #cutHT' ) #+cut )
+	PassingOnly = inFileSample.Get( args.boosted+'TriggerEfficiency'+triggerSel+'/'+name+'Passing_'+cut ) #cutHT' ) #+cut )
 	PassingOnly.Rebin(rebin)
 	Passing = PassingOnly.Clone()
 	print Denom, Passing
@@ -71,7 +71,7 @@ def plotTriggerEfficiency( inFileSample, sample, triggerDenom, name, cut, xmin, 
 	if log: pad1.SetLogy()
 
 	legend.AddEntry( DenomOnly, triggerDenom+' (baseline trigger)', 'l' )
-	legend.AddEntry( PassingOnly, args.trigger, 'l' )
+	legend.AddEntry( PassingOnly, triggerSel, 'l' )
 	#DenomOnly.SetMinimum(10)
 	DenomOnly.GetXaxis().SetRangeUser( xmin, xmax )
 	DenomOnly.Draw('histe')
@@ -224,16 +224,16 @@ def plotDiffEff( listOfEff, name ):
 	del can
 
 
-def plot2DTriggerEfficiency( inFileSample, dataset, triggerDenom, name, cut, xlabel, ylabel, Xmin, Xmax, rebinx, Ymin, Ymax, rebiny, labX, labY, PU ):
+def plot2DTriggerEfficiency( inFileSample, dataset, triggerSel, triggerDenom, name, cut, xlabel, ylabel, Xmin, Xmax, rebinx, Ymin, Ymax, rebiny, labX, labY, PU ):
 	"""docstring for plot"""
 
-	outputFileName = name+'_'+cut+'_'+triggerDenom+"_"+args.trigger+'_'+dataset+'_'+args.boosted+'TriggerEfficiency.'+args.extension
+	outputFileName = name+'_'+cut+'_'+triggerDenom+"_"+triggerSel+'_'+dataset+'_'+args.boosted+'TriggerEfficiency.'+args.extension
 	print 'Processing.......', outputFileName
 
-	print args.boosted+'TriggerEfficiency'+args.trigger+'/'+name+'Denom_'+cut
-	rawDenom = inFileSample.Get( args.boosted+'TriggerEfficiency'+args.trigger+'/'+name+'Denom_'+cut )
+	print args.boosted+'TriggerEfficiency'+triggerSel+'/'+name+'Denom_'+cut
+	rawDenom = inFileSample.Get( args.boosted+'TriggerEfficiency'+triggerSel+'/'+name+'Denom_'+cut )
 	Denom = Rebin2D( rawDenom, rebinx, rebiny )
-	rawPassing = inFileSample.Get( args.boosted+'TriggerEfficiency'+args.trigger+'/'+name+'Passing_'+cut )
+	rawPassing = inFileSample.Get( args.boosted+'TriggerEfficiency'+triggerSel+'/'+name+'Passing_'+cut )
 	Passing = Rebin2D( rawPassing, rebinx, rebiny )
 	
 	'''
@@ -367,8 +367,11 @@ if __name__ == '__main__':
 	if 'all' in args.single: Plots = [ x[1:] for x in plotList if x[0] in args.proc ]
 	else: Plots = [ y[1:] for y in plotList if ( ( y[0] in args.proc ) and ( y[1] in args.single ) )  ]
 
-	if 'all' in grom: Groomers = [ '', 'Trimmed', 'Pruned', 'Filtered' ]
-	else: Grommers = [ grom ]
+	if 'all' in args.trigger: 
+		if 'Boosted' in args.boosted: triggers = [ '', 'PFHT800', 'AK8PFHT700TrimMass50', 'AK8PFPt360TrimMass30', 'AK8PFHT7504Jet', 'AK8DiPFJet280220TrimMass30Btagp20', 'PFJet450', 'SeveralTriggers' ]
+		elif 'Resolved' in args.boosted: triggers = [ '', 'PFHT800', 'PFHT7504Jet', 'PFJet450' ]
+		else:  triggers = [ '', 'PFHT800', 'AK8PFHT700TrimMass50', 'AK8PFPt360TrimMass30', 'AK8PFHT7504Jet', 'AK8DiPFJet280220TrimMass30Btagp20', 'PFJet450', 'PFHT650WideJetMJJ900', 'SeveralTriggers' ]
+	else: triggers = [ args.trigger ]
 
 
 	effList = {}
@@ -379,13 +382,15 @@ if __name__ == '__main__':
 
 	Samples = {}
 
-	Samples[ 'SingleMuonB' ] = [ 'RUNTriggerEfficiencies_SingleMuon_Run2016B_V2p1_'+args.version+'.root', 5878.96 ] 
-	Samples[ 'SingleMuonC' ] = [ 'RUNTriggerEfficiencies_SingleMuon_Run2016C_V2p1_'+args.version+'.root', 2645.97 ] 
-	Samples[ 'SingleMuonD' ] = [ 'RUNTriggerEfficiencies_SingleMuon_Run2016D_V2p1_'+args.version+'.root', 4353.45 ] 
-	Samples[ 'SingleMuonE' ] = [ 'RUNTriggerEfficiencies_SingleMuon_Run2016E_V2p1_'+args.version+'.root', 4049.73 ] 
-	Samples[ 'SingleMuonF' ] = [ 'RUNTriggerEfficiencies_SingleMuon_Run2016F_V2p1_'+args.version+'.root', 3147.82 ] 
-	Samples[ 'SingleMuonG' ] = [ 'RUNTriggerEfficiencies_SingleMuon_Run2016G_V2p1_'+args.version+'.root', 7115.97 ] 
-	Samples[ 'SingleMuonH' ] = [ 'RUNTriggerEfficiencies_SingleMuon_Run2016H_V2p1_'+args.version+'.root', 8545.04 ] 
+	Samples[ 'SingleMuonB' ] = [ 'RUNTriggerEfficiencies_SingleMuon_Run2016B_V2p1_'+args.version+'.root', 5928.83 ] # v03  5878.96 ] # v02
+	Samples[ 'SingleMuonC' ] = [ 'RUNTriggerEfficiencies_SingleMuon_Run2016C_V2p1_'+args.version+'.root', 2632.18 ] # 2645.97 ] 
+	Samples[ 'SingleMuonD' ] = [ 'RUNTriggerEfficiencies_SingleMuon_Run2016D_V2p1_'+args.version+'.root', 4344.64 ] # 4353.45 ] 
+	Samples[ 'SingleMuonE' ] = [ 'RUNTriggerEfficiencies_SingleMuon_Run2016E_V2p1_'+args.version+'.root', 4117.09 ] # 4049.73 ] 
+	Samples[ 'SingleMuonF' ] = [ 'RUNTriggerEfficiencies_SingleMuon_Run2016F_V2p1_'+args.version+'.root', 3185.97 ] # 3147.82 ] 
+	Samples[ 'SingleMuonG' ] = [ 'RUNTriggerEfficiencies_SingleMuon_Run2016G_V2p1_'+args.version+'.root', 7721.06 ] # 7115.97 ] 
+	Samples[ 'SingleMuonH' ] = [ 'RUNTriggerEfficiencies_SingleMuon_Run2016H_V2p1_'+args.version+'.root', 8629.24 ] # 8545.04 ] 
+	Samples[ 'SingleMuonH3' ] = [ 'RUNTriggerEfficiencies_SingleMuon_Run2016H3_V2p1_'+args.version+'.root', 221.44 ]  
+	Samples[ 'SingleMuonAll' ] = [ 'RUNTriggerEfficiencies_SingleMuon_Run2016_V2p1_'+args.version+'.root', 36780.41  ]  #### 36742.26
 
 	Samples[ 'JetHTB' ] = [ 'RUNTriggerEfficiencies_JetHT_Run2016B_V2p1_'+args.version+'.root', 40.49 ] 
 	Samples[ 'JetHTC' ] = [ 'RUNTriggerEfficiencies_JetHT_Run2016C_V2p1_'+args.version+'.root', 2.13 ] 
@@ -425,10 +430,11 @@ if __name__ == '__main__':
 		elif 'JetHT' in sam: BASEDTrigger = 'PFHT475'
 
 		for i in Plots:
-			if '1D' in args.proc:
-				effList[ sam ] = plotTriggerEfficiency( TFile.Open('Rootfiles/'+processingSamples[sam][0]), sam, BASEDTrigger, i[0], cut, i[1], i[2], i[3], i[4], i[5], i[6], PU )
-			elif '2D' in args.proc:
-				plot2DTriggerEfficiency( TFile.Open('Rootfiles/'+processingSamples[sam][0]), sam, BASEDTrigger, i[0], cut, i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10], PU )
+			for t in triggers:
+				if '1D' in args.proc:
+					effList[ sam ] = plotTriggerEfficiency( TFile.Open('Rootfiles/'+processingSamples[sam][0]), sam, t, BASEDTrigger, i[0], cut, i[1], i[2], i[3], i[4], i[5], i[6], PU )
+				elif '2D' in args.proc:
+					plot2DTriggerEfficiency( TFile.Open('Rootfiles/'+processingSamples[sam][0]), sam, t, BASEDTrigger, i[0], cut, i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10], PU )
 
 		#if '1D' in args.proc: plotDiffEff( effList, Plots[0][0] )
 
