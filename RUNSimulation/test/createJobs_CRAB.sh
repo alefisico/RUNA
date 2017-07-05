@@ -23,9 +23,10 @@
 
 totalNumberEvents=${1}
 stop1=${2}		## You can use this parameters later to make everything simpler. 
-coupling=UDD323 	##### UDD312 is for stop to jj, UDD323 for stop to bj
+coupling=${3}	 	##### UDD312 is for stop to jj, UDD323 for stop to bj
 
 Name=RPVStopStopToJets_${coupling}_M-${stop1}_TuneCUETP8M1_13TeV-madgraph-pythia8      
+#Name=AtoZ
 
 
 #####################################################
