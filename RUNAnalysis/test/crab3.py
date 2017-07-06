@@ -101,10 +101,10 @@ if __name__ == '__main__':
 	############### Moriond17 samples
 	Samples[ 'TTJets' ] = [ '/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 100, 'Summer16_23Sep2016V4' ]
 	Samples[ 'WJetsToQQ' ] = [ '/WJetsToQQ_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 10, 'Summer16_23Sep2016V4' ]
-	#Samples[ 'ZJets' ] = [ '', 10, 'Summer16_23Sep2016V4' ]
+	Samples[ 'ZJetsToQQ' ] = [ '/ZJetsToQQ_HT600toInf_13TeV-madgraph/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-7366f40558257932b9432f5b8e0b9ff1/USER', 10, 'Summer16_23Sep2016V4' ]
 	Samples[ 'WZ' ] = [ '/WZ_TuneCUETP8M1_13TeV-pythia8/vorobiev-B2GAnaFW_Spring16MiniAODv2_Moriond17_v80x_ext1_v2p4-bfea8033ab2d179bbb8e0faf6e2dc0cf/USER', 10, 'Summer16_23Sep2016V4' ]
-	Samples[ 'WWJets' ] = [ '/WWTo4Q_13TeV-powheg/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 50, 'Summer16_23Sep2016V4' ]
-	Samples[ 'ZZJets' ] = [ '/ZZTo4Q_13TeV_amcatnloFXFX_madspin_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-6b29e1707fe76ab19c1ba543e7f6f24b/USER', 100, 'Summer16_23Sep2016V4' ]
+	Samples[ 'WWTo4Q' ] = [ '/WWTo4Q_13TeV-powheg/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 50, 'Summer16_23Sep2016V4' ]
+	Samples[ 'ZZTo4Q' ] = [ '/ZZTo4Q_13TeV_amcatnloFXFX_madspin_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-6b29e1707fe76ab19c1ba543e7f6f24b/USER', 100, 'Summer16_23Sep2016V4' ]
 	
 	Samples[ 'RPV80' ] = [ '/RPVStopStopToJets_UDD312_M-80_TuneCUETP8M1_13TeV-madgraph-pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2_B2GAnaFW_80X_V2p4-7366f40558257932b9432f5b8e0b9ff1/USER', 10, 'Summer16_23Sep2016V4' ]
 	Samples[ 'RPV100' ] = [ '/RPVStopStopToJets_UDD312_M-100_TuneCUETP8M1_13TeV-madgraph-pythia8/jsomalwa-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2_B2GAnaFW_80X_V2p4-bfea8033ab2d179bbb8e0faf6e2dc0cf/USER', 10, 'Summer16_23Sep2016V4' ]

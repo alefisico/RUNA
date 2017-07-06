@@ -125,7 +125,7 @@ def plotTriggerEfficiency( inFileSample, sample, triggerSel, triggerDenom, name,
 	Efficiency.SetMarkerStyle(8)
 	Efficiency.SetMarkerColor(kGray)
 	Efficiency.SetMinimum(-0.15)
-	#Efficiency.SetMinimum(0.7)
+	#Efficiency.SetMinimum(0.8)
 	Efficiency.SetMaximum(1.15)
 	Efficiency.GetYaxis().SetLabelSize(0.05)
 	Efficiency.GetXaxis().SetLabelSize(0.05)
@@ -491,6 +491,7 @@ if __name__ == '__main__':
 	plotList = [ 
 
 		[ '1D', 'HT', HTMinX, 1500, 1, triggerlabX, triggerlabY, True],
+		#[ '1D', 'HT', 800, 1200, 1, triggerlabX, triggerlabY, True],
 		[ '1D', 'prunedMassAve', 0, massMaxX, 2, triggerlabX, triggerlabY, True],
 #		[ '1D', 'trimmedMass', massMinX, massMaxX, 2, triggerlabX, triggerlabY, True],
 #		#[ '1D', 'ak4HT', HTMinX, HTMaxX, 5, triggerlabX, triggerlabY, True],

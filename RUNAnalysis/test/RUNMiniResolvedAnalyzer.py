@@ -867,7 +867,7 @@ if __name__ == '__main__':
 	for sam in allSamples: 
 		if sam.startswith( args.samples ): dictSamples[ sam ] = allSamples[ sam ]
 
-	preselection = '(jetsPt[0]>80) && (jetsPt[1]>80) && (jetsPt[2]>80) && (jetsPt[3]>80) && (HT>900)' 
+	preselection = '(jetsPt[0]>80) && (jetsPt[1]>80) && (jetsPt[2]>80) && (jetsPt[3]>80) && (HT>900) && (numJets==4)' 
 	cuts = '(delta1>200) && (delta2>200) && (massAsym<0.1) && (deltaEta<1.)'
 	#preselection = '(jetsPt[0]>50) * (jetsPt[1]>50) *(jetsPt[2]>50) *(jetsPt[3]>50) * (HT>500)' 
 	#cuts = '(delta1>200) * (delta2>200) * (massAsym<0.1) * (deltaEta<1.5)'
@@ -883,5 +883,3 @@ if __name__ == '__main__':
 			p = Process( target=myAnalyzer, args=( dictSamples[sample], preselection, cuts, sample, '' ) )
 	p.start()
 	p.join()
-
-

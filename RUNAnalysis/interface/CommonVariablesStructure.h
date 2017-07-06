@@ -295,29 +295,120 @@ inline void getWeights( Handle<LHEEventProduct> lheEvtInfo, int lha_pdf_id_, vec
 }
 
 //// Btagging scale factors
-inline double btagSF( string csvFile, double jetPt, double jetEta, double flavour, string sysType, string measurementType ){
+inline double btagSF( string csvFile, double jetPt, double jetEta, double flavour, string sysType, string measurementType, int OP ){
 
 	double jetSF = 1;
         BTagCalibration calib("csv", csvFile );
-	BTagCalibrationReader reader(BTagEntry::OP_LOOSE,	// operating point
-			"central",				// central sys type
-			{"up", "down"});			// other sys types
+	if ( OP == 0 ) {
+		BTagCalibrationReader reader(BTagEntry::OP_LOOSE, 	// operating point
+						"central",		// central sys type
+						{"up", "down"});	// other sys types
 
-	if ( TMath::Abs( flavour ) == 5 ) { 
-		reader.load( calib, BTagEntry::FLAV_B, measurementType);
-		jetSF = reader.eval_auto_bounds( sysType, BTagEntry::FLAV_B, jetEta, jetPt );  
+		if ( TMath::Abs( flavour ) == 5 ) { 
+			reader.load( calib, BTagEntry::FLAV_B, measurementType);
+			jetSF = reader.eval_auto_bounds( sysType, BTagEntry::FLAV_B, jetEta, jetPt );  
 
-	} else if ( TMath::Abs( flavour ) == 4 ) { 
-		reader.load( calib, BTagEntry::FLAV_C, measurementType);
-		jetSF = reader.eval_auto_bounds( sysType, BTagEntry::FLAV_C, jetEta, jetPt ); 
+		} else if ( TMath::Abs( flavour ) == 4 ) { 
+			reader.load( calib, BTagEntry::FLAV_C, measurementType);
+			jetSF = reader.eval_auto_bounds( sysType, BTagEntry::FLAV_C, jetEta, jetPt ); 
 
-	} else if ( TMath::Abs( flavour ) == 0 ) {
-		reader.load( calib, BTagEntry::FLAV_UDSG, "incl");
-		jetSF = reader.eval_auto_bounds( sysType, BTagEntry::FLAV_UDSG, jetEta, jetPt );  
+		} else if ( TMath::Abs( flavour ) == 0 ) {
+			reader.load( calib, BTagEntry::FLAV_UDSG, "incl");
+			jetSF = reader.eval_auto_bounds( sysType, BTagEntry::FLAV_UDSG, jetEta, jetPt );  
+		}
+
+	} else 	if ( OP == 1 ) {
+		BTagCalibrationReader reader(BTagEntry::OP_MEDIUM, 	// operating point
+						"central",		// central sys type
+						{"up", "down"});	// other sys types
+
+		if ( TMath::Abs( flavour ) == 5 ) { 
+			reader.load( calib, BTagEntry::FLAV_B, measurementType);
+			jetSF = reader.eval_auto_bounds( sysType, BTagEntry::FLAV_B, jetEta, jetPt );  
+
+		} else if ( TMath::Abs( flavour ) == 4 ) { 
+			reader.load( calib, BTagEntry::FLAV_C, measurementType);
+			jetSF = reader.eval_auto_bounds( sysType, BTagEntry::FLAV_C, jetEta, jetPt ); 
+
+		} else if ( TMath::Abs( flavour ) == 0 ) {
+			reader.load( calib, BTagEntry::FLAV_UDSG, "incl");
+			jetSF = reader.eval_auto_bounds( sysType, BTagEntry::FLAV_UDSG, jetEta, jetPt );  
+		}
+	} else 	if ( OP == 2 ) {
+		BTagCalibrationReader reader(BTagEntry::OP_TIGHT, 	// operating point
+						"central",		// central sys type
+						{"up", "down"});	// other sys types
+
+		if ( TMath::Abs( flavour ) == 5 ) { 
+			reader.load( calib, BTagEntry::FLAV_B, measurementType);
+			jetSF = reader.eval_auto_bounds( sysType, BTagEntry::FLAV_B, jetEta, jetPt );  
+
+		} else if ( TMath::Abs( flavour ) == 4 ) { 
+			reader.load( calib, BTagEntry::FLAV_C, measurementType);
+			jetSF = reader.eval_auto_bounds( sysType, BTagEntry::FLAV_C, jetEta, jetPt ); 
+
+		} else if ( TMath::Abs( flavour ) == 0 ) {
+			reader.load( calib, BTagEntry::FLAV_UDSG, "incl");
+			jetSF = reader.eval_auto_bounds( sysType, BTagEntry::FLAV_UDSG, jetEta, jetPt );  
+		}
 	}
 
 	return jetSF;
 }
+
+//// btag event weight from https://github.com/ferencek/cms-MyAnalyzerDijetCode/blob/master/MyAnalyzer_MainAnalysis_DijetBBTag_2011.cc#L1295-L1356
+//  This assumes that we have 2 and only 2 jets.
+inline double btagEventWeightBoosted( bool jet1Btagged, bool jet2Btagged, double jet1BtagSF, double jet2BtagSF ) {
+
+	double btagWeight = 0;
+
+	if ( jet1Btagged and jet2Btagged ) {
+		for( unsigned int i=0; i<=1; ++i ) {
+			for( unsigned int j=0; j<=1; ++j ) {
+				if( (i+j) != 2 ) continue;
+				btagWeight += pow(jet1BtagSF,i)*pow(1-jet1BtagSF,1-i) * pow(jet2BtagSF,j)*pow(1-jet2BtagSF,1-j);
+				//LogWarning("btag") << "2 btags " << btagWeight;;
+			}
+		}
+	} else if ( jet1Btagged or jet1Btagged ) {
+		double SF = 0;
+		if ( jet1Btagged ) SF = jet1BtagSF;
+		else SF = jet2BtagSF;
+
+		btagWeight += SF*(1-SF);
+		//LogWarning("btag") << "1 btags " << btagWeight;
+
+	} else btagWeight = 1;
+	
+	return btagWeight;
+}
+
+
+//// btag event weight from https://github.com/ferencek/cms-MyAnalyzerDijetCode/blob/master/MyAnalyzer_MainAnalysis_DijetBBTag_2011.cc#L1295-L1356
+//  This assumes that we have 2  btagged in 4 jets.
+inline double btagEventWeightResolved( bool jet1BtaggedPaired, bool jet2BtaggedPaired, double jet1BtagSF, double jet2BtagSF, double jet3BtagSF, double jet4BtagSF ) {
+
+	double btagWeight = 0;
+	double w_04 = (1 - jet1BtagSF) * (1 - jet2BtagSF) * (1 - jet3BtagSF) * (1 - jet4BtagSF) ;
+
+	if ( jet1BtaggedPaired and jet2BtaggedPaired ) {
+		
+		double w_14 = jet1BtagSF * (1 - jet2BtagSF) * (1 - jet3BtagSF) * (1 - jet4BtagSF) 
+				+ jet2BtagSF * (1 - jet1BtagSF) * (1 - jet3BtagSF) * (1 - jet4BtagSF) 
+				+ jet3BtagSF * (1 - jet1BtagSF) * (1 - jet2BtagSF) * (1 - jet4BtagSF) 
+				+ jet4BtagSF * (1 - jet1BtagSF) * (1 - jet2BtagSF) * (1 - jet3BtagSF) ;
+
+		btagWeight += 1 - w_04 - w_14;
+
+	} else if ( jet1BtaggedPaired or jet1BtaggedPaired ) {
+		btagWeight += 1 - w_04;
+		//LogWarning("btag") << "1 btags " << btagWeight;
+		//
+	} else btagWeight = 1;
+
+	return btagWeight;
+}
+
 
 inline vector< myJet > pairing( vector< myJet > JETS, bool withDeltaR ) {
 
