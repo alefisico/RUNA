@@ -724,12 +724,12 @@ if __name__ == '__main__':
 	jerValue = 0.11
 	puValue = 1.015
 	triggerValue = 1.03
-	twoProngValue = 1 ### 1.17
+	twoProngValue = 1.10
 	pdfValue = 1   ####1.12
-	lumiValue = 1.062
+	lumiValue = 1.027
 	twoProngSF = 1 ##0.89
-	ttbarSF = ( 0.77 if 'jet1Tau32' in args.cutTop else 0.96 )
-	MCunc = ( 1.1 if 'jet1Tau32' in args.cutTop else 1.25 )
+	ttbarSF = ( 0.88 if 'jet1Tau32' in args.cutTop else 0.96 )
+	MCunc = ( 1.08 if 'jet1Tau32' in args.cutTop else 1.25 )
 
 	outputFileTheta = ''
 	if args.theta:

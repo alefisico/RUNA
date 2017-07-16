@@ -51,7 +51,7 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 
 	### enlisting masses available
 	if 'Boosted' in args.boosted:
-		massList = [ 80, 90, 100, 110, 120, 130, 140, 150, 170, 180, 190, 210, 220, 230, 240, 300 ] 
+		massList = range(80, 260, 20) + [ 300, 350 ] 
 		massWindow = 30 
 	else:
 		if '312' in args.decay: 
@@ -83,13 +83,13 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 
 		### opening different histograms
 		histos = {}
-		histos[ 'Nominal' ] = rootFile.Get( 'ResolvedAnalysisPlots/'+name ) 
-		histos[ 'Up' ] = rootFile.Get( 'ResolvedAnalysisPlots'+args.unc+'Up/'+name )
-		histos[ 'Down' ] = rootFile.Get( 'ResolvedAnalysisPlots'+args.unc+'Down/'+name )
+		histos[ 'Nominal' ] = rootFile.Get( args.boosted+'AnalysisPlots/'+name ) 
+		histos[ 'Up' ] = rootFile.Get( args.boosted+'AnalysisPlots'+args.unc+'Up/'+name )
+		histos[ 'Down' ] = rootFile.Get( args.boosted+'AnalysisPlots'+args.unc+'Down/'+name )
 
-		scale = 1 / (scaleFactor( 'RPVStopStopToJets_UDD312_M-'+str(xmass) ) )  ## removing scaling of histogram
+		#scale = 1 / (scaleFactor( 'RPVStopStopToJets_UDD312_M-'+str(xmass) ) )  ## removing scaling of histogram
 		for k in histos: 
-			histos[ k ].Scale( scale )
+			#histos[ k ].Scale( scale )
 			histos[ k ] = histos[ k ].Rebin( args.reBin )
 
 		#histos[ 'Up' ] = histos[ 'Up' ].Rebin( len( boostedMassAveBins )-1, histos[ 'Up' ].GetName(), boostedMassAveBins )

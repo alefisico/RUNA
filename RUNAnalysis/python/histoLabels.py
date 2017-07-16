@@ -119,6 +119,8 @@ def labelAxis(name, histo, Grom ):
 	elif 'jetMass' in name: histo.GetXaxis().SetTitle( 'Jet Mass [GeV]' )
 	elif 'jetPt_' in name: histo.GetXaxis().SetTitle( 'Jet p_{T} [GeV]' )
 	elif 'jetsBtag' in name: histo.GetXaxis().SetTitle( 'Jets CSVv2 btagging' )
+	elif 'jet1btagCSVv2' in name: histo.GetXaxis().SetTitle( 'Leading jet CSVv2 discriminator' )
+	elif 'jet2btagCSVv2' in name: histo.GetXaxis().SetTitle( '2nd Leading jet CSVv2 discriminator' )
 	elif 'jet1Pt' in name: histo.GetXaxis().SetTitle( 'Leading Jet p_{T} [GeV]' )
 	elif 'jet1Mass' in name: histo.GetXaxis().SetTitle( 'Leading Jet Mass [GeV]' )
 	elif 'jet1Eta' in name: histo.GetXaxis().SetTitle( 'Leading Jet #eta' )
