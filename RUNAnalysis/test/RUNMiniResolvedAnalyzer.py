@@ -32,8 +32,7 @@ gROOT.SetBatch()
 def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 	"""docstring for myPlotAnalyzer: creates histograms from tree """
 
-
-	outputFileName = 'Rootfiles/RUNMiniResolvedAnalysis_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p0.root' 
+	outputFileName = 'Rootfiles/RUNMiniResolvedAnalysis_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p1.root' 
 	outputFile = TFile( outputFileName, 'RECREATE' )
 
 
@@ -55,6 +54,7 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 	allHistos[ "massAsym_cutBestPair_"+sample ] = TH1F( "massAsym_cutBestPair_"+sample, "massAsym_cutBestPair_"+sample, 20, 0., 1 )
 	allHistos[ "deltaEta_cutBestPair_"+sample ] = TH1F( "deltaEta_cutBestPair_"+sample, "deltaEta_cutBestPair_"+sample, 50, 0., 5 )
 	allHistos[ 'deltavsMassAve_cutBestPair_'+sample ] = TH2F( 'deltavsMassAve_cutBestPair_'+sample, 'deltavsMassAve_cutBestPair_'+sample, 1000, 0., 1000, 2000, -1000., 1000. )
+	allHistos[ 'deltaSumvsMassAve_cutBestPair_'+sample ] = TH2F( 'deltaSumvsMassAve_cutBestPair_'+sample, 'deltaSumvsMassAve_cutBestPair_'+sample, 1000, 0., 1000, 2000, -1000., 1000. )
 	allHistos[ "jet1Btag_cutBestPair_"+sample ] = TH1F( "jet1Btag_cutBestPair_"+sample, "jet1Btag_cutBestPair_"+sample, 20, 0., 1 )
 	allHistos[ "jet2Btag_cutBestPair_"+sample ] = TH1F( "jet2Btag_cutBestPair_"+sample, "jet2Btag_cutBestPair_"+sample, 20, 0., 1 )
 	allHistos[ "jet3Btag_cutBestPair_"+sample ] = TH1F( "jet3Btag_cutBestPair_"+sample, "jet3Btag_cutBestPair_"+sample, 20, 0., 1 )
@@ -119,18 +119,19 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 			'massAve', 
 			fullSel,
 			allHistos[ 'massAve_delta_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) ) 
+			( 0.10 if 'JetHT' in sample else 1 ) ) 
 
 	getHistoFromTree( fileSample, treeName,
 			'HT', 
 			fullSel,
 			allHistos[ 'HT_delta_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			1 )
+
 	getHistoFromTree( fileSample, treeName,
 			'massAve',
 			presel * TCut( cuts.replace('&& (massAsym<0.1)', '') ),
 			allHistos[ 'massAve_woMassAsym_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 
 	#### preselection plots
@@ -138,116 +139,123 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 			'massAve', 
 			presel,
 			allHistos[ 'massAve_cutBestPair_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	getHistoFromTree( fileSample, treeName,
 			'numPV', 
 			presel,
 			allHistos[ 'NPV_cutBestPair_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			1 )
 
 	getHistoFromTree( fileSample, treeName,
 			'HT', 
 			presel,
 			allHistos[ 'HT_cutBestPair_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			1 )
 
 	getHistoFromTree( fileSample, treeName,
 			'jetsPt[0]', 
 			presel,
 			allHistos[ 'jet1Pt_cutBestPair_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			1 )
 
 	getHistoFromTree( fileSample, treeName,
 			'jetsPt[1]', 
 			presel,
 			allHistos[ 'jet2Pt_cutBestPair_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			1 )
 
 	getHistoFromTree( fileSample, treeName,
 			'jetsPt[2]', 
 			presel,
 			allHistos[ 'jet3Pt_cutBestPair_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			1 )
 
 	getHistoFromTree( fileSample, treeName,
 			'jetsPt[3]', 
 			presel,
 			allHistos[ 'jet4Pt_cutBestPair_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			1 )
 
 	get2DHistoFromTree( fileSample, treeName,
 			'massAve', 'delta1',
 			presel,
 			allHistos[ 'deltavsMassAve_cutBestPair_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			1 )
+
 	get2DHistoFromTree( fileSample, treeName,
 			'massAve', 'delta2',
 			presel,
 			allHistos[ 'deltavsMassAve_cutBestPair_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			1 )
+
+	get2DHistoFromTree( fileSample, treeName,
+			'massAve', 'delta1+delta2',
+			presel,
+			allHistos[ 'deltaSumvsMassAve_cutBestPair_'+sample ], 
+			1 )
 
 	getHistoFromTree( fileSample, treeName,
 			'massAsym',
 			presel,
 			allHistos[ 'massAsym_cutBestPair_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	getHistoFromTree( fileSample, treeName,
 			'deltaEta',
 			presel,
 			allHistos[ 'deltaEta_cutBestPair_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			1 )
 
 	##### checking diff deltas
 	getHistoFromTree( fileSample, treeName,
 			'massAve',
 			presel * TCut( cuts.replace('(delta1>200) && (delta2>200)', '(delta1>50) && (delta2>50)') ),
 			allHistos[ 'massAve_delta50_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	getHistoFromTree( fileSample, treeName,
 			'massAve',
 			presel * TCut( cuts.replace('(delta1>200) && (delta2>200)', '(delta1>100) && (delta2>100)') ),
 			allHistos[ 'massAve_delta100_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	getHistoFromTree( fileSample, treeName,
 			'massAve',
 			presel * TCut( cuts.replace('(delta1>200) && (delta2>200)', '(delta1>150) && (delta2>150)') ),
 			allHistos[ 'massAve_delta150_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	getHistoFromTree( fileSample, treeName,
 			'massAve',
 			fullSel,
 			#presel * TCut( cuts.replace('(delta1>200) && (delta2>200)', '(delta1>200) && (delta2>200)') ),
 			allHistos[ 'massAve_delta200_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	getHistoFromTree( fileSample, treeName,
 			'massAve',
 			presel * TCut( cuts.replace('(delta1>200) && (delta2>200)', '(delta1>250) && (delta2>250)') ),
 			allHistos[ 'massAve_delta250_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	getHistoFromTree( fileSample, treeName,
 			'massAve',
 			presel * TCut( cuts.replace('(delta1>200) && (delta2>200)', '(delta1>300) && (delta2>300)') ),
 			allHistos[ 'massAve_delta300_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	getHistoFromTree( fileSample, treeName,
 			'massAve',
 			presel * TCut( cuts.replace('(delta1>200) && (delta2>200)', '(delta1>400) && (delta2>400)') ),
 			allHistos[ 'massAve_delta400_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	getHistoFromTree( fileSample, treeName,
 			'massAve',
 			presel * TCut( cuts.replace('(delta1>200) && (delta2>200)', '(delta1>500) && (delta2>500)') ),
 			allHistos[ 'massAve_delta500_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 
 
@@ -256,70 +264,71 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 			'massAve', 'delta1', 
 			presel * TCut( cuts.replace('&& (delta1>200)','').replace('&& (delta2>200)','') ), 
 			allHistos[ 'deltavsMassAve_n-1_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 	get2DHistoFromTree( fileSample, treeName,
 			'massAve', 'delta2', 
 			presel * TCut( cuts.replace('&& (delta1>200)','').replace('&& (delta2>200)','') ), 
 			allHistos[ 'deltavsMassAve_n-1_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	getHistoFromTree( fileSample, treeName,
 			'massAsym',
 			presel * TCut( cuts.replace('&& (massAsym<0.1)','') ), 
 			allHistos[ 'massAsym_n-1_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	getHistoFromTree( fileSample, treeName,
 			'deltaEta',
 			presel * TCut( cuts.replace('&& (deltaEta<1.)','') ), 
 			allHistos[ 'deltaEta_n-1_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	### Test QGL
+	'''
 	oneQGL = fullSel * TCut( '( (jetsQGL[0]>0.5) || (jetsQGL[1]>0.5) || (jetsQGL[2]>0.5) || (jetsQGL[3]>0.5) )')
 	getHistoFromTree( fileSample, treeName,
 			'massAve', 
 			oneQGL, 
 			allHistos[ 'massAve_delta_1qgl_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	twoQGL = fullSel * TCut(' ( (jetsQGL[0]>0.5) || (jetsQGL[1]>0.5)) && ((jetsQGL[2]>0.5) || (jetsQGL[3]>0.5) )')
 	getHistoFromTree( fileSample, treeName,
 			'massAve', 
 			twoQGL, 
 			allHistos[ 'massAve_delta_2qgl_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	fourQGL = fullSel * TCut('(jetsQGL[0]>0.5) && (jetsQGL[1]>0.5) && (jetsQGL[2]>0.5) && (jetsQGL[3]>0.5)')
 	getHistoFromTree( fileSample, treeName,
 			'massAve', 
 			fourQGL, 
 			allHistos[ 'massAve_delta_4qgl_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	getHistoFromTree( fileSample, treeName,
 			'jetsQGL[0]', 
 			fullSel,
 			allHistos[ 'jet1QGL_delta_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	getHistoFromTree( fileSample, treeName,
 			'jetsQGL[1]', 
 			fullSel,
 			allHistos[ 'jet2QGL_delta_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	getHistoFromTree( fileSample, treeName,
 			'jetsQGL[2]', 
 			fullSel,
 			allHistos[ 'jet3QGL_delta_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	getHistoFromTree( fileSample, treeName,
 			'jetsQGL[3]', 
 			fullSel,
 			allHistos[ 'jet4QGL_delta_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	twoQGLwithoutDelta = TCut( SF ) * TCut( preselection + ' && ' + cuts.replace('(delta1>200) && (delta2>200) && ', '') ) * TCut(' ( (jetsQGL[0]>0.5) || (jetsQGL[1]>0.5)) && ((jetsQGL[2]>0.5) || (jetsQGL[3]>0.5) )')
 	getHistoFromTree( fileSample, treeName,
@@ -327,6 +336,7 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 			twoQGLwithoutDelta, 
 			allHistos[ 'massAve_2qgl_'+sample ], 
 			( 0.10 if 'JetHT' in sample else 1 ) )
+	'''
 	### Test Btag
 	oneBtagM = TCut('( (jetsCSVv2[0]>0.8484) || (jetsCSVv2[1]>0.8484) || (jetsCSVv2[2]>0.8484) || (jetsCSVv2[3]>0.8484) )')
 	getHistoFromTree( fileSample, treeName,
@@ -380,49 +390,49 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 			'jetsCSVv2[0]', 
 			presel,
 			allHistos[ 'jet1Btag_cutBestPair_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	getHistoFromTree( fileSample, treeName,
 			'jetsCSVv2[1]', 
 			presel,
 			allHistos[ 'jet2Btag_cutBestPair_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	getHistoFromTree( fileSample, treeName,
 			'jetsCSVv2[2]', 
 			presel,
 			allHistos[ 'jet3Btag_cutBestPair_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	getHistoFromTree( fileSample, treeName,
 			'jetsCSVv2[3]', 
 			presel,
 			allHistos[ 'jet4Btag_cutBestPair_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	getHistoFromTree( fileSample, treeName,
 			'jetsCSVv2[0]', 
 			fullSel,
 			allHistos[ 'jet1Btag_delta_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	getHistoFromTree( fileSample, treeName,
 			'jetsCSVv2[1]', 
 			fullSel,
 			allHistos[ 'jet2Btag_delta_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	getHistoFromTree( fileSample, treeName,
 			'jetsCSVv2[2]', 
 			fullSel,
 			allHistos[ 'jet3Btag_delta_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 
 	getHistoFromTree( fileSample, treeName,
 			'jetsCSVv2[3]', 
 			fullSel,
 			allHistos[ 'jet4Btag_delta_'+sample ], 
-			( 0.05 if 'JetHT' in sample else 1 ) )
+			( 0.10 if 'JetHT' in sample else 1 ) )
 	outputFile.Write()
 	##### Closing
 	print 'Writing output file: '+ outputFileName

@@ -23,5 +23,7 @@ cd  $CUR_DIR
 #do
 #	python RUNOptimization.py -p calcROC -m ${mass} -b True
 #done
-python RUNMiniBoostedAnalyzer.py -b -m 100 -s QCDPtAll -q Pt -v v08
-python RUNMiniBoostedAnalyzer.py -b -m 100 -s QCDHTAll -q HT -v v08
+#python RUNMiniBoostedAnalyzer.py -b -m 100 -s QCDPtAll -q Pt -v v09
+python RUNMiniResolvedAnalyzer.py -b -m 100 -s QCDPtAll -q Pt -v v09
+source tmpRunJobs.sh UDD312
+#python RUNMiniBoostedAnalyzer.py -b -m 100 -s QCDHTAll -q HT -v v08

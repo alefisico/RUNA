@@ -98,13 +98,13 @@ def signalUnc( hSignal, signalMass ):
 
 	return hSigSyst
 
-def createPseudoExperiment( histo, numEvents ):
+def createPseudoExperiment( histo, acceptance ):
 	"""docstring for createPseudoExperiment"""
 
 	hPseudo = histo.Clone()
 	hPseudo.Reset()
-	newNumEvents = random.randint( numEvents-round(TMath.Sqrt(numEvents)), numEvents+round(TMath.Sqrt(numEvents)) )
-	print 'Events in sample:', numEvents, ', in PseudoExperiment:', newNumEvents
+	newNumEvents = random.randint( acceptance-round(TMath.Sqrt(acceptance)), acceptance+round(TMath.Sqrt(acceptance)) )
+	print 'Events in sample:', acceptance, ', in PseudoExperiment:', newNumEvents
 	hPseudo.FillRandom( histo, newNumEvents ) 
 	return hPseudo
 	
@@ -362,139 +362,129 @@ def shapeCards( datahistosFile, histosFile, signalFile, signalSample, hist, sign
 	############################################################################################
 
 
-def createGausShapes( name, xmin, xmax, rebinX, labX, labY, log):
+def createGausShapes( massList, name, xmin, xmax, rebinX, labX, labY, log, plot=False):
 	"""docstring for plot"""
 
-	#selection = [ 'low', 'high' ]
-	selection = [ 'low' ]
 	gausParam = {}
 	histos = {}
 	newGausFunct = {}
 
-	for sel in selection:
-		constList = []
-		constErrList = []
-		numEventsList = []
-		numEventsErrList = []
-		meanList = []
-		meanErrList = []
-		sigmaList = []
-		sigmaErrList = []
-		#if 'low' in sel: massList = [ 80, 90, 100, 110, 120, 130, 140, 150 ]
-		#else: massList = [ 170, 180, 190, 210, 220, 230, 240, 300, 350 ] 
-		massList = [ 80, 90, 100, 110, 120, 130, 140, 150, 170, 180, 190, 210, 220, 230, 240, 300 ]
-		for xmass in range( len(massList) ):
-			inFileSample = currentDir+'/../../RUNAnalysis/test/Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_RPVStopStopToJets_'+args.decay+'_M-'+str(massList[xmass])+'_'+sel+'_v05p2.root'
-			gStyle.SetOptFit(1)
-			signalHistosFile = TFile.Open( inFileSample )
-			hSignal = signalHistosFile.Get( name+'_RPVStopStopToJets_UDD312_M-'+str(massList[xmass]))
-			hSignal.Rebin( rebinX )
-			htmpSignal = hSignal.Clone()
-			htmpSignal.Reset()
-			sigGaus = TF1( 'sigGaus', 'gaus', 0, 500 )
-			for i in range(2): 
-				sigGaus.SetParameter( 1, massList[xmass] )
-				hSignal.Fit( sigGaus, 'MIR', '', massList[xmass]-(int(2*massWidthList[xmass])), massList[xmass]+(int(2*massWidthList[xmass])))
-				#hSignal.Fit( sigGaus, 'MIR', '', massList[xmass]-30, massList[xmass]+30)
-			gausParam[ massList[xmass] ] = sigGaus 
-			numEventsList.append( sigGaus.Integral( 0, 500 ) )
-			numEventsErrList.append( sigGaus.IntegralError( 0, 500 ) )
-			constList.append( sigGaus.GetParameter( 0 ) )
-			constErrList.append( sigGaus.GetParError( 0 ) )
-			meanList.append( sigGaus.GetParameter( 1 ) )
-			meanErrList.append( sigGaus.GetParError( 1 ) )
-			sigmaList.append( sigGaus.GetParameter( 2 ) )
-			sigmaErrList.append( sigGaus.GetParError( 2 ) )
-			can1 = TCanvas('c'+str(massList[xmass]), 'c'+str(massList[xmass]),  10, 10, 750, 500 )
-			hSignal.GetXaxis().SetRangeUser( massList[xmass]-50 , massList[xmass]+50 )
+	constList = []
+	constErrList = []
+	acceptanceList = []
+	acceptanceErrList = []
+	meanList = []
+	meanErrList = []
+	sigmaList = []
+	sigmaErrList = []
+
+	for xmass in massList:
+
+		inFileSample = currentDir+'/../../RUNAnalysis/test/Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_RPVStopStopToJets_'+args.decay+'_M-'+str(xmass)+'_Moriond17_80X_V2p4_'+args.version+'.root'
+		gStyle.SetOptFit(1)
+		signalHistosFile = TFile.Open( inFileSample )
+		hSignal = signalHistosFile.Get( name+'_RPVStopStopToJets_UDD312_M-'+str(xmass))
+		hSignal.Scale( args.lumi )
+		hSignal.Rebin( rebinX )
+		htmpSignal = hSignal.Clone()
+		htmpSignal.Reset()
+
+		sigGaus = TF1( 'sigGaus', 'gaus', 0, 500 )
+		for i in range(2): 
+			sigGaus.SetParameter( 1, xmass )
+			hSignal.Fit( sigGaus, 'MIR', '', xmass-30, xmass+30)
+
+		gausParam[ xmass ] = sigGaus 
+		acceptanceList.append( sigGaus.Integral( xmass-30, xmass+30 ) )
+		acceptanceErrList.append( sigGaus.IntegralError( xmass-30, xmass+30 ) )
+		constList.append( sigGaus.GetParameter( 0 ) )
+		constErrList.append( sigGaus.GetParError( 0 ) )
+		meanList.append( sigGaus.GetParameter( 1 ) )
+		meanErrList.append( sigGaus.GetParError( 1 ) )
+		sigmaList.append( sigGaus.GetParameter( 2 ) )
+		sigmaErrList.append( sigGaus.GetParError( 2 ) )
+
+		if plot:
+			can1 = TCanvas('c'+str(xmass), 'c'+str(xmass),  10, 10, 750, 500 )
+			hSignal.GetXaxis().SetRangeUser( xmass-50 , xmass+50 )
 			hSignal.Draw()
-			can1.SaveAs( 'Plots/test'+str(massList[xmass])+'.png' )
+			can1.SaveAs( 'Plots/test'+str(xmass)+'.png' )
 			del can1
-		
-		zeroList = [0]*len(massList)
-		numEventsGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', numEventsList), array('d', zeroList ), array( 'd', numEventsErrList) )
-		canNumEvents = TCanvas('NumberEvents', 'NumberEvents',  10, 10, 750, 500 )
-		gStyle.SetOptFit(1)
-		if 'high' in sel: 
-			canNumEvents.SetLogy()
-			numEventsFit = TF1("numEventsFit", "expo", 150, 500 )
-		else:
-			numEventsFit = TF1("numEventsFit", "pol2", 50, 200 )
-		for i in range(3): numEventsGraph.Fit( numEventsFit, 'MIR' )
-		numEventsGraph.SetMarkerStyle( 21 )
-		numEventsGraph.GetXaxis().SetTitle('Average pruned mass [GeV]')
-		numEventsGraph.GetYaxis().SetTitle('Number of Events')
-		numEventsGraph.GetYaxis().SetTitleOffset(0.95)
-		numEventsGraph.Draw('AP')
-		canNumEvents.SaveAs( 'Plots/NumberEvents_'+sel+'.png' )
-		del canNumEvents
+	
+	zeroList = [0]*len(massList)
+	acceptanceGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', acceptanceList), array('d', zeroList ), array( 'd', acceptanceErrList) )
+	canNumEvents = TCanvas('NumberEvents', 'NumberEvents',  10, 10, 750, 500 )
+	gStyle.SetOptFit(1)
+	acceptanceFit = TF1("acceptanceFit", "pol2", 60, 300 )
+	for i in range(3): acceptanceGraph.Fit( acceptanceFit, 'MIR' )
+	acceptanceGraph.SetMarkerStyle( 21 )
+	acceptanceGraph.GetXaxis().SetTitle('Average pruned mass [GeV]')
+	acceptanceGraph.GetYaxis().SetTitle('Number of Events')
+	acceptanceGraph.GetYaxis().SetTitleOffset(0.95)
+	acceptanceGraph.Draw('AP')
+	canNumEvents.SaveAs( 'Plots/acceptance_'+args.decay+'_'+args.cutTop+'_'+args.version+'.png' )
+	del canNumEvents
 
-		constGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', constList), array('d', zeroList ), array( 'd', constErrList) )
-		canConstant = TCanvas('Constant', 'Constant',  10, 10, 750, 500 )
-		gStyle.SetOptFit(1)
-		if 'high' in sel: 
-			canConstant.SetLogy()
-			constFit = TF1("constFit", "expo", 150, 500 )
-		else:
-			constFit = TF1("constFit", "pol2", 50, 200 )
-		for i in range(3): constGraph.Fit( constFit, 'MIR' )
-		constGraph.SetMarkerStyle( 21 )
-		constGraph.GetXaxis().SetTitle('Average pruned mass [GeV]')
-		constGraph.GetYaxis().SetTitle('Number of Events')
-		constGraph.GetYaxis().SetTitleOffset(0.95)
-		constGraph.Draw('AP')
-		canConstant.SaveAs( 'Plots/Constant_'+sel+'.png' )
-		del canConstant
+	constGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', constList), array('d', zeroList ), array( 'd', constErrList) )
+	canConstant = TCanvas('Constant', 'Constant',  10, 10, 750, 500 )
+	gStyle.SetOptFit(1)
+	constFit = TF1("constFit", "pol4", 60, 400 )
+	for i in range(3): constGraph.Fit( constFit, 'MIR', '', 60, 300 )
+	constGraph.SetMarkerStyle( 21 )
+	constGraph.GetXaxis().SetTitle('Average pruned mass [GeV]')
+	constGraph.GetYaxis().SetTitle('Constant parameter')
+	constGraph.GetYaxis().SetTitleOffset(0.95)
+	constGraph.Draw('AP')
+	canConstant.SaveAs( 'Plots/Constant_'+args.decay+'_'+args.cutTop+'_'+args.version+'.png' )
+	del canConstant
 
-		print meanList
-		print meanErrList
-		meanGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', meanList), array('d', zeroList ), array( 'd', meanErrList) )
-		meanFit = TF1("meanFit", "pol1", 50, 400 )
-		for i in range(3): meanGraph.Fit( meanFit, 'MIR' )
-		can1 = TCanvas('MeanGaus', 'MeanGaus',  10, 10, 750, 500 )
-		gStyle.SetOptFit(1)
-		can1.SetGrid()
-		meanGraph.SetMarkerStyle( 21 )
-		meanGraph.GetXaxis().SetTitle('Stop mass [GeV]')
-		meanGraph.GetYaxis().SetTitle('Mean value from fit [GeV]')
-		meanGraph.GetYaxis().SetTitleOffset(0.95)
-		meanGraph.Draw('APS')
-		CMS_lumi.extraText = "Simulation Preliminary"
-		CMS_lumi.lumi_13TeV = ""
-		CMS_lumi.relPosX = 0.13
-		CMS_lumi.CMS_lumi(can1, 4, 0)
-		can1.Update()
-		st2 = meanGraph.GetListOfFunctions().FindObject("stats")
-		st2.SetX1NDC(.15)
-		st2.SetX2NDC(.35)
-		st2.SetY1NDC(.76)
-		st2.SetY2NDC(.91)
-		can1.Modified()
-		can1.SaveAs( 'Plots/signalMean_massAve_deltaEtaDijet_pruned_UDD312RPVSt_low_AnalysisPlots.pdf' )
+	print meanList
+	print meanErrList
+	meanGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', meanList), array('d', zeroList ), array( 'd', meanErrList) )
+	meanFit = TF1("meanFit", "pol1", 70, 300 )
+	for i in range(3): meanGraph.Fit( meanFit, 'MIR' )
+	can1 = TCanvas('MeanGaus', 'MeanGaus',  10, 10, 750, 500 )
+	gStyle.SetOptFit(1)
+	can1.SetGrid()
+	meanGraph.SetMarkerStyle( 21 )
+	meanGraph.GetXaxis().SetTitle('Stop mass [GeV]')
+	meanGraph.GetYaxis().SetTitle('Mean value from fit [GeV]')
+	meanGraph.GetYaxis().SetTitleOffset(0.95)
+	meanGraph.Draw('APS')
+	CMS_lumi.extraText = "Simulation Preliminary"
+	CMS_lumi.lumi_13TeV = ""
+	CMS_lumi.relPosX = 0.13
+	CMS_lumi.CMS_lumi(can1, 4, 0)
+	can1.Update()
+	st2 = meanGraph.GetListOfFunctions().FindObject("stats")
+	st2.SetX1NDC(.15)
+	st2.SetX2NDC(.35)
+	st2.SetY1NDC(.76)
+	st2.SetY2NDC(.91)
+	can1.Modified()
+	can1.SaveAs( 'Plots/signalMean_'+args.decay+'_'+args.cutTop+'_'+args.version+'.png' )
 
-		sigmaGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', sigmaList), array('d', zeroList ), array( 'd', sigmaErrList) )
-		sigmaFit = TF1("sigmaFit", "expo", 0, 400 )
-		for i in range(3): sigmaGraph.Fit( sigmaFit, 'MIR' )
-		canSigma = TCanvas('SigmaGaus', 'SigmaGaus',  10, 10, 750, 500 )
-		gStyle.SetOptStat(1)
-		sigmaGraph.SetMarkerStyle( 21 )
-		sigmaGraph.GetXaxis().SetTitle('Average pruned mass [GeV]')
-		sigmaGraph.GetYaxis().SetTitle('Sigma')
-		sigmaGraph.GetYaxis().SetTitleOffset(0.95)
-		sigmaGraph.Draw('aps')
-		sigmaFit.Draw('sames')
-		canSigma.Update()
-		canSigma.SaveAs( 'Plots/SigmaGaus_'+sel+'.png' )
-		del canSigma
+	sigmaGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', sigmaList), array('d', zeroList ), array( 'd', sigmaErrList) )
+	sigmaFit = TF1("sigmaFit", "pol2", 0, 400 )
+	for i in range(3): sigmaGraph.Fit( sigmaFit, 'MIR' )
+	canSigma = TCanvas('SigmaGaus', 'SigmaGaus',  10, 10, 750, 500 )
+	gStyle.SetOptStat(1)
+	sigmaGraph.SetMarkerStyle( 21 )
+	sigmaGraph.GetXaxis().SetTitle('Average pruned mass [GeV]')
+	sigmaGraph.GetYaxis().SetTitle('Sigma')
+	sigmaGraph.GetYaxis().SetTitleOffset(0.95)
+	sigmaGraph.Draw('aps')
+	sigmaFit.Draw('sames')
+	canSigma.Update()
+	canSigma.SaveAs( 'Plots/SigmaGaus_'+args.decay+'_'+args.cutTop+'_'+args.version+'.png' )
+	del canSigma
 
-		#if 'low' in sel: massList2 = [ 80, 90, 100, 110, 120, 130, 140, 150 ]
-		#else: massList2 = range( 160, 400, 10 )
-		for xmass in range(80, 400, 10 ): #massList2:#
-			sigNewGaus = TF1( 'sigNewGaus', 'gaus', 0, 500 )
-			sigNewGaus.SetParameter( 0, constFit.Eval( xmass ) )
-			sigNewGaus.SetParameter( 1, xmass )
-			sigNewGaus.SetParameter( 2, sigmaFit.Eval( xmass ) )
-			newGausFunct[ xmass ] = sigNewGaus 
+	for xmass in range(80, 400, 20 ): 
+		sigNewGaus = TF1( 'sigNewGaus', 'gaus', 0, 500 )
+		sigNewGaus.SetParameter( 0, constFit.Eval( xmass ) )
+		sigNewGaus.SetParameter( 1, xmass )
+		sigNewGaus.SetParameter( 2, sigmaFit.Eval( xmass ) )
+		newGausFunct[ xmass ] = sigNewGaus 
 	dummy=1
 	can1 = TCanvas('c', 'c',  10, 10, 750, 500 )
 	gausParam[ 80 ].Draw()
@@ -504,7 +494,7 @@ def createGausShapes( name, xmin, xmax, rebinX, labX, labY, log):
 			gausParam[ x ].SetLineColor(dummy)
 			gausParam[ x ].Draw("same")
 		dummy=dummy+1
-	can1.SaveAs( 'Plots/GaussShapes.png' )
+	can1.SaveAs( 'Plots/GaussShapes_'+args.decay+'_'+args.cutTop+'_'+args.version+'.png' )
 	del can1
 
 	dummy2 = 1
@@ -518,8 +508,9 @@ def createGausShapes( name, xmin, xmax, rebinX, labX, labY, log):
 			newGausFunct[ x ].SetLineColor(dummy2)
 			newGausFunct[ x ].Draw("same")
 		dummy2=dummy2+1
-	canNewGaus.SaveAs( 'Plots/NewGaussShapes.png' )
+	canNewGaus.SaveAs( 'Plots/NewGaussShapes_'+args.decay+'_'+args.cutTop+'_'+args.version+'.png')
 	del canNewGaus
+
 	return newGausFunct
 
 def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist, signalMass, signalMassWidth, sysJESUnc, sysJERUnc, minMass, maxMass, outputName ):
@@ -553,19 +544,21 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 
 	##### Bkg estimation
 	if args.mcAsData: 
-		hDataC = bkghistosFile[ 'QCDPtAll' ].Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_QCDPtAll'+('_btag' if 'UDD323' in args.decay else '')+'_C')
+		hDataC = bkghistosFile[ 'QCDPtAll' ].Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_QCDPtAll'+('_2btag' if 'UDD323' in args.decay else '')+'_C')
 		hDataC.Scale( args.lumi*0.46 )
-	else: hDataC = dataFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016'+('_btag' if 'UDD323' in args.decay else '')+'_C')
+	else: hDataC = dataFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016'+('_2btag' if 'UDD323' in args.decay else '')+'_C')
 	hDataC.Rebin ( args.reBin )
 	if args.withABCDTFactor:
-		hDataB = dataFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016'+('_btag' if 'UDD323' in args.decay else '')+'_B')
+		hDataB = dataFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016'+('_2btag' if 'UDD323' in args.decay else '')+'_B')
 		hDataB.Rebin ( args.reBin )
-		hDataD = dataFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016'+('_btag' if 'UDD323' in args.decay else '')+'_D')
+		hDataD = dataFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016'+('_2btag' if 'UDD323' in args.decay else '')+'_D')
 		hDataD.Rebin ( args.reBin )
 	else:
-		newBkgHistoFile = datahistosFile.replace( 'V2p4', 'V2p4_'+args.cutTop+'_ABCDEst' )
+		#newBkgHistoFile = datahistosFile.replace( 'V2p4', 'V2p4_'+args.cutTop+'_ABCDEst' )
+		newBkgHistoFile = datahistosFile.replace( 'V2p4', 'V2p4_combined'+('Btag' if 'UDD312' in args.decay else '' )+'_'+args.cutTop+'_ABCDEst' )
 		newBkgFile = TFile( newBkgHistoFile )
-		hDataRatioBD = newBkgFile.Get('massAve_prunedMassAsymVsdeltaEtaDijet'+('_btag' if 'UDD323' in args.decay else '')+'_DATAMinusResBkg_RatioBD' )
+		#hDataRatioBD = newBkgFile.Get('massAve_prunedMassAsymVsdeltaEtaDijet'+('_2btag' if 'UDD323' in args.decay else '')+'_DATAMinusResBkg_RatioBD' )
+		hDataRatioBD = newBkgFile.Get('massAve_prunedMassAsymVsdeltaEtaDijet_DATAMinusResBkg_RatioBD' )
 		if (hDataRatioBD.GetBinWidth( 1 ) != args.reBin ): 
 			print '|----- Bin size in DATA_C histogram is different than rest.'
 			sys.exit(0)
@@ -731,24 +724,25 @@ if __name__ == '__main__':
 	jerValue = 0.11
 	puValue = 1.015
 	triggerValue = 1.03
-	twoProngValue = 1 ### 1.17
+	twoProngValue = 1.10
 	pdfValue = 1   ####1.12
-	lumiValue = 1.062
+	lumiValue = 1.027
 	twoProngSF = 1 ##0.89
-	ttbarSF = ( 0.77 if 'jet1Tau32' in args.cutTop else 0.96 )
-	MCunc = ( 1.1 if 'jet1Tau32' in args.cutTop else 1.25 )
+	ttbarSF = ( 0.88 if 'jet1Tau32' in args.cutTop else 0.96 )
+	MCunc = ( 1.08 if 'jet1Tau32' in args.cutTop else 1.25 )
 
 	outputFileTheta = ''
 	if args.theta:
-		outputFileTheta = currentDir+'/Rootfiles/theta_histos_Bin'+str(args.reBin)+'_low_'+args.version+'.root'
+		outputFileTheta = currentDir+'/Rootfiles/theta_histos_Bin'+str(args.reBin)+'_'+args.version+'.root'
 		if 'gaus' in args.job: outputFileTheta = outputFileTheta.replace(args.version, args.version+'_GaussShape')
 		if args.withABCDTFactor:  outputFileTheta = outputFileTheta.replace(args.version, args.version+'_withABCDTFactor')
 		files = glob.glob(outputFileTheta)
 		for f in files: os.remove(f)
 
 	if 'gaus' in args.job: 
-		gausFunctList = createGausShapes( 'massAve_deltaEtaDijet', 0, 500, args.reBin, 0.85, 0.45, False )
-		massList = range( 80, 360, 10 )
+		gausFunctList = createGausShapes( range( 80, 240, 20 ), 'massAve_'+( 'deltaEtaDijet' if 'UDD312' in args.decay else '2btag' ), 0, 500, args.reBin, 0.85, 0.45, False, plot=False )
+		massList = range( 80, 360, 20 )
+		sys.exit(0)
 		jesUncAcc = [1]*len(massList)
 	else: 
 		if 'UDD312' in args.decay: massList = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 300, 350 ]
@@ -836,7 +830,7 @@ if __name__ == '__main__':
 			p = Process( target=binByBinCards, 
 					args=( dataFileHistos, bkgFileHistos, signalFileHistos, 
 						signalSample, 
-						'massAve_'+( 'btag' if 'UDD323' in args.decay else 'deltaEtaDijet' ), 
+						'massAve_'+( '2btag' if 'UDD323' in args.decay else 'deltaEtaDijet' ), 
 						mass, 
 						( 0 if args.ttbarAsSignal else 10 ), #massWidthList[ mass ] ), 
 						jesUncAcc[ mass ], 
@@ -847,7 +841,7 @@ if __name__ == '__main__':
 		else: p = Process( target=shapeCards, 
 				args=( dataFileHistos, TFile(bkgFileHistos), signalFileHistos, 
 					signalSample, 
-					'massAve_'+( 'btag' if 'UDD323' in args.decay else 'deltaEtaDijet' ), 
+					'massAve_'+( '2btag' if 'UDD323' in args.decay else 'deltaEtaDijet' ), 
 					mass, 
 					minMass, maxMass, 
 					outputName, 
