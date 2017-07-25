@@ -6,6 +6,7 @@ from string import *
 from array import array
 from ROOT import * 
 import numpy as np
+from decimal import *
 
 ##### Support functions
 def checkLumi( Run, Lumi, NumEvent):
@@ -75,24 +76,26 @@ def Rebin2D( h1, rebinx, rebiny ):
 			h1.AddBinContent(ibin,cu)
 	return h1
 
-def getHistoFromTree( fileName, treeName, plotVar, cuts, histo, percentage=1, skipEvents=0 ):
+def getHistoFromTree( fileName, treeName, plotVar, weights, cuts, histo, percentage, skipEvents=0 ):
 	"""docstring for getHistoFromTree"""
 
 	chain = TChain( treeName )
 	chain.Add( fileName ) 
-	numEntries = int( chain.GetEntries()*percentage*(1 if percentage==1 else 7) )  ### because I am taking every 5 events
+	numEntries = int( chain.GetEntries()*percentage*(1 if Decimal(percentage)%1==0 else 3) )  ### because I am taking every 5 events
+	cuts = (cuts if Decimal(percentage)%1==0 else TCut('Entry$%7==0')+cuts) 
 	print '|---> Plotting: '+plotVar+'>>'+str(histo.GetName()), numEntries, chain.GetEntries(), cuts 
-	chain.Draw( plotVar+'>>'+str(histo.GetName()), (cuts if percentage==1 else cuts*TCut('(Entry$%7==0)')) , 'goff', numEntries, skipEvents ) ### goff no graphics generated
+	chain.Draw( plotVar+'>>'+str(histo.GetName()), weights*cuts, 'goff', numEntries, skipEvents ) ### goff no graphics generated
 
 	return histo
 
-def get2DHistoFromTree( fileName, treeName, plotVar1, plotVar2, cuts, histo, percentage=1, skipEvents=0 ):
+def get2DHistoFromTree( fileName, treeName, plotVar1, plotVar2, weights, cuts, histo, percentage, skipEvents=0 ):
 	"""docstring for getHistoFromTree"""
 
 	chain = TChain( treeName )
 	chain.Add( fileName ) 
-	numEntries = int( chain.GetEntries()*percentage*(1 if percentage==1 else 7) )  ### because I am taking every 5 events
+	numEntries = int( chain.GetEntries()*percentage*(1 if Decimal(percentage)%1==0 else 7) )  ### because I am taking every 5 events
+	cuts = (cuts if Decimal(percentage)%1==0 else TCut('Entry$%7==0')+cuts) 
 	print '|---> Plotting: '+plotVar1+':'+plotVar2+'>>'+str(histo.GetName()), cuts
-	chain.Draw( plotVar2+':'+plotVar1+'>>'+str(histo.GetName()), (cuts if percentage==1 else cuts*TCut('(Entry$%7==0)')), 'goff', numEntries, skipEvents )
+	chain.Draw( plotVar2+':'+plotVar1+'>>'+str(histo.GetName()), weights*cuts, 'goff', numEntries, skipEvents )
 
 	return histo
