@@ -41,17 +41,14 @@ def calcROCs( BkgSamples, SigSamples, treename, varList, window, cutsList ):
 	outputFile = TFile( 'test.root', "RECREATE" )
 	
 	allHistos = {}
-	allSumw2 = {}
 	for var in varList: 
 		allHistos[ var[0]+"_Sig" ] = TH1F( var[0]+"_Sig", var[0]+"_Sig", var[1], var[2], var[3] )
-		allHistos[ var[0]+"_Sig" ].Sumw2()
-		allSumw2[ var[0]+"_Sig" ] = 0
 		for bkgSample in BkgSamples: 
 			allHistos[ var[0]+'_'+bkgSample ] = TH1F( var[0]+"_"+bkgSample, var[0]+"_"+bkgSample, var[1], var[2], var[3] )
-			allHistos[ var[0]+'_'+bkgSample ].Sumw2()
-			allSumw2[ var[0]+"_"+bkgSample  ] = 0
 			allHistos[ var[0]+"_"+bkgSample+"_BkgROC"] = TH1F( var[0]+"_"+bkgSample+"_BkgROC", var[0]+"_"+bkgSample+"_BkgROC; "+var[0], var[1], var[2], var[3] )
 			allHistos[ var[0]+"_"+bkgSample+"_SigROC"] = TH1F( var[0]+"_"+bkgSample+"_SigROC", var[0]+"_"+bkgSample+"_SigROC; "+var[0], var[1], var[2], var[3] )
+	
+	for h in allHistos: allHistos[h].Sumw2()
 
 	massAve = 'prunedMassAve' if 'Boosted' in args.boosted else 'massAve'
 	SF = TCut( 'lumiWeight * puWeight * '+str(args.lumi) )
@@ -72,7 +69,6 @@ def calcROCs( BkgSamples, SigSamples, treename, varList, window, cutsList ):
 		print '---- processing... ', sigVar[0]
 
 
-		#allSumw2[ sigVar[0]+"_Sig" ] += sigSF*sigSF
 
 
 	allROCs = {}
@@ -103,7 +99,6 @@ def calcROCs( BkgSamples, SigSamples, treename, varList, window, cutsList ):
 			SigROCLowEdge = []	
 			firstBin =  SigHisto.FindFirstBinAbove( 0, 1 )
 			lastBin =  SigHisto.FindLastBinAbove( 0, 1 )+1 
-			#print 'Bfore', allSumw2[ bkgVar[0]+"_"+bkgSample ], TMath.Sqrt( allSumw2[ bkgVar[0]+"_"+bkgSample ] )
 			#errorVal = Double(0)
 			#ingral = BkgHisto.IntegralAndError( 0, 1, errorVal )
 			#print '0'*10, ingral, errorVal
@@ -121,7 +116,6 @@ def calcROCs( BkgSamples, SigSamples, treename, varList, window, cutsList ):
 					#print '1'*10, ingral, errorVal
 					#print BkgHisto.GetSumOfWeights()
 					#for i in BkgHisto.GetSumw2(): print i
-					#print allSumw2[ var[0]+"_"+bkgSample ], TMath.Sqrt( allSumw2[ var[0]+"_"+bkgSample ] )
 
 					try: effSig = SigHisto.Integral( firstBin, ibin ) / SigTotal 
 					except ZeroDivisionError: effSig = 0

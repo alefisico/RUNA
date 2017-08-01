@@ -61,6 +61,8 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 	allHistos[ "jet4Btag_cutBestPair_"+sample ] = TH1F( "jet4Btag_cutBestPair_"+sample, "jet4Btag_cutBestPair_"+sample, 20, 0., 1 )
 	allHistos[ "jetsBtag_cutBestPair_"+sample ] = TH1F( "jetsBtag_cutBestPair_"+sample, "jetsBtag_cutBestPair_"+sample, 20, 0., 1 )
 
+	allHistos[ "massAve_massAsym_"+sample ] = TH1F( "massAve_massAsym_"+sample, "massAve_massAsym_"+sample, 3000, 0., 3000 )
+	allHistos[ "massAve_deltaEta_"+sample ] = TH1F( "massAve_deltaEta_"+sample, "massAve_deltaEta_"+sample, 3000, 0., 3000 )
 	allHistos[ "massAve_delta_"+sample ] = TH1F( "massAve_delta_"+sample, "massAve_delta_"+sample, 3000, 0., 3000 )
 	allHistos[ "HT_delta_"+sample ] = TH1F( "HT_delta_"+sample, "HT_delta_"+sample, 5000, 0., 5000 )
 	allHistos[ "massAve_woMassAsym_"+sample ] = TH1F( "massAve_woMassAsym_"+sample, "massAve_woMassAsym_"+sample, 3000, 0., 3000 )
@@ -79,10 +81,6 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 	allHistos[ "jet2QGL_delta_"+sample ] = TH1F( "jet2QGL_delta_"+sample, "jet2QGL_delta_"+sample, 20, 0., 1 )
 	allHistos[ "jet3QGL_delta_"+sample ] = TH1F( "jet3QGL_delta_"+sample, "jet3QGL_delta_"+sample, 20, 0., 1 )
 	allHistos[ "jet4QGL_delta_"+sample ] = TH1F( "jet4QGL_delta_"+sample, "jet4QGL_delta_"+sample, 20, 0., 1 )
-	allHistos[ "jet1Btag_delta_"+sample ] = TH1F( "jet1Btag_delta_"+sample, "jet1Btag_delta_"+sample, 20, 0., 1 )
-	allHistos[ "jet2Btag_delta_"+sample ] = TH1F( "jet2Btag_delta_"+sample, "jet2Btag_delta_"+sample, 20, 0., 1 )
-	allHistos[ "jet3Btag_delta_"+sample ] = TH1F( "jet3Btag_delta_"+sample, "jet3Btag_delta_"+sample, 20, 0., 1 )
-	allHistos[ "jet4Btag_delta_"+sample ] = TH1F( "jet4Btag_delta_"+sample, "jet4Btag_delta_"+sample, 20, 0., 1 )
 	allHistos[ "jetsBtag_delta_"+sample ] = TH1F( "jetsBtag_delta_"+sample, "jetsBtag_delta_"+sample, 20, 0., 1 )
 
 	allHistos[ "massAve_delta_4qgl_"+sample ] = TH1F( "massAve_delta_4qgl_"+sample, "massAve_delta_4qgl_"+sample, 3000, 0., 3000 )
@@ -207,7 +205,7 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 			SF,
 			presel,
 			allHistos[ 'massAsym_cutBestPair_'+sample ], 
-			( 0.10 if 'JetHT' in sample else 1 ) )
+			1 )
 
 	getHistoFromTree( fileSample, treeName,
 			'deltaEta',
@@ -215,6 +213,21 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 			presel,
 			allHistos[ 'deltaEta_cutBestPair_'+sample ], 
 			1 )
+
+	### Intermediate selection
+	getHistoFromTree( fileSample, treeName,
+			'massAve', 
+			SF,
+			presel + TCut( cuts.replace('(delta1>200) && (delta2>200) && (massAsym<0.1) && (deltaEta<1.)', '(massAsym<0.1)') ), ## only massASym
+			allHistos[ 'massAve_massAsym_'+sample ], 
+			( 0.10 if 'JetHT' in sample else 1 ) ) 
+
+	getHistoFromTree( fileSample, treeName,
+			'massAve', 
+			SF,
+			presel + TCut( cuts.replace('(delta1>200) && (delta2>200) &&', '') ),	## only massAsym + deltaEta
+			allHistos[ 'massAve_deltaEta_'+sample ], 
+			( 0.10 if 'JetHT' in sample else 1 ) ) 
 
 	##### checking diff deltas
 	for d in range( 50, 550, 50) :
@@ -379,57 +392,57 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 			'jetsCSVv2[0]', 
 			SF,
 			presel,
-			allHistos[ 'jet1Btag_cutBestPair_'+sample ], 
-			( 0.10 if 'JetHT' in sample else 1 ) )
+			allHistos[ 'jetsBtag_cutBestPair_'+sample ], 
+			1 )
 
 	getHistoFromTree( fileSample, treeName,
 			'jetsCSVv2[1]', 
 			SF,
 			presel,
-			allHistos[ 'jet2Btag_cutBestPair_'+sample ], 
-			( 0.10 if 'JetHT' in sample else 1 ) )
+			allHistos[ 'jetsBtag_cutBestPair_'+sample ], 
+			1 )
 
 	getHistoFromTree( fileSample, treeName,
 			'jetsCSVv2[2]', 
 			SF,
 			presel,
-			allHistos[ 'jet3Btag_cutBestPair_'+sample ], 
-			( 0.10 if 'JetHT' in sample else 1 ) )
+			allHistos[ 'jetsBtag_cutBestPair_'+sample ], 
+			1 )
 
 	getHistoFromTree( fileSample, treeName,
 			'jetsCSVv2[3]', 
 			SF,
 			presel,
-			allHistos[ 'jet4Btag_cutBestPair_'+sample ], 
-			( 0.10 if 'JetHT' in sample else 1 ) )
+			allHistos[ 'jetsBtag_cutBestPair_'+sample ], 
+			1 )
 
 	getHistoFromTree( fileSample, treeName,
 			'jetsCSVv2[0]', 
 			SF,
 			fullSel,
-			allHistos[ 'jet1Btag_delta_'+sample ], 
-			( 0.10 if 'JetHT' in sample else 1 ) )
+			allHistos[ 'jetsBtag_delta_'+sample ], 
+			1 )
 
 	getHistoFromTree( fileSample, treeName,
 			'jetsCSVv2[1]', 
 			SF,
 			fullSel,
-			allHistos[ 'jet2Btag_delta_'+sample ], 
-			( 0.10 if 'JetHT' in sample else 1 ) )
+			allHistos[ 'jetsBtag_delta_'+sample ], 
+			1 )
 
 	getHistoFromTree( fileSample, treeName,
 			'jetsCSVv2[2]', 
 			SF,
 			fullSel,
-			allHistos[ 'jet3Btag_delta_'+sample ], 
-			( 0.10 if 'JetHT' in sample else 1 ) )
+			allHistos[ 'jetsBtag_delta_'+sample ], 
+			1 )
 
 	getHistoFromTree( fileSample, treeName,
 			'jetsCSVv2[3]', 
 			SF,
 			fullSel,
-			allHistos[ 'jet4Btag_delta_'+sample ], 
-			( 0.10 if 'JetHT' in sample else 1 ) )
+			allHistos[ 'jetsBtag_delta_'+sample ], 
+			1 )
 
 	outputFile.Write()
 	##### Closing
