@@ -66,6 +66,8 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 	allHistos[ "massAve_delta_"+sample ] = TH1F( "massAve_delta_"+sample, "massAve_delta_"+sample, 3000, 0., 3000 )
 	allHistos[ "HT_delta_"+sample ] = TH1F( "HT_delta_"+sample, "HT_delta_"+sample, 5000, 0., 5000 )
 	allHistos[ "massAve_woMassAsym_"+sample ] = TH1F( "massAve_woMassAsym_"+sample, "massAve_woMassAsym_"+sample, 3000, 0., 3000 )
+	allHistos[ "deltaEta_massAsym_"+sample ] = TH1F( "deltaEta_massAsym_"+sample, "deltaEta_massAsym_"+sample, 3000, 0., 3000 )
+	allHistos[ "deltaEta_delta_"+sample ] = TH1F( "deltaEta_delta_"+sample, "deltaEta_delta_"+sample, 3000, 0., 3000 )
 	for d in range( 50, 550, 50 ): 
 		allHistos[ "massAve_delta"+str(d)+"_"+sample ] = TH1F( "massAve_delta"+str(d)+"_"+sample, "massAve_delta"+str(d)+"_"+sample, 3000, 0., 3000 )
 		allHistos[ "massAve_sumDelta"+str(d)+"_"+sample ] = TH1F( "massAve_sumDelta"+str(d)+"_"+sample, "massAve_sumDelta"+str(d)+"_"+sample, 3000, 0., 3000 )
@@ -223,11 +225,25 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 			( 0.10 if 'JetHT' in sample else 1 ) ) 
 
 	getHistoFromTree( fileSample, treeName,
+			'deltaEta', 
+			SF,
+			presel + TCut( cuts.replace('(delta1>200) && (delta2>200) && (massAsym<0.1) && (deltaEta<1.)', '(massAsym<0.1)') ), ## only massASym
+			allHistos[ 'deltaEta_massAsym_'+sample ], 
+			1 ) 
+
+	getHistoFromTree( fileSample, treeName,
 			'massAve', 
 			SF,
 			presel + TCut( cuts.replace('(delta1>200) && (delta2>200) &&', '') ),	## only massAsym + deltaEta
 			allHistos[ 'massAve_deltaEta_'+sample ], 
 			( 0.10 if 'JetHT' in sample else 1 ) ) 
+
+	getHistoFromTree( fileSample, treeName,
+			'deltaEta', 
+			SF,
+			presel + TCut( cuts.replace(' && (massAsym<0.1) && (deltaEta<1.)', '') ),	## only delta 
+			allHistos[ 'deltaEta_delta_'+sample ], 
+			1 ) 
 
 	##### checking diff deltas
 	for d in range( 50, 550, 50) :

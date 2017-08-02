@@ -454,13 +454,13 @@ def plotCutFlow( signalFiles, bkgFiles, listOfCuts, name, xmax, log, Norm=False 
 	if len(signalFiles) > 0:
 		for iSignal in signalFiles:
 			line = 'RPV St '+str(iSignal)+" GeV "
-			preFile = TFile( folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_80X_V2p4_'+(args.version).replace('p1','')+'.root')
-			print preFile
-			preCF = preFile.Get('hcutflow')
+			preCF = signalFiles[ iSignal ][0].Get(args.boosted+'AnalysisPlots'+('' if 'pruned' in args.grooming else args.grooming)+'/cutflow')
 			preCF.Scale( args.lumi )
 			for i in range(1,4): line = line + ' & '+str( round(preCF.GetBinContent(i),2) )+' \pm '+ str( round(preCF.GetBinError(i),2) )
 			for icut in listOfCuts:
-				histos[ iSignal ] = signalFiles[ iSignal ][0].Get(name+'_'+icut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(iSignal))
+				miniFile = TFile( 'Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p4_'+args.version+'p1.root' )
+				histos[ iSignal ] = miniFile.Get(name+'_'+icut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(iSignal))
+				print miniFile, histos[ iSignal ], name+'_'+icut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(iSignal)
 				if signalFiles[ iSignal ][1] != 1: histos[ iSignal ].Scale( signalFiles[ iSignal ][1] ) 
 				signalIntErr = Double(0)
 				signalInt =  histos[ iSignal ].IntegralAndError( 0, xmax, signalIntErr )
@@ -1162,7 +1162,7 @@ if __name__ == '__main__':
 
 	if args.miniTree:
 		dataFile = TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_JetHT_Run2016_80X_V2p4_'+args.version+'.root')
-		signalFiles[ args.mass ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p4_'+args.version+'.root'), 
+		signalFiles[ args.mass ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p4_'+args.version+'p1.root'), 
 				args.lumi, 
 				'M_{#tilde{t}} = '+str(args.mass)+' GeV', 
 				kRed]
