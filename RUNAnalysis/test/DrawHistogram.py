@@ -453,30 +453,37 @@ def plotCutFlow( signalFiles, bkgFiles, listOfCuts, name, xmax, log, Norm=False 
 	bkgCF = OrderedDict()
 	if len(signalFiles) > 0:
 		for iSignal in signalFiles:
+			signalTotalNumber = 1
 			line = 'RPV St '+str(iSignal)+" GeV "
-			preCF = signalFiles[ iSignal ][0].Get(args.boosted+'AnalysisPlots'+('' if 'pruned' in args.grooming else args.grooming)+'/cutflow')
-			preCF.Scale( args.lumi )
-			for i in range(1,4): line = line + ' & '+str( round(preCF.GetBinContent(i),2) )+' \pm '+ str( round(preCF.GetBinError(i),2) )
+			#preCF = signalFiles[ iSignal ][0].Get(args.boosted+'AnalysisPlots'+('' if 'pruned' in args.grooming else args.grooming)+'/cutflow')
+			#preCF.Scale( args.lumi )
+			#for i in range(1,4): line = line + ' & '+str( round(preCF.GetBinContent(i),2) )+' \pm '+ str( round(preCF.GetBinError(i),2) )
 			for icut in listOfCuts:
 				miniFile = TFile( 'Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p4_'+args.version+'p1.root' )
 				histos[ iSignal ] = miniFile.Get(name+'_'+icut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(iSignal))
-				print miniFile, histos[ iSignal ], name+'_'+icut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(iSignal)
 				if signalFiles[ iSignal ][1] != 1: histos[ iSignal ].Scale( signalFiles[ iSignal ][1] ) 
 				signalIntErr = Double(0)
 				signalInt =  histos[ iSignal ].IntegralAndError( 0, xmax, signalIntErr )
 				line = line + '& $'+str( round(signalInt,2) )+' \pm '+str( round(signalIntErr,2) )+'$ '
+				if 'cutBestPair' in icut: signalTotalNumber = signalInt 
+				signalPercentage = round( signalInt / signalTotalNumber, 2 )*100
+				line = line + '& $'+str( round(signalInt,2) )+' \pm '+str( round(signalIntErr,2) )+'$ & $'+str(signalPercentage)+'$ '
 			print line 
 
 	if len(bkgFiles) > 0:
 		for iBkg in bkgFiles:
+			bkgTotalNumber = 1
 			line = iBkg+' ' 
 			for icut in listOfCuts:
-				histos[ iBkg ] = bkgFiles[ iBkg ][0].Get(name+'_'+icut+'_'+iBkg)
+				miniFile = TFile( 'Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_'+iBkg+'_Moriond17_80X_V2p4_'+args.version+'p1.root' )
+				histos[ iBkg ] = miniFile.Get(name+'_'+icut+'_'+iBkg)
 				if bkgFiles[ iBkg ][1] != 1: histos[ iBkg ].Scale( bkgFiles[ iBkg ][1] ) 
 				bkgIntErr = Double(0)
 				bkgInt =  histos[ iBkg ].IntegralAndError( 0, xmax, bkgIntErr )
 				bkgCF[ str(iBkg)+'_'+icut ] =  '$'+str( round(bkgInt,2) )+' \pm '+str( round(bkgIntErr,2) )+'$'
-				line = line + '& $'+str( round(bkgInt,2) )+' \pm '+str( round(bkgIntErr,2) )+'$ '
+				if 'cutBestPair' in icut: bkgTotalNumber = bkgInt 
+				bkgPercentage = round( bkgInt / bkgTotalNumber, 2 )*100
+				line = line + '& $'+str( round(bkgInt,2) )+' \pm '+str( round(bkgIntErr,2) )+'$ & $'+str(bkgPercentage)+'$ '
 			print line 
 		
 
