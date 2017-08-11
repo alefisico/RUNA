@@ -66,8 +66,8 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 	allHistos[ "massAve_delta_"+sample ] = TH1F( "massAve_delta_"+sample, "massAve_delta_"+sample, 3000, 0., 3000 )
 	allHistos[ "HT_delta_"+sample ] = TH1F( "HT_delta_"+sample, "HT_delta_"+sample, 5000, 0., 5000 )
 	allHistos[ "massAve_woMassAsym_"+sample ] = TH1F( "massAve_woMassAsym_"+sample, "massAve_woMassAsym_"+sample, 3000, 0., 3000 )
-	allHistos[ "deltaEta_massAsym_"+sample ] = TH1F( "deltaEta_massAsym_"+sample, "deltaEta_massAsym_"+sample, 3000, 0., 3000 )
-	allHistos[ "deltaEta_delta_"+sample ] = TH1F( "deltaEta_delta_"+sample, "deltaEta_delta_"+sample, 3000, 0., 3000 )
+	allHistos[ "deltaEta_massAsym_"+sample ] = TH1F( "deltaEta_massAsym_"+sample, "deltaEta_massAsym_"+sample, 50, 0., 5 )
+	allHistos[ "deltaEta_delta_"+sample ] = TH1F( "deltaEta_delta_"+sample, "deltaEta_delta_"+sample, 50, 0., 5 )
 	for d in range( 50, 550, 50 ): 
 		allHistos[ "massAve_delta"+str(d)+"_"+sample ] = TH1F( "massAve_delta"+str(d)+"_"+sample, "massAve_delta"+str(d)+"_"+sample, 3000, 0., 3000 )
 		allHistos[ "massAve_sumDelta"+str(d)+"_"+sample ] = TH1F( "massAve_sumDelta"+str(d)+"_"+sample, "massAve_sumDelta"+str(d)+"_"+sample, 3000, 0., 3000 )
@@ -471,7 +471,7 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 	"""docstring for myAnalyzer: creates new variables from tree """
 
-	outputFileName = 'Rootfiles/RUNMiniResolvedAnalysis_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p1.root' 
+	outputFileName = 'Rootfiles/RUNMiniResolvedAnalysis_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p2.root' 
 	#outputFileName = 'Rootfiles/RUNMiniResolvedAnalysis_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p2_4jets.root' 
 	outputFile = TFile( outputFileName, 'RECREATE' )
 
@@ -588,6 +588,7 @@ def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 
 	inputFile, events, numEntries = getTree( fileSample, 'ResolvedAnalysisPlots/RUNATree')
 	if 'JetHT' in sample: subNumEntries = int(numEntries*0.1)
+	else: subNumEntries = 0
 	print '-'*40
 	print '------> ', sample
 	print '------> Number of events: '+str(numEntries)
@@ -607,7 +608,7 @@ def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 		fraction = 10.*i/(1.*numEntries)
 		if TMath.FloorNint(fraction) > d: print str(10*TMath.FloorNint(fraction))+'%' 
 		d = TMath.FloorNint(fraction)
-		if ( dummy > subNumEntries ): break
+		if ('JetHT' in sample) and ( dummy > subNumEntries ): break
 
 		Run		= events.run
 		Lumi    	= events.lumi
@@ -639,6 +640,24 @@ def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 			#listOldMinChi, listOfPairsOldMinChi = bestPairing( listOfJets, possibleCombinations, method='minChi2', offset=10 ) ## offset is dummy
 			listDeltaR, listOfPairsDeltaR = bestPairing( listOfJets, possibleCombinations, method='deltaR', offset=0.8 )
 			#listMassAsym, listOfPairsMassAsym = bestPairing( listOfJets, possibleCombinations, method='mass' )
+
+			############ Matching
+			if 'RPV' in args.samples:
+				stopDaughters = OrderedDict()
+				listOfMatched = []
+				for iDau in range(0, 4):
+					stopDaughters[ iDau ] = TLorentzVector()
+					stopDaughters[ iDau ].SetPtEtaPhiE( events.jetsPartPt[iDau], events.jetsPartEta[iDau], events.jetsPartPhi[iDau], events.jetsPartE[iDau] ) 
+					tmpListDeltaR = []
+					for ijet in listOfPairsDeltaR:
+						tmpListDeltaR.append( ijet[0].DeltaR( stopDaughters[ iDau ] ) )
+					if ( min(tmpListDeltaR) < 0.4 ): listOfMatched.append( tmpListDeltaR.index( min(tmpListDeltaR) ) )
+					else: listOfMatched.append( -999 )
+				if ( listOfMatched.count( -999 ) ==0 ) and (np.unique(listOfMatched).size == len(listOfMatched)):
+					print listOfMatched
+
+
+
 
 			############ Min Chi2
 			'''

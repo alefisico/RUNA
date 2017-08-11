@@ -441,51 +441,69 @@ def plot2D( inFiles, sample, scale, Groom, nameInRoot, name, titleXAxis, titleXA
 	del can
 
 
-def plotCutFlow( signalFiles, bkgFiles, listOfCuts, name, xmax, log, Norm=False ):
+def plotCutFlow( signalFiles, bkgFiles, listOfCuts, name, xmax ):
 	"""docstring for plot"""
-
-	#outputFileName = name+'_'+args.grooming+'_'+args.decay+'RPVSt'+args.mass+'_Bkg_AnalysisPlots'+args.version+'.'+args.ext 
-	#print 'Processing.......', outputFileName
 
 	histos = {}
 	histosErr = {}
-	signalCF = OrderedDict()
-	bkgCF = OrderedDict()
+	dictCF = OrderedDict()
+	dictCF[1] = ''
+	dictCF[3] = ''
+	dictCF[4] = ''
+	for icut in listOfCuts: dictCF[icut] = ''
 	if len(signalFiles) > 0:
 		for iSignal in signalFiles:
-			signalTotalNumber = 1
-			line = 'RPV St '+str(iSignal)+" GeV "
-			#preCF = signalFiles[ iSignal ][0].Get(args.boosted+'AnalysisPlots'+('' if 'pruned' in args.grooming else args.grooming)+'/cutflow')
-			#preCF.Scale( args.lumi )
-			#for i in range(1,4): line = line + ' & '+str( round(preCF.GetBinContent(i),2) )+' \pm '+ str( round(preCF.GetBinError(i),2) )
+			line = args.decay+' $ M_{\\tilde{t}} = '+str(iSignal)+"$ GeV "
+			preCF = signalFiles[ iSignal ][0].Get(args.boosted+'AnalysisPlots'+('' if 'pruned' in args.grooming else args.grooming)+'/cutflow')
+			#preCF.Scale( signalFiles[ iSignal ][1] )
+			signalTotalNumber = preCF.GetBinContent(1)
+			for i in [ 1, 3, 4 ]:
+				signalEventsPerBin = preCF.GetBinContent(i)
+				signalPercentage = round( signalEventsPerBin / signalTotalNumber, 2 )*100
+				signalCF = ' & $'+str( round(signalEventsPerBin,2) )+' \pm '+ str( round(TMath.Sqrt(signalEventsPerBin),2) )+'$ & $'+str(signalPercentage)+'$ '
+				line = line + signalCF 
+				dictCF[ i ] = dictCF[ i ] + signalCF
+ 
 			for icut in listOfCuts:
-				miniFile = TFile( 'Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p4_'+args.version+'p1.root' )
+				miniFile = TFile( 'Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(iSignal)+'_Moriond17_80X_V2p4_'+args.version+'p1.root' )
 				histos[ iSignal ] = miniFile.Get(name+'_'+icut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(iSignal))
 				if signalFiles[ iSignal ][1] != 1: histos[ iSignal ].Scale( signalFiles[ iSignal ][1] ) 
 				signalIntErr = Double(0)
 				signalInt =  histos[ iSignal ].IntegralAndError( 0, xmax, signalIntErr )
-				line = line + '& $'+str( round(signalInt,2) )+' \pm '+str( round(signalIntErr,2) )+'$ '
-				if 'cutBestPair' in icut: signalTotalNumber = signalInt 
-				signalPercentage = round( signalInt / signalTotalNumber, 2 )*100
-				line = line + '& $'+str( round(signalInt,2) )+' \pm '+str( round(signalIntErr,2) )+'$ & $'+str(signalPercentage)+'$ '
+				#if 'cutBestPair' in icut: signalTotalNumber = signalInt 
+				signalPercentage = round( signalInt / signalTotalNumber, 4 )*100
+				signalCF = '& $'+str( round(signalInt,2) )+' \pm '+str( round(signalIntErr,2) )+'$ & $'+str(signalPercentage)+'$ '
+				line = line + signalCF
+				dictCF[ icut ] = dictCF[ icut ]+signalCF
 			print line 
 
 	if len(bkgFiles) > 0:
 		for iBkg in bkgFiles:
-			bkgTotalNumber = 1
 			line = iBkg+' ' 
+			preCF = bkgFiles[ iBkg ][0].Get(args.boosted+'AnalysisPlots'+('' if 'pruned' in args.grooming else args.grooming)+'/cutflow')
+			#preCF.Scale( bkgFiles[ iBkg ][1] )
+			bkgTotalNumber = preCF.GetBinContent(1)
+			for i in [ 1, 3, 4 ]:
+				bkgEventsPerBin = preCF.GetBinContent(i)
+				bkgPercentage = round( bkgEventsPerBin / bkgTotalNumber, 2 )*100
+				bkgCF = ' & $'+str( round(bkgEventsPerBin,2) )+' \pm '+ str( round(TMath.Sqrt(bkgEventsPerBin),2) )+'$ & $'+str(bkgPercentage)+'$ '
+				line = line + bkgCF
+				dictCF[ i ] = dictCF[ i ] + bkgCF
+
 			for icut in listOfCuts:
 				miniFile = TFile( 'Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_'+iBkg+'_Moriond17_80X_V2p4_'+args.version+'p1.root' )
 				histos[ iBkg ] = miniFile.Get(name+'_'+icut+'_'+iBkg)
 				if bkgFiles[ iBkg ][1] != 1: histos[ iBkg ].Scale( bkgFiles[ iBkg ][1] ) 
 				bkgIntErr = Double(0)
 				bkgInt =  histos[ iBkg ].IntegralAndError( 0, xmax, bkgIntErr )
-				bkgCF[ str(iBkg)+'_'+icut ] =  '$'+str( round(bkgInt,2) )+' \pm '+str( round(bkgIntErr,2) )+'$'
-				if 'cutBestPair' in icut: bkgTotalNumber = bkgInt 
-				bkgPercentage = round( bkgInt / bkgTotalNumber, 2 )*100
-				line = line + '& $'+str( round(bkgInt,2) )+' \pm '+str( round(bkgIntErr,2) )+'$ & $'+str(bkgPercentage)+'$ '
+				#if 'cutBestPair' in icut: bkgTotalNumber = bkgInt 
+				bkgPercentage = round( bkgInt / bkgTotalNumber, 4 )*100
+				bkgCF = '& $'+str( round(bkgInt,2) )+' \pm '+str( round(bkgIntErr,2) )+'$ & $'+str(bkgPercentage)+'$ '
+				line = line + bkgCF
+				dictCF[ icut ] = dictCF[ icut ] + bkgCF
 			print line 
 		
+	for cf in dictCF: print cf, dictCF[cf]
 
 
 def plotSignalCutFlow( runaFile, miniRunaFile, xmax, log, Norm=False ):
@@ -1190,8 +1208,8 @@ if __name__ == '__main__':
 		dataFile = TFile.Open(folder+'/RUNAnalysis_JetHT_Run2016_80X_V2p4_'+args.version+'.root')
 		signalFiles[ args.mass ] = [ TFile.Open(folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = '+str(args.mass)+' GeV', kRed]
 		#signalFiles[ args.mass ] = [ TFile.Open('~/mySpace/archiveEOS/Archive/v7414/RUNAnalysis_RPVSt350tojj_13TeV_pythia8RunIISpring15MiniAODv2-74X_Asympt25ns_v09_v01.root'), args.lumi, 'M_{#tilde{t}} = '+str(args.mass)+' GeV', kRed]
-		if ( 'Norm' in args.process ) or ( 'DATA' in args.process ): 
-			otherMass = ( '180' if args.boosted == 'Boosted' else '700' )
+		if ( 'Norm' in args.process ) or ( 'DATA' in args.process ) or ( 'CF' in args.process ): 
+			otherMass = ( 180 if args.boosted == 'Boosted' else 700 )
 			signalFiles[ otherMass ] = [ TFile.Open(folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(otherMass)+'_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = '+str(otherMass)+' GeV', kRed]
 			#signalFiles[ '800' ] = [ TFile.Open('~/mySpace/archiveEOS/Archive/v7414/RUNAnalysis_RPVStopStopToJets_UDD312_M-800-madgraph_RunIISpring15MiniAODv2-74X_Asympt25ns_v09_v03.root'), args.lumi, 'M_{#tilde{t}} = 800 GeV', kRed]
 		if 'Boosted' in args.boosted: 
@@ -1203,7 +1221,7 @@ if __name__ == '__main__':
 			#bkgFiles[ 'ZZTo4Q' ] = [ TFile.Open(folder+'/RUNAnalysis_ZZTo4Q_80X_V2p4_'+args.version+'.root'), args.lumi, 'ZZ (had)', kOrange+2 ]
 			#bkgFiles[ 'WZ' ] = [ TFile.Open(folder+'/RUNAnalysis_WZ_80X_V2p4_'+args.version+'.root'), args.lumi, 'WZ', kCyan ]
 		bkgFiles[ 'QCD'+args.qcd+'All' ] = [ TFile.Open(folder+'/RUNAnalysis_QCD'+args.qcd+'All_80X_V2p4_'+args.version+'.root'), args.lumi*QCDSF, 'QCD'+args.qcd+'', kBlue-4 ]
-		bkgFiles[ 'QCDPtAll' ] = [ TFile.Open(folder+'/RUNAnalysis_QCDHTAll_80X_V2p4_'+args.version+'.root'), args.lumi*QCDSF, 'QCD'+args.qcd+'', kBlue-4 ]
+		#bkgFiles[ 'QCDPtAll' ] = [ TFile.Open(folder+'/RUNAnalysis_QCDHTAll_80X_V2p4_'+args.version+'.root'), args.lumi*QCDSF, 'QCD'+args.qcd+'', kBlue-4 ]
 		#bkgFiles[ 'QCD'+args.qcd+'All' ] = [ TFile.Open('~/mySpace/archiveEOS/Archive/v7414/RUNAnalysis_QCDPtAll_RunIISpring15MiniAODv2-74X_Asympt25ns_v09_v01.root'), args.lumi*QCDSF, 'QCD'+args.qcd+'', kBlue-4 ]
 
 
@@ -1406,7 +1424,9 @@ if __name__ == '__main__':
 		plotDiffSample( bkgFiles['QCDPtAll'][0], bkgFiles['QCDPtAll'][0], 'QCDpythia', 'QCDmadgraph', args.single+'_'+args.cut , '', '', '', True, 'QCDSample', True)
 
 	if 'CF' in args.process:
-		plotCutFlow( signalFiles, bkgFiles, [ 'cutBestPair', 'massAsym', 'deltaEta', 'delta' ], 'massAve', 1000, True, True )
+		plotCutFlow( signalFiles, bkgFiles, 
+				( [ 'cutBestPair', 'massAsym', 'deltaEta', 'delta' ] +( ['delta_2CSVv2L']  if 'UDD323' in args.decay else [] ) ), 
+				'massAve', 1000 )
 
 	if 'Scf' in args.process:
 		plotSignalCutFlow(folder+'/RUNAnalysis_RPVStopStopToJets_UDD312_M-100_RunIIFall15MiniAODv2_v76x_v2p0_'+args.version+'.root', folder+'/RUNMiniBoostedAnalysis_'+args.grooming+'_RPVStopStopToJets_UDD312_M-100_'+args.version+'.root', (10 if 'high' in args.RANGE else 12), True, True )
