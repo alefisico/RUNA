@@ -337,6 +337,6 @@ if __name__ == '__main__':
 
 
 	else: 
-		if '312' in args.decay:  listMass = [ 80, 100, 140, 160, 180, 200, 220, 240, 300, 350 ]
-		else: listMass = [ 120, 180, 200, 220, 240, 280, 300, 350 ]
+		if '312' in args.decay:  listMass = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 300, 350 ]
+		else: listMass = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 280, 300, 350 ]
 	plotLimits( listMass  )

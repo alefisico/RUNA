@@ -505,20 +505,15 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 	sigHistos = OrderedDict()
 	dummySig=0
 	for signalSamples in signalFiles:
-		if signalSamples == 120: signalNameHisto = ( nameInRoot+'_RPVStopStopToJets_UDD323_M-120_'+args.numBtags if args.miniTree else 'BoostedAnalysisPlots/'+nameInRoot )
-		else: signalNameHisto = ( nameInRoot+'_RPVStopStopToJets_'+args.decay+'_M-'+str(signalSamples) if args.miniTree else 'BoostedAnalysisPlots/'+nameInRoot )
+		signalNameHisto = ( nameInRoot+'_RPVStopStopToJets_'+args.decay+'_M-'+str(signalSamples) if args.miniTree else 'BoostedAnalysisPlots/'+nameInRoot )
 		sigHistos[ signalSamples ] = signalFiles[ signalSamples ][0].Get( signalNameHisto+'_A' )
-		sigHistos[ signalSamples ] = rebin( sigHistos[ signalSamples ], ( rebinX if signalSamples == 120 else rebinX ) )
+		sigHistos[ signalSamples ] = rebin( sigHistos[ signalSamples ], rebinX )
 		sigHistos[ signalSamples ].Scale( signalFiles[ signalSamples ][1] * twoProngSF * antiTau32SF )
 		sigHistos[ signalSamples ].SetLineColor( signalFiles[ signalSamples ][3] )
 		sigHistos[ signalSamples ].SetLineWidth( 3 )
 		sigHistos[ signalSamples ].SetLineStyle( 2+dummySig )
 		sigHistos[ signalSamples ].GetXaxis().SetRangeUser( int(signalSamples)-30, int(signalSamples)+30 )
 		dummySig+=8
-	###temporary
-	sigHistosBtag = {}
-	sigHistosBtag[120] = sigHistos[ 120 ]
-	sigHistos.pop(120, None )
 	#######################################
 	
 	##### Opening data histograms, rebin, clone unbinned histo
@@ -548,11 +543,10 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 			if not 'TT' in isamples: hBkgsMinusTTbarTopRegion.Add( MCBkgHistos[ isamples ].Clone() )
 
 	stackTopRegion = THStack( 'stackTopRegion', 'stackTopRegion' )
-	stackTopRegion.Add( MCBkgHistos[ 'Dibosons_'+cutTop ].Clone() )
-	stackTopRegion.Add( MCBkgHistos[ 'ZJetsToQQ_'+cutTop ].Clone() )
-	stackTopRegion.Add( MCBkgHistos[ 'WJetsToQQ_'+cutTop ].Clone() )
-	stackTopRegion.Add( MCBkgHistos[ 'TT_'+cutTop ].Clone() )
-	stackTopRegion.Add( MCBkgHistos[ 'QCD'+args.qcd+'All_'+cutTop ].Clone() )
+	stackTopRegionNames = []
+	for isamples in bkgFiles:
+		stackTopRegion.Add( MCBkgHistos[ isamples+'_'+cutTop ].Clone() )
+		stackTopRegionNames.append( [ MCBkgHistos[ isamples+'_'+cutTop ].Clone(), bkgFiles[ isamples ][2] ] ) 
 
 	hDataMinusBkgTopRegion = dataHistos[ 'DATA_'+cutTop ].Clone()
 	hDataMinusBkgTopRegion.Add( hBkgsMinusTTbarTopRegion, -1 )
@@ -564,12 +558,7 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 			[ hDataMinusBkgTopRegion, MCBkgHistos[ 'TT_'+cutTop ] ], "(Data-bkgs)/MCttbar", 
 			'', 'TopRegion_'+cutTop, 
 			True, 
-			stackHistos=[ 
-				[ MCBkgHistos[ 'QCD'+args.qcd+'All_'+cutTop ].Clone(), 'MC QCD' ], 
-				[ MCBkgHistos[ 'TT_'+cutTop ].Clone(), 't #bar{t} + Jets' ], 
-				[ MCBkgHistos[ 'WJetsToQQ_'+cutTop ].Clone(), 'W + Jets'], 
-				[ MCBkgHistos[ 'ZJetsToQQ_'+cutTop ].Clone(), 'Z + Jets'], 
-				[ MCBkgHistos[ 'Dibosons_'+cutTop ].Clone(), 'Dibosons' ] ],
+			stackHistos=stackTopRegionNames,
 			addHisto=MCBkgHistos[ 'TT_'+cutTop ], 
 			addUncBand=False,
 			topRegion=True,
@@ -706,10 +695,11 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 	######## FINAL ESTIMATION
 	### stack plot
 	stackABCD = THStack( 'stackABCD', 'stackABCD' )
-	stackABCD.Add( MCBkgHistos[ 'Dibosons_A' ].Clone() )
-	stackABCD.Add( MCBkgHistos[ 'ZJetsToQQ_A' ].Clone() )
-	stackABCD.Add( MCBkgHistos[ 'WJetsToQQ_A' ].Clone() )
-	stackABCD.Add( MCBkgHistos[ 'TT_A' ].Clone() )
+	stackABCDNames = []
+	for isamples in bkgFiles:
+		if not 'QCD' in isamples:
+			stackABCD.Add( MCBkgHistos[ isamples+'_A' ].Clone() )
+			stackABCDNames.append( [ MCBkgHistos[ isamples+'_A' ].Clone(), bkgFiles[ isamples ][2] ] ) 
 
 	### adding ABCD 
 	hABCDOnly = hDataWOResBkgBCD.Clone()
@@ -717,6 +707,7 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 	stackABCD.Add( hABCDOnly )
 	addAllBkg = hABCDOnly.Clone()
 	addAllBkg.Add( hBkgMinusResonantBkgA )
+	stackABCDNames.append( [ hABCDOnly, '#splitline{QCD multijets}{from ABCD}' ] )
 
 	### adding systematics
 	hABCDOnlySys = addSysBand( hABCDOnly, 1.10, kBlack, additionalSys=dataHistos['DATA_C'])
@@ -730,6 +721,7 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 	hABCDOnlySys.Add( hdibosonsOnlySys )
 	hABCDOnlySys.SetLineColor( kBlue )
 	hABCDOnlySys.SetLineWidth( 2 )
+	stackABCDNames.append( [ hABCDOnlySys, 'Bkg. unc.' ] )
 	### systematics in ratio plot
 	hRatioSys = hABCDOnlySys.Clone()
 	hRatioSys.Reset()
@@ -747,12 +739,7 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 			'', 'Log_BCDPlusMCbkgs_'+cutTop, 
 			True, 
 			addHisto=addAllBkg, 
-			stackHistos=[ [ hABCDOnly, 'QCD from ABCD'], 
-				[ MCBkgHistos[ 'TT_A' ].Clone(), 't #bar{t} + Jets' ], 
-				[ MCBkgHistos[ 'WJetsToQQ_A' ].Clone(), 'W + Jets'], 
-				[ MCBkgHistos[ 'ZJetsToQQ_A' ].Clone(), 'Z + Jets'], 
-				[ MCBkgHistos[ 'Dibosons_A' ].Clone(), 'Dibosons' ], 
-				[ hABCDOnlySys, 'Bkg. uncertainty' ] ], 
+			stackHistos=stackABCDNames, 
 			addUncBand=[ hABCDOnlySys, hRatioSys ], 
 			signalHistos=sigHistos)
 	###########################################
@@ -932,7 +919,7 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 				[ MCBkgHistos[ 'Dibosons_'+args.numBtags+'_A' ].Clone(), 'Dibosons' ], 
 				[ hBtagABCDOnlySys, 'Bkg. uncertainty' ] ], 
 			addUncBand=[ hBtagABCDOnlySys, hBtagRatioSys ], 
-			signalHistos=sigHistosBtag)
+			signalHistos=sigHistos)
 	###########################################
 
 	##### Full closure test btagging
@@ -1078,7 +1065,7 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 				[ MCBkgHistos[ 'Dibosons_'+args.numBtags+'_A' ].Clone(), 'Dibosons' ], 
 				[ hBtagABCDOnlySys, 'Bkg. uncertainty' ] ], 
 			addUncBand=[ hBtagABCDOnlySys, hBtagRatioSys ], 
-			signalHistos=sigHistosBtag)
+			signalHistos=sigHistos)
 	###########################################
 
 
@@ -1146,7 +1133,7 @@ def makePlots( nameInRoot,
 	if log: 
 		pad1.SetLogy() 	
 		if 'Region' in labelh1: histo1.SetMaximum( 2.5* max( histo1.GetMaximum(), histo2.GetMaximum() ) )
-		else: histo1.SetMaximum( 5000 )
+		else: histo1.SetMaximum( 15000 )
 		histo1.SetMinimum( 0.5 )
 	else: 
 		pad1.SetGrid()
@@ -1540,9 +1527,9 @@ if __name__ == '__main__':
 		#bkgLabel='(w QCD madgraphMLM+pythia8)'
 		QCDSF = 1
 
-	twoProngSF = 1.10 
-	antiTwoProngSF = 0.86 
-	tau32SF = 1.07
+	twoProngSF = 1 #1.10 
+	antiTwoProngSF = 1 #0.86 
+	tau32SF = 1# 1.07
 	antiTau32SF = 1 #0.57 
 
 	if args.miniTree: filePrefix = 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming
@@ -1555,15 +1542,14 @@ if __name__ == '__main__':
 	dataFile = TFile.Open(dataFileName)
 
 	signalFiles[ args.mass ] = [ TFile.Open(filePrefix+'_RPVStopStopToJets_'+args.decay+'_M-'+args.mass+'_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = '+args.mass+' GeV', kRed]
-	#signalFiles[ '80' ] = [ TFile.Open(filePrefix+'_RPVStopStopToJets_'+args.decay+'_M-80_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = 80 GeV', kRed]
-	#signalFiles[ '170' ] = [ TFile.Open(filePrefix+'_RPVStopStopToJets_'+args.decay+'_M-170_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = 170 GeV', kMagenta]
-	#signalFiles[ '240' ] = [ TFile.Open(filePrefix+'_RPVStopStopToJets_'+args.decay+'_M-240_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = 240 GeV', 28]
-	signalFiles[ 120 ] = [ TFile.Open(filePrefix+'_RPVStopStopToJets_UDD323_M-120_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = 120 GeV', kRed]
-	bkgFiles[ 'TT' ] = [ TFile.Open(filePrefix+'_TT_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 't #bar{t} + Jets', kGreen+2 ]
+	if args.final:
+		signalFiles[ '180' ] = [ TFile.Open(filePrefix+'_RPVStopStopToJets_'+args.decay+'_M-170_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = 170 GeV', kMagenta]
+		signalFiles[ '240' ] = [ TFile.Open(filePrefix+'_RPVStopStopToJets_'+args.decay+'_M-240_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = 240 GeV', 28]
+	bkgFiles[ 'Dibosons' ] = [ TFile.Open(filePrefix+'_Dibosons_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'Dibosons', kMagenta+2 ]
     	bkgFiles[ 'ZJetsToQQ' ] = [ TFile.Open(filePrefix+'_ZJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'Z + Jets', kOrange]
     	bkgFiles[ 'WJetsToQQ' ] = [ TFile.Open(filePrefix+'_WJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'W + Jets', 38]
-	bkgFiles[ 'Dibosons' ] = [ TFile.Open(filePrefix+'_Dibosons_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'WW (had)', kMagenta+2 ]
-	bkgFiles[ 'QCD'+args.qcd+'All' ] = [ TFile.Open(filePrefix+'_QCD'+args.qcd+'All_Moriond17_80X_V2p4_'+args.version+'.root'), QCDSF*args.lumi, 'QCD', kBlue ]
+	bkgFiles[ 'TT' ] = [ TFile.Open(filePrefix+'_TT_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 't #bar{t} + Jets', kGreen+2 ]
+	bkgFiles[ 'QCD'+args.qcd+'All' ] = [ TFile.Open(filePrefix+'_QCD'+args.qcd+'All_Moriond17_80X_V2p4_'+args.version+'.root'), QCDSF*args.lumi, 'MC QCD multijets', kBlue ]
 
 
 	massMinX = 60

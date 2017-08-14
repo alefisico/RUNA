@@ -81,8 +81,8 @@ def getHistoFromTree( fileName, treeName, plotVar, weights, cuts, histo, percent
 
 	chain = TChain( treeName )
 	chain.Add( fileName ) 
-	numEntries = int( chain.GetEntries()*percentage*(1 if Decimal(percentage)%1==0 else 3) )  ### because I am taking every 5 events
-	cuts = (cuts if Decimal(percentage)%1==0 else TCut('Entry$%7==0')+cuts) 
+	numEntries = int( chain.GetEntries()*percentage*(1 if Decimal(percentage)%1==0 else 5) )  ### because I am taking every 5 events
+	cuts = (cuts if Decimal(percentage)%1==0 else TCut('Entry$%5==0')+cuts) 
 	print '|---> Plotting: '+plotVar+'>>'+str(histo.GetName()), numEntries, chain.GetEntries(), cuts 
 	chain.Draw( plotVar+'>>'+str(histo.GetName()), weights*cuts, 'goff', numEntries, skipEvents ) ### goff no graphics generated
 
@@ -93,8 +93,8 @@ def get2DHistoFromTree( fileName, treeName, plotVar1, plotVar2, weights, cuts, h
 
 	chain = TChain( treeName )
 	chain.Add( fileName ) 
-	numEntries = int( chain.GetEntries()*percentage*(1 if Decimal(percentage)%1==0 else 7) )  ### because I am taking every 5 events
-	cuts = (cuts if Decimal(percentage)%1==0 else TCut('Entry$%7==0')+cuts) 
+	numEntries = int( chain.GetEntries()*percentage*(1 if Decimal(percentage)%1==0 else 5) )  ### because I am taking every 5 events
+	cuts = (cuts if Decimal(percentage)%1==0 else TCut('Entry$%5==0')+cuts) 
 	print '|---> Plotting: '+plotVar1+':'+plotVar2+'>>'+str(histo.GetName()), cuts
 	chain.Draw( plotVar2+':'+plotVar1+'>>'+str(histo.GetName()), weights*cuts, 'goff', numEntries, skipEvents )
 

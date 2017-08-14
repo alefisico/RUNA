@@ -121,104 +121,114 @@ def myPlotAnalyzer( fileSample, listCuts, signalName, UNC ):
 	################################################################################################## Running the Analysis
 	print '-'*40
 	#lumiWeight = ( 1 if 'JetHT' in signalName else sf  )
-	SF = TCut('lumiWeight * puWeight') 
-	preselection = TCut('HT>900') * TCut("numJets==2") * TCut( SF )
+	SF = TCut( '1' if 'JetHT' in signalName else 'lumiWeight * puWeight') 
+	preselection = TCut('HT>900') + TCut("numJets==2") 
 	stringSel = '' 
 	for var in listCuts: stringSel = stringSel+'('+var[0]+('>' if '32' in var[0] else '<')+str(var[1])+')'
-	stringSel = stringSel.replace(')(',') * (')
-	print '---- Cuts applied: ', stringSel, preselection * TCut( stringSel )
+	stringSel = stringSel.replace(')(',') && (')
+	print '---- Cuts applied: ', stringSel, preselection + TCut( stringSel )
 
 	ABCDRegions = {}
-	ABCDRegions[ '_A' ] = preselection * TCut( stringSel )
-	ABCDRegions[ '_B' ] = preselection * TCut( stringSel.replace('deltaEtaDijet<', 'deltaEtaDijet>') )
-	ABCDRegions[ '_C' ] = preselection * TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>') )
-	ABCDRegions[ '_D' ] = preselection * TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>').replace('deltaEtaDijet<', 'deltaEtaDijet>') )
+	ABCDRegions[ '_A' ] = preselection + TCut( stringSel )
+	ABCDRegions[ '_B' ] = preselection + TCut( stringSel.replace('deltaEtaDijet<', 'deltaEtaDijet>') )
+	ABCDRegions[ '_C' ] = preselection + TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>') )
+	ABCDRegions[ '_D' ] = preselection + TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>').replace('deltaEtaDijet<', 'deltaEtaDijet>') )
 
 	btag1Selection = TCut('(jet1btagCSVv2 > 0.8484) || (jet2btagCSVv2 > 0.8484)')
 	#btag1Selection = TCut('(jet1btagCSVv2 > 0.5426) || (jet2btagCSVv2 > 0.5426)')
 	ABCDRegions1Btag = {}
-	ABCDRegions1Btag[ '_A' ] = preselection * TCut( stringSel ) * TCut( btag1Selection )
-	ABCDRegions1Btag[ '_B' ] = preselection * TCut( stringSel.replace('deltaEtaDijet<', 'deltaEtaDijet>') ) * TCut( btag1Selection )
-	ABCDRegions1Btag[ '_C' ] = preselection * TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>') ) * TCut( btag1Selection )
-	ABCDRegions1Btag[ '_D' ] = preselection * TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>').replace('deltaEtaDijet<', 'deltaEtaDijet>') ) * TCut( btag1Selection )
+	ABCDRegions1Btag[ '_A' ] = preselection + TCut( stringSel ) + TCut( btag1Selection )
+	ABCDRegions1Btag[ '_B' ] = preselection + TCut( stringSel.replace('deltaEtaDijet<', 'deltaEtaDijet>') ) + TCut( btag1Selection )
+	ABCDRegions1Btag[ '_C' ] = preselection + TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>') ) + TCut( btag1Selection )
+	ABCDRegions1Btag[ '_D' ] = preselection + TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>').replace('deltaEtaDijet<', 'deltaEtaDijet>') ) + TCut( btag1Selection )
 
-	btag2Selection = '(jet1btagCSVv2 > 0.8484) * (jet2btagCSVv2 > 0.8484)'
-	#btag2Selection = '(jet1btagCSVv2 > 0.5426) * (jet2btagCSVv2 > 0.5426)'
+	btag2Selection = '(jet1btagCSVv2 > 0.8484) && (jet2btagCSVv2 > 0.8484)'
+	#btag2Selection = '(jet1btagCSVv2 > 0.5426) && (jet2btagCSVv2 > 0.5426)'
 	ABCDRegions2Btag = {}
-	ABCDRegions2Btag[ '_A' ] = preselection * TCut( stringSel ) * TCut( btag2Selection )
-	ABCDRegions2Btag[ '_B' ] = preselection * TCut( stringSel.replace('deltaEtaDijet<', 'deltaEtaDijet>') ) * TCut( btag2Selection )
-	ABCDRegions2Btag[ '_C' ] = preselection * TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>') ) * TCut( btag2Selection )
-	ABCDRegions2Btag[ '_D' ] = preselection * TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>').replace('deltaEtaDijet<', 'deltaEtaDijet>') ) * TCut( btag2Selection )
+	ABCDRegions2Btag[ '_A' ] = preselection + TCut( stringSel ) + TCut( btag2Selection )
+	ABCDRegions2Btag[ '_B' ] = preselection + TCut( stringSel.replace('deltaEtaDijet<', 'deltaEtaDijet>') ) + TCut( btag2Selection )
+	ABCDRegions2Btag[ '_C' ] = preselection + TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>') ) + TCut( btag2Selection )
+	ABCDRegions2Btag[ '_D' ] = preselection + TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>').replace('deltaEtaDijet<', 'deltaEtaDijet>') ) + TCut( btag2Selection )
 
-	sel = preselection * TCut( stringSel )
-	btag2Sel = sel * TCut( btag2Selection ) * TCut( 'btagWeight' )
-	btag1Sel = sel * TCut( btag1Selection ) * TCut( 'btagWeight' )
+	sel = preselection + TCut( stringSel )
+	btag2Sel = sel + TCut( btag2Selection ) + TCut( 'btagWeight' )
+	btag1Sel = sel + TCut( btag1Selection ) + TCut( 'btagWeight' )
 
 	treeName = 'BoostedAnalysisPlots'+('Puppi' if 'Puppi' in args.grooming else '')+'/RUNATree'
 
-	if 'JetHT' in signalName: SF = 1
 
 	### Preselection
 	getHistoFromTree( fileSample, treeName,
 			'HT', 
+			SF,
 			preselection,
 			allHistos[ 'HT_preSel_'+signalName ], 
 			1 )
 
 	getHistoFromTree( fileSample, treeName,
 			'numJets', 
+			SF,
 			preselection,
 			allHistos[ 'numJets_preSel_'+signalName ], 
 			1 )
 	
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAve', 
+			SF,
 			preselection, 
 			allHistos[ 'massAve_preSel_'+signalName ], 
 			1 )
 
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAsym', 
+			SF,
 			preselection,
 			allHistos[ 'prunedMassAsym_preSel_'+signalName ], 
 			1 )
 
 	getHistoFromTree( fileSample, treeName,
 			'deltaEtaDijet', 
+			SF,
 			preselection,
 			allHistos[ 'deltaEtaDijet_preSel_'+signalName ], 
 			1 )
 
 	getHistoFromTree( fileSample, treeName,
 			'jet1Tau21', 
+			SF,
 			preselection,
 			allHistos[ 'jet1Tau21_preSel_'+signalName ], 
 			1 )
 
 	getHistoFromTree( fileSample, treeName,
 			'jet2Tau21', 
+			SF,
 			preselection,
 			allHistos[ 'jet2Tau21_preSel_'+signalName ], 
 			1 )
 
 	getHistoFromTree( fileSample, treeName,
 			'jet1Tau32', 
+			SF,
 			preselection,
 			allHistos[ 'jet1Tau32_preSel_'+signalName ], 
 			1 )
 
 	getHistoFromTree( fileSample, treeName,
 			'jet2Tau32', 
+			SF,
 			preselection,
 			allHistos[ 'jet2Tau32_preSel_'+signalName ], 
 			1 )
 	getHistoFromTree( fileSample, treeName,
 			'jet1btagCSVv2', 
+			SF,
 			preselection,
 			allHistos[ 'jet1btagCSVv2_preSel_'+signalName ], 
 			1 )
 	getHistoFromTree( fileSample, treeName,
 			'jet2btagCSVv2', 
+			SF,
 			preselection,
 			allHistos[ 'jet2btagCSVv2_preSel_'+signalName ], 
 			1 )
@@ -226,18 +236,21 @@ def myPlotAnalyzer( fileSample, listCuts, signalName, UNC ):
 	### All selection
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAve', 
+			SF,
 			sel, 
 			allHistos[ 'massAve_deltaEtaDijet_'+signalName ], 
 			( 0.10 if 'JetHT' in signalName else 1 ) ) 
 
 	getHistoFromTree( fileSample, treeName,
 			'jet1Pt', 
+			SF,
 			sel, 
 			allHistos[ 'jet1Pt_deltaEtaDijet_'+signalName ], 
 			( 0.10 if 'JetHT' in signalName else 1 ) ) 
 
 	getHistoFromTree( fileSample, treeName,
 			'jet2Pt', 
+			SF,
 			sel, 
 			allHistos[ 'jet2Pt_deltaEtaDijet_'+signalName ], 
 			( 0.10 if 'JetHT' in signalName else 1 ) ) 
@@ -245,19 +258,22 @@ def myPlotAnalyzer( fileSample, listCuts, signalName, UNC ):
 	### Partial selection
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAve', 
-			preselection * TCut('(jet1Tau21<0.45) * (jet2Tau21<0.45)'), 
+			SF,
+			preselection + TCut('(jet1Tau21<0.45) && (jet2Tau21<0.45)'), 
 			allHistos[ 'massAve_jet2Tau21_'+signalName ], 
 			( 0.10 if 'JetHT' in signalName else 1 ) ) 
 
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAve', 
-			preselection * TCut('(jet1Tau21<0.45) * (jet2Tau21<0.45) *(jet1Tau32>0.57) * (jet2Tau32>0.57)'), 
+			SF,
+			preselection * TCut('(jet1Tau21<0.45) && (jet2Tau21<0.45) && (jet1Tau32>0.57) && (jet2Tau32>0.57)'), 
 			allHistos[ 'massAve_jet2Tau32_'+signalName ], 
 			( 0.10 if 'JetHT' in signalName else 1 ) ) 
 
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAve', 
-			preselection * TCut('(jet1Tau21<0.45) * (jet2Tau21<0.45) *(jet1Tau32>0.57) * (jet2Tau32>0.57) * (prunedMassAsym<0.1)'), 
+			SF,
+			preselection + TCut('(jet1Tau21<0.45) && (jet2Tau21<0.45) && (jet1Tau32>0.57) && (jet2Tau32>0.57) && (prunedMassAsym<0.1)'), 
 			allHistos[ 'massAve_prunedMassAsym_'+signalName ], 
 			( 0.10 if 'JetHT' in signalName else 1 ) ) 
 
@@ -265,55 +281,64 @@ def myPlotAnalyzer( fileSample, listCuts, signalName, UNC ):
 	### ttbar selection inclusive
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAve', 
-			preselection * TCut( stringSel.replace('(jet1Tau32>0.57)','(jet1Tau32<0.57)').replace('(jet2Tau32>0.57)','(jet2Tau32<0.57)') ), 
-			#preselection * TCut( stringSel ) * TCut( '(jet1Tau32<0.57) * (jet2Tau32<0.57)') , 
+			SF,
+			preselection + TCut( stringSel.replace('(jet1Tau32>0.57)','(jet1Tau32<0.57)').replace('(jet2Tau32>0.57)','(jet2Tau32<0.57)') ), 
+			#preselection + TCut( stringSel ) + TCut( '(jet1Tau32<0.57) && (jet2Tau32<0.57)') , 
 			allHistos[ 'massAve_jet2Tau32_'+signalName ], 
 			1 ) 
 
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAve', 
-			preselection * TCut( stringSel.replace('(jet1Tau32>0.57)','(jet1Tau32<0.57)').replace('(jet2Tau32>0.57)','(jet2Tau32<0.57)').replace('(jet1Tau21<0.45)','(jet1Tau21>0.45)').replace('(jet2Tau21<0.45)','(jet2Tau21>0.45)') ), 
-			#preselection * TCut( stringSel.replace('(jet1Tau21<0.45)','(jet1Tau21>0.45)').replace('(jet2Tau21<0.45)','(jet2Tau21>0.45)') ) * TCut( '(jet1Tau32<0.57) * (jet2Tau32<0.57)'), 
+			SF,
+			preselection + TCut( stringSel.replace('(jet1Tau32>0.57)','(jet1Tau32<0.57)').replace('(jet2Tau32>0.57)','(jet2Tau32<0.57)').replace('(jet1Tau21<0.45)','(jet1Tau21>0.45)').replace('(jet2Tau21<0.45)','(jet2Tau21>0.45)') ), 
+			#preselection + TCut( stringSel.replace('(jet1Tau21<0.45)','(jet1Tau21>0.45)').replace('(jet2Tau21<0.45)','(jet2Tau21>0.45)') ) + TCut( '(jet1Tau32<0.57) && (jet2Tau32<0.57)'), 
 			allHistos[ 'massAve_jet1Tau32_'+signalName ], 
 			1 ) 
 
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAve', 
-			preselection * TCut( stringSel.replace('(jet1Tau32>0.57)','(jet1Tau32<0.57)').replace('(jet2Tau32>0.57)','(jet2Tau32<0.57)').replace('* (jet1Tau21<0.45)','').replace('* (jet2Tau21<0.45)','') ), 
-			#preselection * TCut( stringSel.replace('* (jet1Tau21<0.45)','').replace('* (jet2Tau21<0.45)','') ) * TCut( '(jet1Tau32<0.57) * (jet2Tau32<0.57)'), 
+			SF,
+			preselection + TCut( stringSel.replace('(jet1Tau32>0.57)','(jet1Tau32<0.57)').replace('(jet2Tau32>0.57)','(jet2Tau32<0.57)').replace('&& (jet1Tau21<0.45)','').replace('&& (jet2Tau21<0.45)','') ), 
+			#preselection + TCut( stringSel.replace('&& (jet1Tau21<0.45)','').replace('&& (jet2Tau21<0.45)','') ) + TCut( '(jet1Tau32<0.57) && (jet2Tau32<0.57)'), 
 			allHistos[ 'massAve_jet2Tau32WOTau21_'+signalName ], 
 			1 ) 
 
 	### n-1 selection
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAsym', 
-			preselection * TCut( stringSel.replace('* (prunedMassAsym<0.1)','') ), 
+			SF,
+			preselection + TCut( stringSel.replace('&& (prunedMassAsym<0.1)','') ), 
 			allHistos[ 'prunedMassAsym_n-1_'+signalName ], 
 			1 ) 
 
 	getHistoFromTree( fileSample, treeName,
 			'deltaEtaDijet', 
-			preselection * TCut( stringSel.replace(('* (deltaEtaDijet<1.5)' if 'pruned' in args.grooming else '&& (deltaEtaDijet<1.0)' ),'') ), 
+			SF,
+			preselection + TCut( stringSel.replace(('&& (deltaEtaDijet<1.5)' if 'pruned' in args.grooming else '&& (deltaEtaDijet<1.0)' ),'') ), 
 			allHistos[ 'deltaEtaDijet_n-1_'+signalName ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet1Tau21', 
-			preselection * TCut( stringSel.replace('* (jet2Tau21<0.45)','').replace('* (jet1Tau21<0.45)','') ), 
+			SF,
+			preselection + TCut( stringSel.replace('&& (jet2Tau21<0.45)','').replace('&& (jet1Tau21<0.45)','') ), 
 			allHistos[ 'jet1Tau21_n-1_'+signalName ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet2Tau21', 
-			preselection * TCut( stringSel.replace('* (jet2Tau21<0.45)','').replace('* (jet1Tau21<0.45)','') ), 
+			SF,
+			preselection + TCut( stringSel.replace('&& (jet2Tau21<0.45)','').replace('&& (jet1Tau21<0.45)','') ), 
 			allHistos[ 'jet2Tau21_n-1_'+signalName ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet1Tau32', 
-			preselection * TCut( stringSel.replace('* (jet2Tau32<0.57)','').replace('* (jet1Tau32<0.57)','') ), 
+			SF,
+			preselection + TCut( stringSel.replace('&& (jet2Tau32<0.57)','').replace('&& (jet1Tau32<0.57)','') ), 
 			allHistos[ 'jet1Tau32_n-1_'+signalName ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet2Tau32', 
-			preselection * TCut( stringSel.replace('* (jet2Tau32<0.57)','').replace('* (jet1Tau32<0.57)','') ), 
+			SF,
+			preselection + TCut( stringSel.replace('&& (jet2Tau32<0.57)','').replace('&& (jet1Tau32<0.57)','') ), 
 			allHistos[ 'jet2Tau32_n-1_'+signalName ], 
 			1 ) 
 
@@ -321,12 +346,14 @@ def myPlotAnalyzer( fileSample, listCuts, signalName, UNC ):
 	for region, selABCD in ABCDRegions.items():
 		getHistoFromTree( fileSample, treeName,
 				'prunedMassAve', 
+				SF,
 				selABCD, 
 				allHistos[ 'massAve_prunedMassAsymVsdeltaEtaDijet_'+signalName+region ], 
-				1 ) 
+				( 0.10 if '_A' in region else (0.1 if '_C' in region else 1 ) ) )
 	
 		get2DHistoFromTree( fileSample, treeName,
 				'prunedMassAsym', 'deltaEtaDijet',
+				SF,
 				selABCD, 
 				allHistos[ 'prunedMassAsymVsdeltaEtaDijet_'+signalName+region ],
 				1 ) 
@@ -334,6 +361,7 @@ def myPlotAnalyzer( fileSample, listCuts, signalName, UNC ):
 	## Btagging
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAve', 
+			SF,
 			btag1Sel, 
 			allHistos[ 'massAve_1btag_'+signalName ], 
 			( 0.10 if 'JetHT' in signalName else 1 ) ) 
@@ -342,17 +370,20 @@ def myPlotAnalyzer( fileSample, listCuts, signalName, UNC ):
 		getHistoFromTree( fileSample, treeName,
 				'prunedMassAve', 
 				selABCD, 
+				SF,
 				allHistos[ 'massAve_prunedMassAsymVsdeltaEtaDijet_'+signalName+'_1btag'+region ], 
-				1 ) 
+				( 0.10 if '_A' in region else (0.1 if '_C' in region else 1 ) ) )
 	
 		get2DHistoFromTree( fileSample, treeName,
 				'prunedMassAsym', 'deltaEtaDijet',
+				SF,
 				selABCD, 
 				allHistos[ 'prunedMassAsymVsdeltaEtaDijet_'+signalName+'_1btag'+region ],
 				1 ) 
 
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAve', 
+			SF,
 			btag2Sel, 
 			allHistos[ 'massAve_2btag_'+signalName ], 
 			( 0.10 if 'JetHT' in signalName else 1 ) ) 
@@ -360,12 +391,14 @@ def myPlotAnalyzer( fileSample, listCuts, signalName, UNC ):
 	for region, selABCD in ABCDRegions2Btag.items():
 		getHistoFromTree( fileSample, treeName,
 				'prunedMassAve', 
+				SF,
 				selABCD, 
 				allHistos[ 'massAve_prunedMassAsymVsdeltaEtaDijet_'+signalName+'_2btag'+region ], 
-				1 ) 
+				( 0.10 if '_A' in region else (0.1 if '_C' in region else 1 ) ) )
 	
 		get2DHistoFromTree( fileSample, treeName,
 				'prunedMassAsym', 'deltaEtaDijet',
+				SF,
 				selABCD, 
 				allHistos[ 'prunedMassAsymVsdeltaEtaDijet_'+signalName+'_2btag'+region ],
 				1 ) 
@@ -373,42 +406,50 @@ def myPlotAnalyzer( fileSample, listCuts, signalName, UNC ):
 	### n-1 selection btagged
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAsym', 
-			preselection * TCut( stringSel.replace('* (prunedMassAsym<0.1)','') ) * TCut( btag2Selection ), 
+			SF,
+			preselection + TCut( stringSel.replace('&& (prunedMassAsym<0.1)','') ) + TCut( btag2Selection ), 
 			allHistos[ 'prunedMassAsym_n-1_2btag_'+signalName ], 
 			1 ) 
 
 	getHistoFromTree( fileSample, treeName,
 			'deltaEtaDijet', 
-			preselection * TCut( stringSel.replace(('* (deltaEtaDijet<1.5)' if 'pruned' in args.grooming else '&& (deltaEtaDijet<1.0)' ),'') ) * TCut( btag2Selection ), 
+			SF,
+			preselection + TCut( stringSel.replace(('&& (deltaEtaDijet<1.5)' if 'pruned' in args.grooming else '&& (deltaEtaDijet<1.0)' ),'') ) + TCut( btag2Selection ), 
 			allHistos[ 'deltaEtaDijet_n-1_2btag_'+signalName ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet1Tau21', 
-			preselection * TCut( stringSel.replace('* (jet2Tau21<0.45)','').replace('* (jet1Tau21<0.45)','') ) * TCut( btag2Selection ), 
+			SF,
+			preselection + TCut( stringSel.replace('&& (jet2Tau21<0.45)','').replace('&& (jet1Tau21<0.45)','') ) + TCut( btag2Selection ), 
 			allHistos[ 'jet1Tau21_n-1_2btag_'+signalName ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet2Tau21', 
-			preselection * TCut( stringSel.replace('* (jet2Tau21<0.45)','').replace('* (jet1Tau21<0.45)','') ) * TCut( btag2Selection ), 
+			SF,
+			preselection + TCut( stringSel.replace('&& (jet2Tau21<0.45)','').replace('&& (jet1Tau21<0.45)','') ) + TCut( btag2Selection ), 
 			allHistos[ 'jet2Tau21_n-1_2btag_'+signalName ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet1Tau32', 
-			preselection * TCut( stringSel.replace('* (jet2Tau32<0.57)','').replace('* (jet1Tau32<0.57)','') ) * TCut( btag2Selection ), 
+			SF,
+			preselection + TCut( stringSel.replace('&& (jet2Tau32<0.57)','').replace('&& (jet1Tau32<0.57)','') ) + TCut( btag2Selection ), 
 			allHistos[ 'jet1Tau32_n-1_2btag_'+signalName ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet2Tau32', 
-			preselection * TCut( stringSel.replace('* (jet2Tau32<0.57)','').replace('* (jet1Tau32<0.57)','') ) * TCut( btag2Selection ), 
+			SF,
+			preselection + TCut( stringSel.replace('&& (jet2Tau32<0.57)','').replace('&& (jet1Tau32<0.57)','') ) + TCut( btag2Selection ), 
 			allHistos[ 'jet2Tau32_n-1_2btag_'+signalName ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet1btagCSVv2', 
+			SF,
 			sel,
 			allHistos[ 'jet1btagCSVv2_n-1_2btag_'+signalName ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet2btagCSVv2', 
+			SF,
 			sel,
 			allHistos[ 'jet2btagCSVv2_n-1_2btag_'+signalName ], 
 			1 ) 

@@ -746,7 +746,7 @@ if __name__ == '__main__':
 		jesUncAcc = [1]*len(massList)
 	else: 
 		if 'UDD312' in args.decay: massList = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 300, 350 ]
-		else:  massList = [ 120, 180, 200, 220, 240, 280, 300, 350 ]
+		else: massList = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 280, 300, 350 ]
 		jesUncAcc = [1]*len(massList)
 		#massList = [ 90 ]
 		#massWidthList = [ 8.445039648677378 ]
