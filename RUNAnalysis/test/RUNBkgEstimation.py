@@ -505,7 +505,7 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 	sigHistos = OrderedDict()
 	dummySig=0
 	for signalSamples in signalFiles:
-		signalNameHisto = ( nameInRoot+'_RPVStopStopToJets_'+args.decay+'_M-'+str(signalSamples) if args.miniTree else 'BoostedAnalysisPlots/'+nameInRoot )
+		signalNameHisto = ( nameInRoot+'_RPVStopStopToJets_'+args.decay+'_M-'+str(signalSamples)+('_2btag' if 'UDD323' in args.decay else '' ) if args.miniTree else 'BoostedAnalysisPlots/'+nameInRoot )
 		sigHistos[ signalSamples ] = signalFiles[ signalSamples ][0].Get( signalNameHisto+'_A' )
 		sigHistos[ signalSamples ] = rebin( sigHistos[ signalSamples ], rebinX )
 		sigHistos[ signalSamples ].Scale( signalFiles[ signalSamples ][1] * twoProngSF * antiTau32SF )
@@ -1522,12 +1522,12 @@ if __name__ == '__main__':
 	
 	if 'Pt' in args.qcd: 
 		#bkgLabel='(w QCD pythia8)'
-		QCDSF = ( 1 if 'Puppi' in args.grooming else 0.366 ) #0.46 )
+		QCDSF = ( 1 if 'Puppi' in args.grooming else 0.28 ) 
 	else: 
 		#bkgLabel='(w QCD madgraphMLM+pythia8)'
 		QCDSF = 1
 
-	twoProngSF = 1 #1.10 
+	twoProngSF = 1.21
 	antiTwoProngSF = 1 #0.86 
 	tau32SF = 1# 1.07
 	antiTau32SF = 1 #0.57 

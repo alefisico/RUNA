@@ -294,7 +294,7 @@ def shapeCards( datahistosFile, histosFile, signalFile, signalSample, hist, sign
 	xframe = myWS.var("massAve").frame()
 	signalPdf.plotOn( xframe )
 	xframe.Draw()
-	c1.SaveAs('test.png')
+	c1.SaveAs('test'+args.extension)
 	del c1
 	'''
 	############################################################################################
@@ -408,7 +408,7 @@ def createGausShapes( massList, name, xmin, xmax, rebinX, labX, labY, log, plot=
 			can1 = TCanvas('c'+str(xmass), 'c'+str(xmass),  10, 10, 750, 500 )
 			hSignal.GetXaxis().SetRangeUser( xmass-50 , xmass+50 )
 			hSignal.Draw()
-			can1.SaveAs( 'Plots/test'+str(xmass)+'.png' )
+			can1.SaveAs( 'Plots/test'+str(xmass)+'.'+args.extension )
 			del can1
 	
 	zeroList = [0]*len(massList)
@@ -422,7 +422,7 @@ def createGausShapes( massList, name, xmin, xmax, rebinX, labX, labY, log, plot=
 	acceptanceGraph.GetYaxis().SetTitle('Number of Events')
 	acceptanceGraph.GetYaxis().SetTitleOffset(0.95)
 	acceptanceGraph.Draw('AP')
-	canNumEvents.SaveAs( 'Plots/acceptance_'+args.decay+'_'+args.cutTop+'_'+args.version+'.png' )
+	canNumEvents.SaveAs( 'Plots/acceptance_'+args.decay+'_'+args.cutTop+'_'+args.version+'.'+args.extension )
 	del canNumEvents
 
 	constGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', constList), array('d', zeroList ), array( 'd', constErrList) )
@@ -435,13 +435,13 @@ def createGausShapes( massList, name, xmin, xmax, rebinX, labX, labY, log, plot=
 	constGraph.GetYaxis().SetTitle('Constant parameter')
 	constGraph.GetYaxis().SetTitleOffset(0.95)
 	constGraph.Draw('AP')
-	canConstant.SaveAs( 'Plots/Constant_'+args.decay+'_'+args.cutTop+'_'+args.version+'.png' )
+	canConstant.SaveAs( 'Plots/Constant_'+args.decay+'_'+args.cutTop+'_'+args.version+'.'+args.extension )
 	del canConstant
 
 	print meanList
 	print meanErrList
 	meanGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', meanList), array('d', zeroList ), array( 'd', meanErrList) )
-	meanFit = TF1("meanFit", "pol1", 70, 300 )
+	meanFit = TF1("meanFit", "pol1", 70, 400 )
 	for i in range(3): meanGraph.Fit( meanFit, 'MIR' )
 	can1 = TCanvas('MeanGaus', 'MeanGaus',  10, 10, 750, 500 )
 	gStyle.SetOptFit(1)
@@ -462,7 +462,7 @@ def createGausShapes( massList, name, xmin, xmax, rebinX, labX, labY, log, plot=
 	st2.SetY1NDC(.76)
 	st2.SetY2NDC(.91)
 	can1.Modified()
-	can1.SaveAs( 'Plots/signalMean_'+args.decay+'_'+args.cutTop+'_'+args.version+'.png' )
+	can1.SaveAs( 'Plots/signalMean_'+args.decay+'_'+args.cutTop+'_'+args.version+'.'+args.extension )
 
 	sigmaGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', sigmaList), array('d', zeroList ), array( 'd', sigmaErrList) )
 	sigmaFit = TF1("sigmaFit", "pol2", 0, 400 )
@@ -476,7 +476,7 @@ def createGausShapes( massList, name, xmin, xmax, rebinX, labX, labY, log, plot=
 	sigmaGraph.Draw('aps')
 	sigmaFit.Draw('sames')
 	canSigma.Update()
-	canSigma.SaveAs( 'Plots/SigmaGaus_'+args.decay+'_'+args.cutTop+'_'+args.version+'.png' )
+	canSigma.SaveAs( 'Plots/SigmaGaus_'+args.decay+'_'+args.cutTop+'_'+args.version+'.'+args.extension )
 	del canSigma
 
 	for xmass in range(80, 400, 20 ): 
@@ -494,7 +494,7 @@ def createGausShapes( massList, name, xmin, xmax, rebinX, labX, labY, log, plot=
 			gausParam[ x ].SetLineColor(dummy)
 			gausParam[ x ].Draw("same")
 		dummy=dummy+1
-	can1.SaveAs( 'Plots/GaussShapes_'+args.decay+'_'+args.cutTop+'_'+args.version+'.png' )
+	can1.SaveAs( 'Plots/GaussShapes_'+args.decay+'_'+args.cutTop+'_'+args.version+'.'+args.extension )
 	del can1
 
 	dummy2 = 1
@@ -508,7 +508,7 @@ def createGausShapes( massList, name, xmin, xmax, rebinX, labX, labY, log, plot=
 			newGausFunct[ x ].SetLineColor(dummy2)
 			newGausFunct[ x ].Draw("same")
 		dummy2=dummy2+1
-	canNewGaus.SaveAs( 'Plots/NewGaussShapes_'+args.decay+'_'+args.cutTop+'_'+args.version+'.png')
+	canNewGaus.SaveAs( 'Plots/NewGaussShapes_'+args.decay+'_'+args.cutTop+'_'+args.version+'.'+args.extension)
 	del canNewGaus
 
 	return newGausFunct
@@ -555,7 +555,7 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 		hDataD.Rebin ( args.reBin )
 	else:
 		#newBkgHistoFile = datahistosFile.replace( 'V2p4', 'V2p4_'+args.cutTop+'_ABCDEst' )
-		newBkgHistoFile = datahistosFile.replace( 'V2p4', 'V2p4_combined'+('Btag' if 'UDD312' in args.decay else '' )+'_'+args.cutTop+'_ABCDEst' )
+		newBkgHistoFile = datahistosFile.replace( 'V2p4', 'V2p4_combined'+'_'+args.cutTop+'_ABCDEst' )
 		newBkgFile = TFile( newBkgHistoFile )
 		#hDataRatioBD = newBkgFile.Get('massAve_prunedMassAsymVsdeltaEtaDijet'+('_2btag' if 'UDD323' in args.decay else '')+'_DATAMinusResBkg_RatioBD' )
 		hDataRatioBD = newBkgFile.Get('massAve_prunedMassAsymVsdeltaEtaDijet_DATAMinusResBkg_RatioBD' )
@@ -709,6 +709,7 @@ if __name__ == '__main__':
 	parser.add_argument('-m', '--mass', dest='massValue', action="store", type=int, default=-1, help='To run in a mass point only' )
 	parser.add_argument('-c', '--cutTop', action='store', default='jet1Tau32', dest='cutTop', help='Version of rootfiles: v05.' )
     	parser.add_argument('-M', "--mcAsData", dest="mcAsData", action="store_true", default=False, help="Create theta file.")
+	parser.add_argument('-E', '--extension', action='store', default='png', dest='extension', help='Extension of plots: png, pdf' )
 
 	try:
 		args = parser.parse_args()
@@ -740,7 +741,7 @@ if __name__ == '__main__':
 		for f in files: os.remove(f)
 
 	if 'gaus' in args.job: 
-		gausFunctList = createGausShapes( range( 80, 240, 20 ), 'massAve_'+( 'deltaEtaDijet' if 'UDD312' in args.decay else '2btag' ), 0, 500, args.reBin, 0.85, 0.45, False, plot=False )
+		gausFunctList = createGausShapes( range( 80, 260, 20 )+[300, 350], 'massAve_'+( 'deltaEtaDijet' if 'UDD312' in args.decay else '2btag' ), 0, 500, args.reBin, 0.85, 0.45, False, plot=False )
 		massList = range( 80, 360, 20 )
 		sys.exit(0)
 		jesUncAcc = [1]*len(massList)
@@ -804,9 +805,10 @@ if __name__ == '__main__':
 		dataFileHistos = currentDir+'/../../RUNAnalysis/test/Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_JetHT_Run2016_80X_V2p4_'+args.version+'.root'
 		bkgFileHistos = {}
 		bkgFileHistos[ 'TT' ] = TFile( currentDir+'/../../RUNAnalysis/test/Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_TT_Moriond17_80X_V2p4_'+args.version+'.root')
-		bkgFileHistos[ 'WJetsToQQ' ] = TFile( currentDir+'/../../RUNAnalysis/test/Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_WJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root')
-		bkgFileHistos[ 'ZJetsToQQ' ] = TFile( currentDir+'/../../RUNAnalysis/test/Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_ZJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root')
-		bkgFileHistos[ 'Dibosons' ] = TFile( currentDir+'/../../RUNAnalysis/test/Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_Dibosons_Moriond17_80X_V2p4_'+args.version+'.root')
+		if 'UDD312' in args.decay:
+			bkgFileHistos[ 'WJetsToQQ' ] = TFile( currentDir+'/../../RUNAnalysis/test/Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_WJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root')
+			bkgFileHistos[ 'ZJetsToQQ' ] = TFile( currentDir+'/../../RUNAnalysis/test/Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_ZJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root')
+			bkgFileHistos[ 'Dibosons' ] = TFile( currentDir+'/../../RUNAnalysis/test/Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_Dibosons_Moriond17_80X_V2p4_'+args.version+'.root')
 		if args.mcAsData: bkgFileHistos[ 'QCDPtAll' ] = TFile( currentDir+'/../../RUNAnalysis/test/Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_QCDPtAll_Moriond17_80X_V2p4_'+args.version+'.root' )
 
 		if args.unc: outputName = signalSample+'_'+args.grooming+'_'+args.cutTop+'_Bin'+str(args.reBin)+'_'+args.version

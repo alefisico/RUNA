@@ -8,7 +8,7 @@ Description: My Draw histograms. Check for options at the end.
 
 #from ROOT import TFile, TH1F, THStack, TCanvas, TMath, gROOT, gPad
 from ROOT import *
-import time, os, math, sys
+import time, os, math, sys, copy
 from array import array
 import argparse
 from collections import OrderedDict
@@ -447,31 +447,40 @@ def plotCutFlow( signalFiles, bkgFiles, listOfCuts, name, xmax ):
 	histos = {}
 	histosErr = {}
 	dictCF = OrderedDict()
-	dictCF[1] = ''
-	dictCF[3] = ''
-	dictCF[4] = ''
-	for icut in listOfCuts: dictCF[icut] = ''
+	dictTotalBkgCF = OrderedDict()
+	if 'Resolved' in args.boosted: 
+		dictCF[(2 if 'Boosted' in args.boosted else 1)] = ''
+		dictCF[3] = ''
+		dictCF[4] = ''
+		dictTotalBkgCF[(2 if 'Boosted' in args.boosted else 1)] = 0
+		dictTotalBkgCF[3] = 0
+		dictTotalBkgCF[4] = 0
+	for icut in listOfCuts: 
+		dictCF[icut] = ''
+		dictTotalBkgCF[icut] = 0
+
 	if len(signalFiles) > 0:
 		for iSignal in signalFiles:
 			line = args.decay+' $ M_{\\tilde{t}} = '+str(iSignal)+"$ GeV "
 			preCF = signalFiles[ iSignal ][0].Get(args.boosted+'AnalysisPlots'+('' if 'pruned' in args.grooming else args.grooming)+'/cutflow')
 			#preCF.Scale( signalFiles[ iSignal ][1] )
-			signalTotalNumber = preCF.GetBinContent(1)
-			for i in [ 1, 3, 4 ]:
-				signalEventsPerBin = preCF.GetBinContent(i)
-				signalPercentage = round( signalEventsPerBin / signalTotalNumber, 2 )*100
-				signalCF = ' & $'+str( round(signalEventsPerBin,2) )+' \pm '+ str( round(TMath.Sqrt(signalEventsPerBin),2) )+'$ & $'+str(signalPercentage)+'$ '
-				line = line + signalCF 
-				dictCF[ i ] = dictCF[ i ] + signalCF
+			if 'Resolved' in args.boosted: 
+				signalTotalNumber = preCF.GetBinContent(1)
+				for i in ( [2,3,4] if 'Boosted' in args.boosted else [ 1, 3, 4 ]):
+					signalEventsPerBin = preCF.GetBinContent(i)
+					signalPercentage = round( signalEventsPerBin / signalTotalNumber, 2 )*100
+					signalCF = ' & $'+str( round(signalEventsPerBin,2) )+' \pm '+ str( round(TMath.Sqrt(signalEventsPerBin),2) )+'$ & $'+str(signalPercentage)+'$ '
+					line = line + signalCF 
+					dictCF[ i ] = dictCF[ i ] + signalCF
  
 			for icut in listOfCuts:
-				miniFile = TFile( 'Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(iSignal)+'_Moriond17_80X_V2p4_'+args.version+'p1.root' )
+				miniFile = TFile( 'Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(iSignal)+'_Moriond17_80X_V2p4_'+args.version+'p2.root' )
 				histos[ iSignal ] = miniFile.Get(name+'_'+icut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(iSignal))
 				if signalFiles[ iSignal ][1] != 1: histos[ iSignal ].Scale( signalFiles[ iSignal ][1] ) 
+				if ('Boosted' in args.boosted) and (icut == listOfCuts[0]): signalTotalNumber = histos[ iSignal ].Integral()
 				signalIntErr = Double(0)
 				signalInt =  histos[ iSignal ].IntegralAndError( 0, xmax, signalIntErr )
-				#if 'cutBestPair' in icut: signalTotalNumber = signalInt 
-				signalPercentage = round( signalInt / signalTotalNumber, 4 )*100
+				signalPercentage = round( signalInt / signalTotalNumber, 2 )*100
 				signalCF = '& $'+str( round(signalInt,2) )+' \pm '+str( round(signalIntErr,2) )+'$ & $'+str(signalPercentage)+'$ '
 				line = line + signalCF
 				dictCF[ icut ] = dictCF[ icut ]+signalCF
@@ -482,28 +491,45 @@ def plotCutFlow( signalFiles, bkgFiles, listOfCuts, name, xmax ):
 			line = iBkg+' ' 
 			preCF = bkgFiles[ iBkg ][0].Get(args.boosted+'AnalysisPlots'+('' if 'pruned' in args.grooming else args.grooming)+'/cutflow')
 			#preCF.Scale( bkgFiles[ iBkg ][1] )
-			bkgTotalNumber = preCF.GetBinContent(1)
-			for i in [ 1, 3, 4 ]:
-				bkgEventsPerBin = preCF.GetBinContent(i)
-				bkgPercentage = round( bkgEventsPerBin / bkgTotalNumber, 2 )*100
-				bkgCF = ' & $'+str( round(bkgEventsPerBin,2) )+' \pm '+ str( round(TMath.Sqrt(bkgEventsPerBin),2) )+'$ & $'+str(bkgPercentage)+'$ '
-				line = line + bkgCF
-				dictCF[ i ] = dictCF[ i ] + bkgCF
+			if 'Resolved' in args.boosted: 
+				bkgTotalNumber = preCF.GetBinContent(1)
+				for i in ( [2,3,4] if 'Boosted' in args.boosted else [ 1, 3, 4 ]):
+					bkgEventsPerBin = preCF.GetBinContent(i)
+					bkgPercentage = ( bkgEventsPerBin / bkgTotalNumber)*100
+					bkgCF = ' & $'+str( round(bkgEventsPerBin,2) )+' \pm '+ str( round(TMath.Sqrt(bkgEventsPerBin),2) )+'$ & $'+str(round(bkgPercentage,2))+'$ '
+					line = line + bkgCF
+					dictTotalBkgCF[ i ] +=  bkgEventsPerBin
+					dictCF[ i ] = dictCF[ i ] + bkgCF
 
 			for icut in listOfCuts:
-				miniFile = TFile( 'Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_'+iBkg+'_Moriond17_80X_V2p4_'+args.version+'p1.root' )
+				miniFile = TFile( 'Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_'+iBkg+'_Moriond17_80X_V2p4_'+args.version+'p2.root' )
 				histos[ iBkg ] = miniFile.Get(name+'_'+icut+'_'+iBkg)
 				if bkgFiles[ iBkg ][1] != 1: histos[ iBkg ].Scale( bkgFiles[ iBkg ][1] ) 
+				if ('Boosted' in args.boosted) and  (icut == listOfCuts[0]): bkgTotalNumber = histos[ iBkg ].Integral()
 				bkgIntErr = Double(0)
 				bkgInt =  histos[ iBkg ].IntegralAndError( 0, xmax, bkgIntErr )
+				#print '*'*20, iBkg, icut, bkgInt, histos[iBkg].Integral()
 				#if 'cutBestPair' in icut: bkgTotalNumber = bkgInt 
-				bkgPercentage = round( bkgInt / bkgTotalNumber, 4 )*100
-				bkgCF = '& $'+str( round(bkgInt,2) )+' \pm '+str( round(bkgIntErr,2) )+'$ & $'+str(bkgPercentage)+'$ '
+				bkgPercentage = ( bkgInt / bkgTotalNumber )*100
+				bkgCF = '& $'+str( round(bkgInt,2) )+' \pm '+str( round(bkgIntErr,2) )+'$ & $'+str(round(bkgPercentage,2))+'$ '
 				line = line + bkgCF
 				dictCF[ icut ] = dictCF[ icut ] + bkgCF
+				dictTotalBkgCF[ icut ] +=  bkgInt
 			print line 
 		
+	totalBkg = dictTotalBkgCF[('preSel' if 'Boosted' in args.boosted else 1 )]
+	for j in dictTotalBkgCF:
+		bkgTotalPercentage = (dictTotalBkgCF[j]/totalBkg)*100
+		bkgCF = ' & $'+str( round(dictTotalBkgCF[j],2) )+' \pm '+ str( round(TMath.Sqrt(dictTotalBkgCF[j]),2) )+'$ & $'+str(round(bkgTotalPercentage,2))+'$ '
+		dictCF[ j ] = dictCF[ j ] + bkgCF
+
+
+	print '*'*40
 	for cf in dictCF: print cf, dictCF[cf]
+	print '*'*40
+	for cf in dictCF: print cf, '&'.join( dictCF[cf].split('&')[0:7] )
+	for cf in dictCF: print cf, '&', '&'.join( dictCF[cf].split('&')[7:13] )
+	for cf in dictCF: print cf, '&', '&'.join( dictCF[cf].split('&')[13:] )
 
 
 def plotSignalCutFlow( runaFile, miniRunaFile, xmax, log, Norm=False ):
@@ -595,8 +621,8 @@ def plotSignalShape( nameInRoot, rebinX, massList, massWidthList, log ):
 	multiGraph = TMultiGraph()
 	for m in range( len(massList) ): 
 		histos[ massList[m] ] = files[ massList[m] ].Get( nameInRoot+'_RPVStopStopToJets_'+args.decay+'_M-'+str( massList[m] ) )
-		#histos[ massList[m] ].Scale( 1/(histos[ massList[m] ].Integral()))
-		histos[ massList[m] ].Scale( args.lumi )
+		histos[ massList[m] ].Scale( 1/(histos[ massList[m] ].Integral()))
+		#histos[ massList[m] ].Scale( args.lumi )
 		if rebinX > 1: histos[ massList[m] ] = histos[ massList[m] ].Rebin( rebinX )
 		if 'Boosted' in args.boosted:
 			if 'massAve' in args.single: histos[ massList[m] ].GetXaxis().SetRangeUser( massList[m]-(int(massWidthList[m])*3), massList[m]+(int(massWidthList[m])*3) )
@@ -683,8 +709,10 @@ def plotSignalAcceptance( miniRunaFile, nameInRoot, massList, massWidthList, log
 	for m in range( len(massList) ): 
 		NAME = 'RPVStopStopToJets_'+args.decay+'_M-'+str( massList[m] )
 		events = search( dictEvents, NAME )[0]
+
 		histos[ massList[m] ] = files[ massList[m] ].Get( nameInRoot+'_'+NAME )
 		#histos[ massList[m] ].Scale( 1.10 ) ### due to two prong tagger
+		histos[ massList[m] ].Scale( 1/scaleFactor( NAME ) )  
 		eventsInWindow = histos[ massList[m] ].Integral( ) #massList[m]-(int(2*massWidthList[m])), massList[m]+(int(2*massWidthList[m])) )
 		failedEvents = events - eventsInWindow
 		#acceptance = eventsInHisto/events
@@ -1147,7 +1175,7 @@ if __name__ == '__main__':
 	parser.add_argument('-v', '--version', action='store', default='v00', help='Version: v01, v02.' )
 	parser.add_argument('-g', '--grom', action='store', default='pruned', dest='grooming', help='Grooming Algorithm, example: Pruned, Filtered.' )
 	parser.add_argument('-m', '--mass', type=int, action='store', default='100', help='Mass of Stop, example: 100' )
-	parser.add_argument('-C', '--cut', action='store', default='_deltaEtaDijet', help='cut, example: cutDEta' )
+	parser.add_argument('-C', '--cut', action='store', default='deltaEtaDijet', help='cut, example: cutDEta' )
 	parser.add_argument('-s', '--single', action='store', default='all', help='single histogram, example: massAve_cutDijet.' )
 	parser.add_argument('-q', '--qcd', action='store', default='Pt', dest='qcd', help='Type of QCD binning, example: HT.' )
 	parser.add_argument('-c', '--camp', action='store', default='RunIISpring15MiniAODv2-74X', help='Campaign, example: PHYS14.' )
@@ -1175,7 +1203,7 @@ if __name__ == '__main__':
 	if 'Pt' in args.qcd: 
 		bkgLabel='(w QCD pythia8)'
 		##QCDSF = ( 0.68 if 'Resolved' in args.boosted else ( 1 if 'Puppi' in args.grooming else 0.46) )  ### 0.54 with all data for resolved ### v08
-		QCDSF = ( 0.255 if 'Resolved' in args.boosted else ( 1 if 'Puppi' in args.grooming else 0.366 ) )  ### v09
+		QCDSF = ( 0.255 if 'Resolved' in args.boosted else ( 1 if 'Puppi' in args.grooming else 0.28 ) )  ### v09 
 	else: 
 		bkgLabel='(w QCD madgraphMLM+pythia8)'
 		QCDSF = 0.66
@@ -1187,7 +1215,7 @@ if __name__ == '__main__':
 
 	if args.miniTree:
 		dataFile = TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_JetHT_Run2016_80X_V2p4_'+args.version+'.root')
-		signalFiles[ args.mass ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p4_'+args.version+'p1.root'), 
+		signalFiles[ args.mass ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p4_'+args.version+'.root'), 
 				args.lumi, 
 				'M_{#tilde{t}} = '+str(args.mass)+' GeV', 
 				kRed]
@@ -1213,7 +1241,7 @@ if __name__ == '__main__':
 			signalFiles[ otherMass ] = [ TFile.Open(folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(otherMass)+'_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = '+str(otherMass)+' GeV', kRed]
 			#signalFiles[ '800' ] = [ TFile.Open('~/mySpace/archiveEOS/Archive/v7414/RUNAnalysis_RPVStopStopToJets_UDD312_M-800-madgraph_RunIISpring15MiniAODv2-74X_Asympt25ns_v09_v03.root'), args.lumi, 'M_{#tilde{t}} = 800 GeV', kRed]
 		if 'Boosted' in args.boosted: 
-			bkgFiles[ 'TTJets' ] = [ TFile.Open(folder+'/RUNAnalysis_TT_80X_V2p4_'+args.version+'.root'), args.lumi, 't #bar{t} + Jets', kGreen+2 ]
+			bkgFiles[ 'TT' ] = [ TFile.Open(folder+'/RUNAnalysis_TT_80X_V2p4_'+args.version+'.root'), args.lumi, 't #bar{t} + Jets', kGreen+2 ]
 			bkgFiles[ 'WJetsToQQ' ] = [ TFile.Open(folder+'/RUNAnalysis_WJetsToQQ_80X_V2p4_'+args.version+'.root'), args.lumi , 'W + Jets', 38 ]
 			bkgFiles[ 'Dibosons' ] = [ TFile.Open(folder+'/RUNAnalysis_Dibosons_80X_V2p4_'+args.version+'.root'), args.lumi , 'Dibosons', kMagenta+2 ]
 			bkgFiles[ 'ZJetsToQQ' ] = [ TFile.Open(folder+'/RUNAnalysis_ZJetsToQQ_80X_V2p4_'+args.version+'.root'), args.lumi, 'Z + Jets', kOrange ]
@@ -1285,7 +1313,7 @@ if __name__ == '__main__':
 		[ '1D', 'Boosted', 'jet2Eta', -3, 3, 1, '', '', False],
 		[ '1D', 'Boosted', 'jet2Mass', 0, massMaxX, 1, '', '', False],
 		[ '1D', 'Boosted', 'massAve', 60, 350, 5, 0.92, 0.85, True, False],
-		#[ '1DDATA', 'Boosted', 'massAve', 60, 350, (5 if 'deltaEtaDijet' in args.cut else 10 ), 0.92, 0.85, True, False],
+		[ '1DDATA', 'Boosted', 'massAve', 60, 350, (5 if 'deltaEtaDijet' in args.cut else 10 ), 0.92, 0.85, True, False],
 		#[ '1DData', 'Boosted', 'massAve', 60, 350, (1 if args.miniTree else 5), 0.92, 0.85, True, False],
 		#[ '1DDATA', 'Resolved', 'massAve', 0, 1000, 20, 0.92, 0.85, False, False],
 
@@ -1416,7 +1444,7 @@ if __name__ == '__main__':
 		massList = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 300, 350] 
 		massWidthList = [10]*len(massList)
 	else:
-		massList = [ 80, 120, 180, 200, 220, 240, 260, 280, 300, 350] 
+		massList = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 350] 
 		massWidthList = [10]*len(massList)
 
 	if 'test' in args.process:
@@ -1424,9 +1452,12 @@ if __name__ == '__main__':
 		plotDiffSample( bkgFiles['QCDPtAll'][0], bkgFiles['QCDPtAll'][0], 'QCDpythia', 'QCDmadgraph', args.single+'_'+args.cut , '', '', '', True, 'QCDSample', True)
 
 	if 'CF' in args.process:
+		if 'Boosted' in args.boosted: listOfCuts = [ 'preSel', 'jet2Tau21', 'jet1Tau21', 'prunedMassAsym', 'deltaEtaDijet' ]+( ['2btag']  if 'UDD323' in args.decay else [] )
+		else : 	listOfCuts = [ 'cutBestPair', 'massAsym', 'deltaEta', 'delta' ] +( ['delta_2CSVv2L']  if 'UDD323' in args.decay else [] )
 		plotCutFlow( signalFiles, bkgFiles, 
-				( [ 'cutBestPair', 'massAsym', 'deltaEta', 'delta' ] +( ['delta_2CSVv2L']  if 'UDD323' in args.decay else [] ) ), 
-				'massAve', 1000 )
+				listOfCuts, 
+				'massAve', 
+				10000 )
 
 	if 'Scf' in args.process:
 		plotSignalCutFlow(folder+'/RUNAnalysis_RPVStopStopToJets_UDD312_M-100_RunIIFall15MiniAODv2_v76x_v2p0_'+args.version+'.root', folder+'/RUNMiniBoostedAnalysis_'+args.grooming+'_RPVStopStopToJets_UDD312_M-100_'+args.version+'.root', (10 if 'high' in args.RANGE else 12), True, True )
