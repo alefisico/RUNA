@@ -4,9 +4,9 @@ then
 	then
 		if [ $4 == "UDD312" ]
 		then
-			masses="200 220 240 300 350 400 450 500 550 600 650 700 750 800 850 900 950 1000 1100"
+			masses="200 220 240 300 350 400 450 500 550 600 650 700 750 800 850 900 950 1000 1100 1200 "
 		else
-			masses="200 220 240 280 300 350 450 500 550 600 650 700 750 800 850 950 1000 1100"
+			masses="200 220 240 260 280 300 350 400 450 500 550 600 650 700 750 800 850 900 950 1000 1100 1200"
 		fi
 	else
 		if [ $4 == "UDD312" ]
@@ -29,19 +29,19 @@ do
 
 	if [ $2 == "Resolved" ]
 	then
-		combine -M Asymptotic Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_${version}.txt -n ${decay}RPVSt_M-${mass}_Resolved_${3}_${version}
+		combine -M Asymptotic Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_${version}.txt -n _RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_${version}
 
 	elif [ $2 == "Bias" ]
 	then
 		numTests=${6}
-		combine Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_BiasTest_${version}.txt -M GenerateOnly --setPhysicsModelParameters pdf_index=0 --toysFrequentist -t ${numTests} --expectSignal 1 --saveToys -n ${decay}RPVSt_M-${mass}_Resolved_${3}_${version}_Index0_signal1_10k --freezeNuisances pdf_index
-		combine Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_BiasTest_${version}.txt -M GenerateOnly --setPhysicsModelParameters pdf_index=0 --toysFrequentist -t ${numTests} --expectSignal 0 --saveToys -n ${decay}RPVSt_M-${mass}_Resolved_${3}_${version}_Index0_signal0_10k --freezeNuisances pdf_index
+		combine Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_BiasTest_${version}.txt -M GenerateOnly --setPhysicsModelParameters pdf_index=0 --toysFrequentist -t ${numTests} --expectSignal 1 --saveToys -n _RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_${version}_Index0_signal1_10k --freezeNuisances pdf_index
+		combine Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_BiasTest_${version}.txt -M GenerateOnly --setPhysicsModelParameters pdf_index=0 --toysFrequentist -t ${numTests} --expectSignal 0 --saveToys -n _RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_${version}_Index0_signal0_10k --freezeNuisances pdf_index
 		for ind in 0 1 2 3
 		do
 			echo "======= Running Index ${ind} for mass ${mass}"
-			combine Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_BiasTest_${version}.txt -M MaxLikelihoodFit  --setPhysicsModelParameters pdf_index=${ind} --toysFile higgsCombine${decay}RPVSt_M-${mass}_Resolved_${3}_${version}_Index0_signal1_10k.GenerateOnly.mH120.123456.root  -t ${numTests} --rMin -10 --rMax 10 --freezeNuisances pdf_index -n _RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_BiasTest_signal1_${version}_Index0ToIndex${ind}
+			combine Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_BiasTest_${version}.txt -M MaxLikelihoodFit  --setPhysicsModelParameters pdf_index=${ind} --toysFile higgsCombine_RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_${version}_Index0_signal1_10k.GenerateOnly.mH120.123456.root  -t ${numTests} --rMin -10 --rMax 10 --freezeNuisances pdf_index -n _RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_BiasTest_signal1_${version}_Index0ToIndex${ind}
 
-			combine Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_BiasTest_${version}.txt -M MaxLikelihoodFit  --setPhysicsModelParameters pdf_index=${ind} --toysFile higgsCombine${decay}RPVSt_M-${mass}_Resolved_${3}_${version}_Index0_signal0_10k.GenerateOnly.mH120.123456.root  -t ${numTests} --rMin -10 --rMax 10 --freezeNuisances pdf_index  -n _RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_BiasTest_signal0_${version}_Index0ToIndex${ind}
+			combine Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_BiasTest_${version}.txt -M MaxLikelihoodFit  --setPhysicsModelParameters pdf_index=${ind} --toysFile higgsCombine_RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_${version}_Index0_signal0_10k.GenerateOnly.mH120.123456.root  -t ${numTests} --rMin -10 --rMax 10 --freezeNuisances pdf_index  -n _RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_BiasTest_signal0_${version}_Index0ToIndex${ind}
 		done
 
 	elif [ $2 == "fullCLs" ]

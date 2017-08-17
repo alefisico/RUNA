@@ -51,19 +51,22 @@ line.SetLineColor(kRed)
 
 
 
-def createPseudoExperiment():
+def createPseudoExperiment( rawFunction, parRawFunction, numEvents, minX, maxX, plot ):
 	"""docstring for createPseudoExperiment"""
-	h1 = inFileBkg.Get(hist)
-	binSize = h1.GetBinWidth(1)
-	P4PSE = TF1("P4PSE", "[0]*pow(1-x/13000.0,[1])/pow(x/13000.0,[2]+[3]*log(x/13000.))", minX, maxX);
-	P4PSE.SetParameter(0,bkgParameters[0])				
-	P4PSE.SetParameter(1,bkgParameters[1])
-	P4PSE.SetParameter(2,bkgParameters[2])
-	P4PSE.SetParameter(3,bkgParameters[3])
-	randomNumEventsQCD = random.randint( bkgParameters[4]-round(sqrt(bkgParameters[4])), bkgParameters[4]+round(sqrt(bkgParameters[4])) )
-	print "randomNumberOf QCD events", randomNumEventsQCD
-	hMainPSE = TH1D("hbkgPSE", "hbkgPSE", int( (maxX-minX)/binSize ) , minX, maxX)
-	hMainPSE.FillRandom( "P4PSE", int(randomNumEventsQCD) )
+
+	randomNumEventsQCD = random.randint( int(numEvents-round(TMath.Sqrt(numEvents))), int(numEvents+round(TMath.Sqrt(numEvents))) )
+	print "randomNumber Of PseudoExperiment events", randomNumEventsQCD
+	hMainPSE = TH1D("hbkgPSE", "hbkgPSE", int( (maxX-minX) ) , minX, maxX)
+	hMainPSE.SetBinErrorOption(TH1.kPoisson)
+	if isinstance( rawFunction, TH1 ):
+		hMainPSE.FillRandom( rawFunction, int(randomNumEventsQCD) )
+	else:
+		fitFunction = rawFunction[0][0].Clone() 
+		fitFunction.SetName(rawFunction[0][0].GetName()+"PSE")
+		#### giving initial values to fit
+		for k in range( len(parRawFunction) ): fitFunction.SetParameter(k, parRawFunction[rawFunction[0][0].GetName()][k] )
+		hMainPSE.FillRandom( rawFunction[0][0].GetName()+"PSE", int(randomNumEventsQCD) )
+
 	c1 = TCanvas('c1', 'c1',  10, 10, 750, 500 )
 	c1.SetLogy()
 	gStyle.SetOptFit()
@@ -72,15 +75,15 @@ def createPseudoExperiment():
 	gStyle.SetStatW(0.15)
 	gStyle.SetStatH(0.15) 
 	hMainPSE.GetXaxis().SetTitle( histYaxis )
-	hMainPSE.GetYaxis().SetTitle("Events / 10 GeV" ) # dN/dM_{bbjj} [GeV^{-1}]")
-	hMainPSE.GetYaxis().SetTitleOffset(1.2);
+	hMainPSE.GetYaxis().SetTitle("Events / "+str(rebinX)+" GeV" ) # dN/dM_{bbjj} [GeV^{-1}]")
+	#hMainPSE.GetYaxis().SetTitleOffset(1.2);
 	hMainPSE.SetTitle("QCD PseudoExperiments")
 	hMainPSE.Sumw2()
 	hMainPSE.Draw()
 	c1.SaveAs(outputDir+hist+"_PseudoExperiment_Fit_ResolvedAnalysis_"+args.version+"."+args.extension)
 	del c1
 
-
+	return hMainPSE
 
 def rootFitter( inFile, hist, scale, fitFunctions, minX, maxX, rebinX, plot, log=True ):
 	"""Simple rootFitter"""
@@ -91,8 +94,10 @@ def rootFitter( inFile, hist, scale, fitFunctions, minX, maxX, rebinX, plot, log
 	maxBinX = int(maxX/(rebinX if args.miniTree else rebinX*10 ))+1
 
 	#### Initial histo
-	rawHisto = inFile.Get( hist )
-	rawHisto.SetBinErrorOption(TH1.kPoisson)
+	if isinstance( inFile, TFile ):
+		rawHisto = inFile.Get( hist )
+		rawHisto.SetBinErrorOption(TH1.kPoisson)
+	else: rawHisto = inFile
 	rawHisto.Scale( scale )
 	rawHisto.Rebin( rebinX )
 
@@ -115,6 +120,7 @@ def rootFitter( inFile, hist, scale, fitFunctions, minX, maxX, rebinX, plot, log
 	for ibin in range( 0, numBins ):
 		finalHisto.SetBinContent( ibin+1, binContents[ibin] )
 		finalHisto.SetBinError( ibin+1, binError[ibin] )
+	print '|----> Number of events: ', finalHisto.Integral()
 
 	fitParameters = OrderedDict()
 	fitParErrors = OrderedDict()
@@ -167,13 +173,14 @@ def rootFitter( inFile, hist, scale, fitFunctions, minX, maxX, rebinX, plot, log
 
 
 
-def histoFunctionFit( nameHisto, initFitFunction, parameters, parErrors, massBin, massBinErr, minX, maxX ):
+def histoFunctionFit( nameHisto, initFitFunction, parameters, parErrors, massBin, massBinErr, minX, maxX, imass=0 ):
 	"""docstring for histoFunctionFit"""
 
 	fitFunction = initFitFunction.Clone()
 	for i in range(0, initFitFunction.GetNpar() ): 
 		fitFunction.SetParameter( i, parameters[fitFunction.GetName()][i] )
 		fitFunction.SetParError( i, parErrors[fitFunction.GetName()][i] )
+	if args.final and ( 'RPV' in nameHisto) : fitFunction.FixParameter( 1, imass )
 
 	histoFit = TH1D( nameHisto, nameHisto, len(massBin) , minX, maxX)
 	histoFit.Sumw2(False)
@@ -190,13 +197,36 @@ def histoFunctionFit( nameHisto, initFitFunction, parameters, parErrors, massBin
 	return histoFit, fitFunction
 
 
+def fitToHisto( nameHisto, initFitFunction, minX, maxX ):
+	"""docstring for fitToHisto"""
 
-def residualAndPulls(dataPoints, dataErrPoints, function, histo, minX, maxX ):
+	print '|----> For signal+bkg, parameters:' 
+	for k in range( initFitFunction.GetNpar() ) :
+		print k, initFitFunction.GetParameter(k) 
+
+	newHisto = TH1D( nameHisto, nameHisto, (maxX-minX)/rebinX , minX, maxX)
+	newHisto.Sumw2(False)
+
+	points = []
+	errPoints = []
+	for ibin in range( 0, newHisto.GetNbinsX() ):
+		valIntegral = initFitFunction.Eval( newHisto.GetBinCenter(ibin) ) 
+		newHisto.SetBinContent( ibin, valIntegral )
+		newHisto.SetBinError( ibin, TMath.Sqrt(valIntegral) )
+		points.append( valIntegral )
+		errPoints.append( TMath.Sqrt(valIntegral) )
+
+	newHisto.SetBinErrorOption(TH1.kPoisson)
+			
+	return newHisto, points, errPoints
+
+
+def residualAndPulls(dataPoints, dataErrPoints, function, histo, minX, maxX, extraName='' ):
 	"""docstring for residualAndPulls"""
 
-	hPull = TH1D("hpull_"+function.GetName(), "hpull_"+function.GetName(), len(dataPoints) , minX, maxX)
+	hPull = TH1D("hpull_"+extraName+function.GetName(), "hpull_"+extraName+function.GetName(), len(dataPoints) , minX, maxX)
 	hPull.Sumw2()
-	hResidual = TH1D("hresidual_"+function.GetName(), "hresidual_"+function.GetName(), len(dataPoints) , minX, maxX)
+	hResidual = TH1D("hresidual_"+extraName+function.GetName(), "hresidual_"+extraName+function.GetName(), len(dataPoints) , minX, maxX)
 	hResidual.Sumw2()
 
 	######## Calculating Pull and Residual
@@ -230,14 +260,14 @@ def residualAndPulls(dataPoints, dataErrPoints, function, histo, minX, maxX ):
 
 
 
-def FitterCombination( inFileData, inFileBkg, inFileSignal, hist, scale, bkgFunction, minX, maxX, rebinX, runData ):
+def FitterCombination( inFileData, inFileBkg, inFileSignalName, hist, scale, bkgFunction, minX, maxX, rebinX ):
 	"""docstring for FitterCombination"""
 
 	### Fit QCD MC
 	print "|----> Fitting MC QCD"
 	BkgParameters = rootFitter( inFileBkg, 
 			hist+('QCD'+args.qcd+'All' if args.miniTree else ''), 
-			scale*0.85, #( 1 if args.miniTree else 0.75 ), 
+			scale*QCDSF, #( 1 if args.miniTree else 0.75 ), 
 			bkgFunction, 
 			minX, 
 			maxX, 
@@ -249,14 +279,15 @@ def FitterCombination( inFileData, inFileBkg, inFileSignal, hist, scale, bkgFunc
 	bkgpoints = BkgParameters[2]
 	bkgpointsErr = BkgParameters[3]
 
-#	SigParameters = rootFitter( inFileSignal, hist, scale, gaus, [], args.mass-50, args.mass+50, rebinX, False )
-	
-	legend=TLegend(0.18,0.15,0.50,0.35)
+	if args.final: legend=TLegend(0.70,0.65,0.95,0.90)
+	else: legend=TLegend(0.18,0.15,0.50,0.35)
 	legend.SetFillStyle(0)
 	legend.SetTextSize(0.03)
-
-	if runData:
+	
+	if (not args.bkgAsData) or (args.pseudoExperiment):
 		print "|----> Fitting Data"
+		if args.pseudoExperiment:
+			inFileData = createPseudoExperiment( inFileBkg.Get( hist+('QCD'+args.qcd+'All' if args.miniTree else '') ), bkgParameters, sum(bkgpoints), minX, maxX, True )
 		DataParameters = rootFitter( inFileData, 
 				hist+('JetHT_Run2016' if args.miniTree else ''), 
 				1,
@@ -266,16 +297,54 @@ def FitterCombination( inFileData, inFileBkg, inFileSignal, hist, scale, bkgFunc
 				rebinX, 
 				False )
 		#DataParameters = rootFitter( inFileData, hist+('QCDHerwigAll' if args.miniTree else ''), scale, bkgFunction, minX, maxX, rebinX, False )
-		dataParameters = DataParameters[0]
-		dataParErrors = DataParameters[1]
+
 		points = DataParameters[2]
 		pointsErr = DataParameters[3]
-		hMain, mainP4 = histoFunctionFit( 'Data', bkgFunction[0][0], dataParameters, dataParErrors, points, pointsErr, minX, maxX )
-		legend.AddEntry( hMain, 'Data', 'ep' )
-		legend.AddEntry( mainP4, 'Fit to data', 'l' )
+		hMain, mainP4 = histoFunctionFit( 'Data', bkgFunction[0][0], DataParameters[0], DataParameters[1], points, pointsErr, minX, maxX )
+		legend.AddEntry( hMain, ('PseudoExperiment' if args.pseudoExperiment else 'Data'), 'ep' )
+		legend.AddEntry( mainP4, 'Background Fit', 'l' )
 		hMCQCD, qcdMCP4 = histoFunctionFit( 'QCD'+args.qcd+'All', bkgFunction[0][0], bkgParameters, bkgParErrors, bkgpoints, bkgpointsErr, minX, maxX )
 		#legend.AddEntry( qcdMCP4, 'Fit to MC QCD pythia', 'l' )
 
+		if args.final:
+			signalFuncs = OrderedDict()
+			hSBPulls = OrderedDict()
+			hSBResiduals = OrderedDict()
+			for imass in [ args.mass, 700 ]:
+				signalFileName = inFileSignalName.replace(str(args.mass), str(imass) )
+				SignalParameters = rootFitter( TFile( signalFileName ), 
+						hist+('RPVStopStopToJets_'+args.decay+'_M-'+str(imass) if args.miniTree else ''), 
+						scale, 
+						[ [ fitFunctions['gaus'][0], [ 1, imass, 50 ] ] ], 
+						imass-(100 if (imass < 800 ) else 200 ), 
+						imass+(100 if (imass < 800 ) else 200 ), 
+						rebinX, 
+						True,
+						False )
+				sigpoints = SignalParameters[2]
+				sigpointsErr = SignalParameters[3]
+				hSig, signalFuncs[ imass ] = histoFunctionFit( 'RPVStopStopToJets_'+args.decay+'_M-'+str(imass), 
+									fitFunctions['gaus'][0], 
+									SignalParameters[0], SignalParameters[1], 
+									sigpoints, sigpointsErr, 
+									imass-(100 if (imass < 800 ) else 200 ), 
+									imass+(100 if (imass < 800 ) else 200 ),
+									imass=imass) 
+				legend.AddEntry( signalFuncs[ imass ], 'M_{#tilde{t}} = '+str(imass)+' GeV', 'l' )
+		
+				##### for plotting purposes, signal + bkg
+				signalPlusBkg = TF1( 'signalPlusBkg'+str(imass), 'gaus+'+bkgFunction[0][0].GetName() )
+				signalPlusBkg.SetParameter( 0, SignalParameters[0]['gaus'][0] ) 
+				signalPlusBkg.SetParError( 0, SignalParameters[1]['gaus'][0] ) 
+				signalPlusBkg.SetParameter( 1, imass ) 
+				signalPlusBkg.SetParameter( 2, SignalParameters[0]['gaus'][2] ) 
+				signalPlusBkg.SetParError( 2, SignalParameters[1]['gaus'][2] ) 
+				for i in range(0, len(DataParameters[0][args.func]) ): 
+					signalPlusBkg.SetParameter( i+3, DataParameters[0][args.func][i] )
+					signalPlusBkg.SetParError( i+3, DataParameters[1][args.func][i] )
+				hSignalPlusBkg, signalPlusBkgPoints, signalPlusBkgPointsErrors = fitToHisto( 'hSignalPlusBkg'+str(imass), signalPlusBkg, minX, maxX )
+				hSBPulls[imass], hSBResiduals[imass], sbchi2, sbNDF = residualAndPulls(signalPlusBkgPoints, signalPlusBkgPointsErrors, mainP4, hMain, minX, maxX, extraName="SB" )
+		'''
 		if isinstance( inFileSignal, TFile):
 			Bkg2Parameters = rootFitter( inFileSignal, 
 							hist+('QCDHerwigAll' if args.miniTree else ''), 
@@ -293,6 +362,7 @@ def FitterCombination( inFileData, inFileBkg, inFileSignal, hist, scale, bkgFunc
 			#hBkg2, qcdHTMCP4 = histoFunctionFit( 'QCDHT', bkg2Parameters, bkg2points, bkg2pointsErr, minX, maxX )
 			legend.AddEntry( qcdHTMCP4, 'Fit to MC QCD powheg', 'l' )
 			#legend.AddEntry( qcdHTMCP4, 'Fit to MC QCD madgraph+pythia', 'l' )
+		'''
 
 	else:
 		hMain, mainP4 = histoFunctionFit( 'QCD'+args.qcd+'All', bkgFunction[0][0], bkgParameters, bkgParErrors, bkgpoints, bkgpointsErr, minX, maxX )
@@ -308,17 +378,22 @@ def FitterCombination( inFileData, inFileBkg, inFileSignal, hist, scale, bkgFunc
 	maxXPlot = maxX+500
 	tdrStyle.SetPadRightMargin(0.05)
   	tdrStyle.SetPadLeftMargin(0.15)
-	gStyle.SetOptFit()
-	gStyle.SetStatY(0.91)
-	gStyle.SetStatX(0.95)
-	gStyle.SetStatW(0.15)
-	gStyle.SetStatH(0.30) 
+	if args.final: 
+		gStyle.SetOptFit(0)
+		#sigBkgPoints = bkgpoints+sigpoints
+		#hSigPull, hSigResidual, sigchi2, sigNDF = residualAndPulls(sigBkgPoints, pointsErr, mainP4, hMain, minX, maxX )
+	else: 
+		gStyle.SetOptFit()
+		gStyle.SetStatY(0.91)
+		gStyle.SetStatX(0.95)
+		gStyle.SetStatW(0.15)
+		gStyle.SetStatH(0.30) 
 	#c3 = TCanvas('c1', 'c1',  10, 10, 750, 1000 )
 	#pad1 = TPad("pad1", "Fit",0,0.40,1.00,1.00,-1)
 	#pad2 = TPad("pad2", "Pull",0,0.25,1.00,0.475,-1);
 	#pad3 = TPad("pad3", "Residual",0,0,1.00,0.277,-1);
 	c3 = TCanvas('c1', 'c1',  10, 10, 1250, 500 )
-	pad1 = TPad("pad1", "Fit",0,0.00,0.50,1.00,-1)
+	pad1 = TPad("pad1", "Fit",0,0.03,0.50,1.00,-1)
 	pad2 = TPad("pad2", "Pull",0.50,0.45,1.00,0.95,-1);
 	pad3 = TPad("pad3", "Residual",0.50,0,1.00,0.507,-1);
 	pad1.Draw()
@@ -330,19 +405,27 @@ def FitterCombination( inFileData, inFileBkg, inFileSignal, hist, scale, bkgFunc
 	hMain.SetMarkerStyle(8)
 	hMain.GetYaxis().SetTitle("dN/dm_{av} / "+ str(hMain.GetBinWidth(1)) +" GeV" ) # dN/dM_{bbjj} [GeV^{-1}]")
 	hMain.GetXaxis().SetTitle( histYaxis )
-	hMain.GetYaxis().SetTitleOffset(1.2);
+	hMain.GetXaxis().SetTitleSize(0.055)
+	hMain.GetYaxis().SetTitleOffset(1.15);
 	hMain.SetTitle("")
 	hMain.SetMarkerStyle(20)
 	#hMain.SetMaximum( 1.5 * hMain.GetMaximum() )
+	hMain.SetMaximum( 200 )
+	hMain.SetMinimum( 0.01 )
 	hMain.Draw('E0')
 	hMain.GetXaxis().SetRangeUser( minX, maxXPlot  )
 	mainP4.SetLineColor(kBlack)
 	mainP4.Draw("same")
-	#gaus2.SetLineColor(kRed-4)
-	#gaus2.Draw("same")
+	if args.final:
+		color = 4
+		for imass in signalFuncs:
+			signalFuncs[imass].SetLineStyle(5)
+			signalFuncs[imass].SetLineColor(kRed-color)
+			signalFuncs[imass].Draw("same")
+			color+=1
 	mainP4.SetLineColor(kBlue-4)
 	mainP4.Draw("same")
-	if runData:
+	if (not args.bkgAsData) or (args.pseudoExperiment):
 		#qcdMCP4.SetLineColor( kMagenta )
 		#qcdMCP4.Draw("same")	
 		#if isinstance( inFileSignal, TFile):
@@ -359,16 +442,27 @@ def FitterCombination( inFileData, inFileBkg, inFileSignal, hist, scale, bkgFunc
 	pad2.cd()
 	pad2.SetGrid()
 	gStyle.SetOptStat(0)
-	hPull.GetYaxis().SetTitle("#frac{(Data - Fit)}{#sigma_{Data}}")
-	hPull.GetYaxis().SetLabelSize(0.08)
-	hPull.GetYaxis().SetTitleSize(0.09)
-	hPull.GetYaxis().SetTitleOffset(0.70)
+	hPull.GetYaxis().SetTitle("#frac{(Data - Fit)}{Unc.}")
+	hPull.GetXaxis().SetTitleSize(0.06)
+	hPull.GetYaxis().SetLabelSize(0.07)
+	hPull.GetYaxis().SetTitleSize(0.08)
+	hPull.GetYaxis().SetTitleOffset(0.80)
 	hPull.GetYaxis().CenterTitle()
 	hPull.SetMarkerStyle(7)
-	#hPull.SetMaximum(3)
+	hPull.SetMaximum(3.5)
+	hPull.SetMinimum(-3.5)
 	hPull.GetXaxis().SetRangeUser( minX, maxXPlot )
-	hPull.Sumw2()
 	hPull.Draw("e")
+	if args.final:
+		color=4
+		for imass in hSBPulls:
+			hSBPulls[imass].SetLineStyle(5)
+			hSBPulls[imass].SetLineColor(kRed-color)
+			hSBPulls[imass].SetFillStyle(3004)
+			hSBPulls[imass].SetFillColor(kRed-color)
+			hSBPulls[imass].GetXaxis().SetRangeUser( imass-50, imass+50)
+			hSBPulls[imass].Draw("same hist")
+			color+=1
 	line.Draw("same")
 	
 	pad3.cd()
@@ -385,13 +479,23 @@ def FitterCombination( inFileData, inFileBkg, inFileSignal, hist, scale, bkgFunc
 	hResidual.GetYaxis().SetTitleOffset(0.80)
 	hResidual.GetYaxis().CenterTitle()
 	hResidual.SetMarkerStyle(7)
-	hResidual.SetMaximum(0.59)
-	hResidual.SetMinimum(-0.59)
+	hResidual.SetMaximum(0.79)
+	hResidual.SetMinimum(-0.79)
 	hResidual.GetXaxis().SetRangeUser( minX, maxXPlot )
 	#hResidual.Sumw2()
 	hResidual.Draw("e")
+	if args.final:
+		color=4
+		for imass in hSBResiduals:
+			hSBResiduals[imass].SetLineStyle(5)
+			hSBResiduals[imass].SetLineColor(kRed-color)
+			hSBResiduals[imass].SetFillStyle(3004)
+			hSBResiduals[imass].SetFillColor(kRed-color)
+			hSBResiduals[imass].GetXaxis().SetRangeUser( imass-50, imass+50)
+			hSBResiduals[imass].Draw("same hist")
+			color+=1
 	line.Draw("same")
-	c3.SaveAs("Plots/"+hist.replace('ResolvedAnalysisPlots/','')+"_"+('MC' if args.bkgAsData else args.process)+"_"+args.version+"Fit"+bkgFunction[0][0].GetName()+"_ResolvedAnalysis_"+args.version+"."+args.extension)
+	c3.SaveAs("Plots/"+hist.replace('ResolvedAnalysisPlots/','')+"_"+('PseudoExperiment' if args.pseudoExperiment else ('MC' if args.bkgAsData else args.process))+"_"+args.version+"Fit"+bkgFunction[0][0].GetName()+"_"+( 'final_' if args.final else '' )+"ResolvedAnalysis_"+args.version+"."+args.extension)
 	del c3
 
 
@@ -407,13 +511,13 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 	bkgFuncParameters = rootFitter( bkgFile, hist+('QCD'+args.qcd+'All' if args.miniTree else ''), scale, bkgFunctions, minX, maxX, rebinX, True)
 	'''
 	bkgFuncParameters = rootFitter( dataFile, 
-			hist+( 'QCD'+args.qcd+'All' if args.bkgAsData else ('JetHT_Run2016' if args.miniTree else '')) , 
-			( scale*0.85 if args.bkgAsData else 1 ), 
-			bkgFunctions, 
-			minX, 
-			maxX, 
-			rebinX, 
-			( False if args.bkgAsData else True ))
+					hist+( 'QCD'+args.qcd+'All' if args.bkgAsData else ('JetHT_Run2016' if args.miniTree else '')) , 
+					( scale*QCDSF if args.bkgAsData else 1 ), 
+					bkgFunctions, 
+					minX, 
+					maxX, 
+					1, #rebinX, 
+					( False if args.bkgAsData else True ))
 
 	########## Storing parameters in RooRealVar
 	dictPar = OrderedDict()
@@ -421,10 +525,10 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		for par in range( 1, len( bkgFuncParameters[0][func] ) ):
 			tmpNamePar = func+'p'+str(par)
 			dictPar[ tmpNamePar ] = RooRealVar( tmpNamePar, 
-					tmpNamePar, 
-					bkgFuncParameters[0][func][par], 
-					-abs(bkgFuncParameters[0][func][par])*100, 
-					abs(bkgFuncParameters[0][func][par])*100)
+								tmpNamePar, 
+								bkgFuncParameters[0][func][par], 
+								-abs(bkgFuncParameters[0][func][par])*100, 
+								abs(bkgFuncParameters[0][func][par])*100)
 
 	############ Creating data plot from input in bkgFuncParameters
 	hData = TH1D("hData", "hData", len(bkgFuncParameters[2]) , minX, maxX)
@@ -445,14 +549,14 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		print '|----> Signal'
 		print '|----> tmp resolution', tmpResolution
 		SignalParameters = rootFitter( TFile.Open( inFileSignal.replace( str(args.mass), str(imass) ) ), 
-				hist+('RPVStopStopToJets_'+args.decay+'_M-'+str(imass) if args.miniTree else ''), 
-				scale, 
-				[ [ fitFunctions['gaus'][0], [ 1, imass, tmpResolution ] ] ], 
-				imass-(tmpResolution*2), # (100 if (imass < 800 ) else 200 ), 
-				imass+(tmpResolution*2), # (100 if (imass < 800 ) else 200 ), 
-				rebinX, 
-				True,
-				False )
+						hist+('RPVStopStopToJets_'+args.decay+'_M-'+str(imass) if args.miniTree else ''), 
+						scale, 
+						[ [ fitFunctions['gaus'][0], [ 1, imass, tmpResolution ] ] ], 
+						imass-(tmpResolution*2), # (100 if (imass < 800 ) else 200 ), 
+						imass+(tmpResolution*1.5), # (100 if (imass < 800 ) else 200 ), 
+						rebinX, 
+						True,
+						False )
 
 		print SignalParameters[0]['gaus'][2]
 		massWindow = int(SignalParameters[0]['gaus'][2])*2		### size of search
@@ -620,7 +724,7 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		datacard.close()
 		print '|----> Datacard created:', datacard
 	
-	if 'Limit' in args.process:
+	if ('Limit' in args.process ) and not args.bkgAsData :
 
 		print '|----> Creating acceptance plots'
 		print listMass, listAcceptance, listAccepError
@@ -637,7 +741,7 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		accXeffGraph.GetYaxis().SetTitle( 'Acceptance #times efficiency' )
 		accXeffGraph.GetXaxis().SetTitle( "Resonance mass [GeV]" )
 		accXeffGraph.GetYaxis().SetTitleOffset( 0.8 )
-		#accXeffGraph.GetYaxis().SetRangeUser( 0.0001, 0.01  )
+		accXeffGraph.GetYaxis().SetRangeUser( 0.0001, 0.1  )
 
 		#legend.Draw()
 		CMS_lumi.extraText = "Simulation Preliminary"
@@ -668,6 +772,8 @@ def FisherTest( dataFile, hist, bkgFunctions, minX, maxX, rebinX ):
 	"""docstring for FisherTest"""
 
 	if args.bkgAsData:
+		if args.pseudoExperiment:
+			dataFile = createPseudoExperiment( inFileBkg.Get( hist+('QCD'+args.qcd+'All' if args.miniTree else '') ), bkgParameters, sum(bkgpoints), minX, maxX, True )
 		fitParameters = rootFitter( dataFile, 
 				hist+( 'QCD'+args.qcd+'All' if args.miniTree else ''), 
 				scale, 
@@ -1109,6 +1215,7 @@ if __name__ == '__main__':
 	parser.add_argument('-e', '--extension', action='store', default='png', help='Extension of plots.' )
 	parser.add_argument('-C', '--cut', action='store', default='delta', help='cut, example: cutDEta' )
 	parser.add_argument('-F', '--func', action='store', default='P3', help='Function, example: P3, P4, P5' )
+	parser.add_argument('-P', '--pseudoExperiment', action='store_true', default=False, help='Run pseudoexperiment.' )
 
 	try:
 		args = parser.parse_args()
@@ -1126,10 +1233,11 @@ if __name__ == '__main__':
 	else: 
 		if '312' in args.decay: 
 			listMass = [ 200, 220, 240 ] + range( 300, 1050, 50 ) + range( 1100, 1200, 100 ) 
-			listMass.remove( 850 )
-		else: listMass = [ 200, 220, 240, 280, 300, 350 ] + range( 450, 900, 50 ) + [950, 1000, 1100 ] #, 1200, 1300] #+  range( 1100, 1600, 100 )
+			listMass.remove(850)
+		else: listMass = range( 200, 320, 20 ) + range( 350, 1050, 50 ) + ( [1100, 1200 ] if 'CSVv2L' in args.cut else [] )
 
 
+	QCDSF = 0.255
 	outputDir = "Plots/"
 	signalFilename = filePrefix+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p4_'+args.version+'.root'
 	signalFile =  TFile.Open(signalFilename)
@@ -1142,18 +1250,20 @@ if __name__ == '__main__':
 	###### Input parameters
 	histYaxis = "Average dijet mass [GeV]"
 	minFit = 160
-	maxFit = 1200
+	maxFit = 1260
 	CMS_lumi.lumi_13TeV = str( round( (args.lumi/1000.), 1 ) )+" fb^{-1}"
 	CMS_lumi.extraText = "Preliminary Simulation"
 
 	######## Fit Functions
 	fitFunctions = {}
 	fitFunctions['P5'] = [ TF1("P5", "[0]*TMath::Power(1-(x/13000.0),[1])/(TMath::Power(x/13000.0,[2]+([3]*TMath::Log(x/13000.))+([4]*TMath::Power(TMath::Log(x/13000.),2))))",0,2000), 
-			[ 1, 100, 2, 0.1, 0.01], 
+			#[ 1, 100, 2, 0.1, 0.01], 
+			[ 1, 100, 1, .1, 0.01], 
 			'(pow(1-@0/13000,@1)/pow(@0/13000,@2+@3*log(@0/13000)+@4*pow(log(@0/13000),2))' ]
 
 	fitFunctions['P4'] = [ TF1("P4", "[0]*TMath::Power(1-(x/13000.0),[1])/(TMath::Power(x/13000.0,[2]+([3]*TMath::Log(x/13000.))))",0,2000), 
-			[ 1, 100, 0.1, 0.01 ], #0, 100, 2, 0.1], 
+			#[ 1, 100, 2, 0.01 ], 
+			[ 3, 80, 1, 0.01],   ### btag
 			'pow(1-@0/13000,@1)/pow(@0/13000,@2+@3*log(@0/13000))' ]
 
 	fitFunctions['P3'] = [ TF1("P3", "[0]* TMath::Power(1-(x/13000.0),[1]) / (TMath::Power(x/13000.0,[2]))",0,2000), 
@@ -1174,13 +1284,13 @@ if __name__ == '__main__':
 
 	fitFunctions['atlas'] = [ 
 			TF1("atlas", "[0]* TMath::Power((1-TMath::Power(x/13000.0,0.33)),[1]) / TMath::Power(x/13000.0,[2])",0,2000), 
-			[ (1 if '2CSVvsL' in args.cut else 0.01 ), 100, 1 ], 
+			[ (0.01 if '2CSVvsL' in args.cut else 0.01 ), 100, 1 ], 
 			'(pow(1-pow(@0/13000,0.33),@1)/pow(@0/13000,@2))' ]
 
 	fitFunctions['Landau'] = [ 
-			TF1("landau", "[0]*TMath::Landau(-x,[1],[2])",0,2000), 
+			TF1("Landau", "[0]*TMath::Landau(-x,[1],[2])",0,2000), 
 			[ 10000, 1000, 1000  ], 
-			'landau(@0,@1,@2)' ]
+			'TMath::Landau(@0,@1,@2)' ]
 
 	fitFunctions['P1'] = [ TF1("P1", "[0] / (TMath::Power(x/13000.0,[1]))",0,2000), [ 0] ]
 	fitFunctions['gaus'] = [ TF1("gaus", "gaus", 0, 2000), [ ] ]
@@ -1188,14 +1298,14 @@ if __name__ == '__main__':
 
 
 	if 'Data' in args.process:
-		CMS_lumi.extraText = ('Simulation' if args.bkgAsData else '')+"Preliminary"
+		CMS_lumi.extraText = ('Simulation ' if args.bkgAsData or args.pseudoExperiment else '')+"Preliminary"
 		p = Process( target=FitterCombination, args=( ( bkgFile if args.bkgAsData else dataFile ), 
-			bkgFile, 
-			'', #bkgFile3, 
-			hist, 
-			scale, 
-			[fitFunctions[args.func]], 
-			minFit, maxFit, rebinX, ( False if args.bkgAsData else True )))
+				bkgFile, 
+				( signalFilename if args.final else ''), 
+				hist, 
+				scale, 
+				[fitFunctions[args.func]], 
+				minFit, maxFit, rebinX))
 
 	elif 'RPV' in args.process:
 		process = 'RPVSt'+str(args.mass)+'tojj'
@@ -1203,13 +1313,13 @@ if __name__ == '__main__':
 
 	elif 'Limit' in args.process:
 		p = Process( target=createCards, args=( ( bkgFile if args.bkgAsData else dataFile ),
-			bkgFile, 
-			signalFilename,
-			listMass,
-			hist, 
-			scale, 
-			[fitFunctions['P3']], 
-			minFit, maxFit, 10 ) )
+				bkgFile, 
+				signalFilename,
+				listMass,
+				hist, 
+				scale, 
+				[fitFunctions['P3']], 
+				minFit, maxFit, 10 ) )
 
 	elif 'Bias' in args.process:
 		p = Process( target=createCards, args=( ( bkgFile if args.bkgAsData else dataFile ), 

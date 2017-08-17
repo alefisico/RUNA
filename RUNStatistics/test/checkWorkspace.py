@@ -12,12 +12,12 @@ gROOT.SetBatch()
 
 def main():
 
-     inputFileWorkspace = TFile("Rootfiles/workspace_RPVStopStopToJets_UDD312_M-300_Resolved_delta_BiasTest_v08p0.root") 
-     #inputFileWorkspace = TFile("Rootfiles/workspace_RPVStopStopToJets_UDD312_M-300_Resolved_delta_2qgl_v02p1.root") 
+     #inputFileWorkspace = TFile("Rootfiles/workspace_RPVStopStopToJets_UDD312_M-300_Resolved_delta_BiasTest_v08p0.root") 
+     inputFileWorkspace = TFile("Rootfiles/workspace_RPVStopStopToJets_UDD312_M-200_Resolved_delta_v09p1.root") 
      #inputFileWorkspace = TFile("test.root") 
 
-     #workspace = inputFileWorkspace.Get("myWS")
-     workspace = inputFileWorkspace.Get("bkgWS")
+     workspace = inputFileWorkspace.Get("myWS")
+     #workspace = inputFileWorkspace.Get("bkgWS")
      workspace.Print()
 
      mjj = workspace.var("mass")
@@ -42,8 +42,8 @@ def main():
 #     data.Print()
      #signal.Print()
 
-#     data_TH1_fineBinning = data.createHistogram("data_TH1_fineBinning",mjj)    
-#     data_TH1_fineBinning.SetLineColor(1)
+     data_TH1_fineBinning = data.createHistogram("data_TH1_fineBinning",mjj)    
+     data_TH1_fineBinning.SetLineColor(1)
 #     signal_TH1_fineBinning = signal.createHistogram("signal_TH1_fineBinning",mjj)    
 #     signalUp_TH1_fineBinning = signalUp.createHistogram("signalUp_TH1_fineBinning",mjj)    
 #     signalUp_TH1_fineBinning.SetLineColor(kRed)
@@ -60,14 +60,14 @@ def main():
 
      canvas = TCanvas()
      #canvas.SetLogy()
-     xframe = workspace.var("mass").frame()
+     #xframe = workspace.var("mass").frame()
      #workspace.pdf("background").plotOn(xframe)
-     workspace.pdf("landau_pdf").plotOn(xframe)
+     #workspace.pdf("landau_pdf").plotOn(xframe)
      #workspace.pdf("signal").plotOn(xframe)
-     xframe.Draw()
+     #xframe.Draw()
 
      #data_TH1_fineBinning.Rebin(10)    
-     #data_TH1_fineBinning.Draw()    
+     data_TH1_fineBinning.Draw()    
      #signal_TH1_fineBinning.Rebin(10)
      #signal_TH1_fineBinning.Draw('')    
      #signalUp_TH1_fineBinning.Draw("hist same")    

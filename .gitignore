@@ -4,3 +4,4 @@ RUNAnalysis/test/supportFiles/*tar.gz
 RUNStatistics/test/*root 
 RUNAnalysis/test/supportFiles/*txt
 RUNStatistics/test/higgsCombine*
+RUNStatistics/test/*root

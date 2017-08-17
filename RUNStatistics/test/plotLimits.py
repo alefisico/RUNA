@@ -88,7 +88,7 @@ def plotLimits( listMasses  ):
 			XS = search( dictXS, 'RPVStopStopToJets_'+args.decay+'_M-'+str(mass) )
 			xs_theory.append( XS )
 
-			tmpFile, tmpTree, tmpEntries = getTree( "higgsCombineRPVStopStopToJets_"+args.decay+"_M-"+str(mass)+args.grooming+'_'+args.sys+'_'+args.version+'.'+args.method+".mH120.root", "limit" )
+			tmpFile, tmpTree, tmpEntries = getTree( "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(mass)+args.grooming+'_'+args.sys+'_'+args.version+'.'+args.method+".mH120.root", "limit" )
 			for i in xrange(tmpEntries):
 				tmpTree.GetEntry(i)
 				tmp = round( tmpTree.quantileExpected, 2)
@@ -259,11 +259,11 @@ def plotLimits( listMasses  ):
         #shadow_graph_xs_th.Draw("L")
         graph_xs_th.Draw("L")
 	#graph_xs_cms13TeV2015.Draw("L")
-	#graph_obs.Draw("LP")
+	if not args.addComparison: graph_obs.Draw("LP")
 
         #legend.AddEntry(graph_xs_th,"RPV #lambda_{312}^{''} (#tilde{t} #rightarrow qq) cross section","l")
         legend.AddEntry(graph_xs_th,"Top squark pair production #lambda_{"+("312" if '312' in args.decay else '323')+"}^{''} (#tilde{t} #rightarrow "+("qq)" if '312' in args.decay else 'bq)' ),"l")
-	#legend.AddEntry(graph_obs,"Observed limit","lp")
+	if not args.addComparison: legend.AddEntry(graph_obs,"Observed limit","lp")
 	legend.AddEntry(graph_exp,"Expected limit","lp")
 	legend.AddEntry(graph_exp_1sigma,"Expected #pm 1#sigma","F")
 	legend.AddEntry(graph_exp_2sigma,"Expected #pm 2#sigma","F")
@@ -329,7 +329,7 @@ if __name__ == '__main__':
 	lumi = args.lumi/1000
 	#if 'gaus' in args.process: listMass = range( 80, 360, 10 )
 	if 'Resolved' in args.boosted: 
-		args.grooming = ''
+		args.grooming = '_Resolved'
 		if '312' in args.decay:  
 			listMass = [ 200, 220, 240 ] + range( 300, 1050, 50 ) + range( 1100, 1200, 100 ) 
 			listMass.remove( 850 )

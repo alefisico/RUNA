@@ -25,6 +25,7 @@
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHERunInfoProduct.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
@@ -41,6 +42,7 @@
 
 using namespace edm;
 using namespace std;
+using namespace reco;
 
 //
 // constants, enums and typedefs
@@ -78,6 +80,7 @@ class RUNResolvedAnalysis : public EDAnalyzer {
 		map< string, double > cutmap;
 
 		bool isData;
+		bool isSignal;
 		bool LHEcont;
 		bool mkTree;
 		TString pairingMethod;
@@ -105,6 +108,14 @@ class RUNResolvedAnalysis : public EDAnalyzer {
 		vector<float> *jetsCSVv2 = new std::vector<float>();
 		vector<float> *jetsCSVv2SF = new std::vector<float>();
 		vector<float> *jetsCMVAv2 = new std::vector<float>();
+		vector<float> *jetsGenPt = new std::vector<float>();
+		vector<float> *jetsGenEta = new std::vector<float>();
+		vector<float> *jetsGenPhi = new std::vector<float>();
+		vector<float> *jetsGenE = new std::vector<float>();
+		vector<float> *jetsPartPt = new std::vector<float>();
+		vector<float> *jetsPartEta = new std::vector<float>();
+		vector<float> *jetsPartPhi = new std::vector<float>();
+		vector<float> *jetsPartE = new std::vector<float>();
 		vector<float> *muonsPt = new std::vector<float>();
 		vector<float> *elesPt  = new std::vector<float>();
 		vector<float> *listChi2 = new std::vector<float>();
@@ -145,6 +156,7 @@ class RUNResolvedAnalysis : public EDAnalyzer {
 		EDGetTokenT<unsigned int> run_;
 		EDGetTokenT<ULong64_t> event_;
 		EDGetTokenT<GenEventInfoProduct> generator_;
+		EDGetTokenT<GenParticleCollection> genParticles_;
 		EDGetTokenT<LHEEventProduct> extLHEProducer_;
 
 		// Trigger
@@ -206,6 +218,7 @@ RUNResolvedAnalysis::RUNResolvedAnalysis(const ParameterSet& iConfig):
 	run_(consumes<unsigned int>(iConfig.getParameter<InputTag>("Run"))),
 	event_(consumes<ULong64_t>(iConfig.getParameter<InputTag>("Event"))),
 	generator_(consumes<GenEventInfoProduct>(iConfig.getParameter<InputTag>("generator"))),
+	genParticles_(consumes<GenParticleCollection>(iConfig.getParameter<InputTag>("genParticles"))),
 	extLHEProducer_(consumes<LHEEventProduct>(iConfig.getParameter<InputTag>("extLHEProducer"))),
 	// Trigger
 	triggerPrescale_(consumes<vector<int>>(iConfig.getParameter<InputTag>("triggerPrescale"))),
@@ -239,6 +252,7 @@ RUNResolvedAnalysis::RUNResolvedAnalysis(const ParameterSet& iConfig):
 	cutDeltaEtaDijetSyst	= iConfig.getParameter<double>("cutDeltaEtaDijetSyst");
 	triggerPass 	= iConfig.getParameter<vector<string>>("triggerPass");
 	isData 		= iConfig.getParameter<bool>("isData");
+	isSignal 	= iConfig.getParameter<bool>("isSignal");
 	LHEcont		= iConfig.getParameter<bool>("LHEcont");
 	mkTree 		= iConfig.getParameter<bool>("mkTree");
 	pairingMethod	= iConfig.getParameter<string>("pairingMethod");
@@ -411,6 +425,9 @@ void RUNResolvedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup)
 	Handle<vector<float> > eleLoose;
 	iEvent.getByToken(eleLoose_, eleLoose);
 
+	Handle< GenParticleCollection > genParticles;
+	iEvent.getByToken( genParticles_, genParticles );
+
 	////// Muon veto
 	if ( muonPt->size() > 0 ) {
 		for (size_t m = 0; m < muonPt->size(); m++) {
@@ -488,17 +505,36 @@ void RUNResolvedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup)
 	double rawHT = 0;
 	HT = 0;
 
-	/////// Genjets
+	/////// Gen Info for signal
 	vector< TLorentzVector > genJets;
-	for (size_t i = 0; i < jetGenPt->size(); i++) {
-		if( (*jetGenPt)[i] < 30 ) continue;
-		TLorentzVector tmpGenJet;
-		tmpGenJet.SetPtEtaPhiE( (*jetGenPt)[i], (*jetGenEta)[i], (*jetGenPhi)[i], (*jetGenE)[i] );
-		genJets.push_back( tmpGenJet );
+	vector< TLorentzVector > genPartStop1;
+	vector< TLorentzVector > genPartStop2;
+	if ( isSignal ) {
+		/////// Genjets
+		for (size_t i = 0; i < jetGenPt->size(); i++) {
+			if( (*jetGenPt)[i] < 30 ) continue;
+			TLorentzVector tmpGenJet;
+			tmpGenJet.SetPtEtaPhiE( (*jetGenPt)[i], (*jetGenEta)[i], (*jetGenPhi)[i], (*jetGenE)[i] );
+			genJets.push_back( tmpGenJet );
+		}
+
+		/////// Gen Info
+		for( const auto & p : *genParticles ) {  
+			const reco::Candidate * mother = p.mother();
+			if( p.status() == 23 ) {
+				TLorentzVector tmpGenPart;
+				tmpGenPart.SetPtEtaPhiE( p.pt(), p.eta(), p.phi(), p.energy() );
+				if(mother->pdgId() == 1000002) {
+					genPartStop1.push_back( tmpGenPart );
+				       	//LogWarning("pdgId") << p.status() << " " << p.pdgId() << " " << p.pt();
+				}
+				if(mother->pdgId() == -1000002) genPartStop2.push_back( tmpGenPart );
+			}
+		}
 	}
+	//LogWarning("genPart") << genPartStop1.size() << " " << genPartStop2.size();
 
 	/////// Preselect jets
-	double minDeltaRGenJet = 99999;
 	for (size_t i = 0; i < jetPt->size(); i++) {
 
 		if( TMath::Abs( (*jetEta)[i] ) > 2.4 ) continue;
@@ -554,17 +590,26 @@ void RUNResolvedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup)
 			histos1D_[ "numConst" ]->Fill( (*chargedMultiplicity)[i] + (*neutralMultiplicity)[i], totalWeight );
 			histos1D_[ "chargedMultiplicity" ]->Fill( (*chargedMultiplicity)[i] * jec, totalWeight );
 
+			int ind = 0;
+			int finalInd = 0;
 			TLorentzVector genJetP4;
-			for ( auto genJet : genJets ) {
-				double tmpDeltaR = genJet.DeltaR( corrJet );
-				//LogWarning("genJets") << genJet.Pt() << " " << tmpDeltaR; 
-				if ( tmpDeltaR < minDeltaRGenJet ) {
-					//LogWarning("mingenJets") << genJet.Pt() << " " << tmpDeltaR; 
-					minDeltaRGenJet = tmpDeltaR;
-					genJetP4 = genJet;
+			double minDeltaRGenJet = 99999;
+			if ( isSignal && ( genJets.size() > 0 ) ) {
+				for ( auto genJet : genJets ) {
+					double tmpDeltaR = genJet.DeltaR( corrJet );
+					//LogWarning("genJets") << genJet.Pt() << " " << tmpDeltaR; 
+					if ( tmpDeltaR < minDeltaRGenJet ) {
+						//LogWarning("mingenJets") << genJet.Pt() << " " << tmpDeltaR; 
+						minDeltaRGenJet = tmpDeltaR;
+						genJetP4 = genJet;
+						finalInd = ind;
+					}
+					ind++;
 				}
+				//LogWarning("eraseJets") << ind << " " << finalInd << " " << genJets.size();
+				genJets.erase( genJets.begin()+finalInd);
+				//LogWarning("choosengenJets") << corrJet.Pt() << " " << genJetP4.Pt(); 
 			}
-			//LogWarning("choosengenJets") << corrJet.Pt() << " " << genJetP4.Pt(); 
 
 			myJet tmpJET;
 			tmpJET.p4 = corrJet;
@@ -639,6 +684,7 @@ void RUNResolvedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup)
 				j3 = tmpJets[2];
 				j4 = tmpJets[3];
 
+				/// matching
 				mass1 = ( j1.p4 + j2.p4 ).M();
 				mass2 = ( j3.p4 + j4.p4 ).M();
 				massAve = ( mass1 + mass2 ) / 2;
@@ -715,6 +761,22 @@ void RUNResolvedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup)
 					jet2Pt = JETS[1].p4.Pt();
 					jet3Pt = JETS[2].p4.Pt();
 					jet4Pt = JETS[3].p4.Pt();
+					jetsGenPt->push_back( j1.genp4.Pt() );
+					jetsGenPt->push_back( j2.genp4.Pt() );
+					jetsGenPt->push_back( j3.genp4.Pt() );
+					jetsGenPt->push_back( j4.genp4.Pt() );
+					jetsGenEta->push_back( j1.genp4.Eta() );
+					jetsGenEta->push_back( j2.genp4.Eta() );
+					jetsGenEta->push_back( j3.genp4.Eta() );
+					jetsGenEta->push_back( j4.genp4.Eta() );
+					jetsGenPhi->push_back( j1.genp4.Phi() );
+					jetsGenPhi->push_back( j2.genp4.Phi() );
+					jetsGenPhi->push_back( j3.genp4.Phi() );
+					jetsGenPhi->push_back( j4.genp4.Phi() );
+					jetsGenE->push_back( j1.genp4.E() );
+					jetsGenE->push_back( j2.genp4.E() );
+					jetsGenE->push_back( j3.genp4.E() );
+					jetsGenE->push_back( j4.genp4.E() );
 					
 					for (unsigned int ijet = 4; ijet < JETS.size(); ijet++) {
 						jetsPt->push_back( JETS[ ijet ].p4.Pt() );
@@ -725,6 +787,29 @@ void RUNResolvedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup)
 						jetsCSVv2->push_back( JETS[ ijet ].btagCSVv2 );
 						if ( !isData ) jetsCSVv2SF->push_back( vectorBtagSF[ijet-4] );
 						//jetsCMVAv2->push_back( JETS[ ijet ].btagCMVAv2 );
+						jetsGenPt->push_back( JETS[ ijet ].genp4.Pt() );
+						jetsGenEta->push_back( JETS[ ijet ].genp4.Eta() );
+						jetsGenPhi->push_back( JETS[ ijet ].genp4.Phi() );
+						jetsGenE->push_back( JETS[ ijet ].genp4.E() );
+					}
+
+					if ( isSignal ) {
+						jetsPartPt->push_back( genPartStop1[0].Pt() );
+						jetsPartPt->push_back( genPartStop1[1].Pt() );
+						jetsPartPt->push_back( genPartStop2[0].Pt() );
+						jetsPartPt->push_back( genPartStop2[1].Pt() );
+						jetsPartEta->push_back( genPartStop1[0].Eta() );
+						jetsPartEta->push_back( genPartStop1[1].Eta() );
+						jetsPartEta->push_back( genPartStop2[0].Eta() );
+						jetsPartEta->push_back( genPartStop2[1].Eta() );
+						jetsPartPhi->push_back( genPartStop1[0].Phi() );
+						jetsPartPhi->push_back( genPartStop1[1].Phi() );
+						jetsPartPhi->push_back( genPartStop2[0].Phi() );
+						jetsPartPhi->push_back( genPartStop2[1].Phi() );
+						jetsPartE->push_back( genPartStop1[0].E() );
+						jetsPartE->push_back( genPartStop1[1].E() );
+						jetsPartE->push_back( genPartStop2[0].E() );
+						jetsPartE->push_back( genPartStop2[1].E() );
 					}
 
 					RUNAtree->Fill();
@@ -880,6 +965,14 @@ void RUNResolvedAnalysis::beginJob() {
 		RUNAtree->Branch( "jet2Pt", &jet2Pt, "jet2Pt/F" );
 		RUNAtree->Branch( "jet3Pt", &jet3Pt, "jet3Pt/F" );
 		RUNAtree->Branch( "jet4Pt", &jet4Pt, "jet4Pt/F" );
+		RUNAtree->Branch( "jetsGenPt", "vector<float>", &jetsGenPt);
+		RUNAtree->Branch( "jetsGenEta", "vector<float>", &jetsGenEta);
+		RUNAtree->Branch( "jetsGenPhi", "vector<float>", &jetsGenPhi);
+		RUNAtree->Branch( "jetsGenE", "vector<float>", &jetsGenE);
+		RUNAtree->Branch( "jetsPartPt", "vector<float>", &jetsPartPt);
+		RUNAtree->Branch( "jetsPartEta", "vector<float>", &jetsPartEta);
+		RUNAtree->Branch( "jetsPartPhi", "vector<float>", &jetsPartPhi);
+		RUNAtree->Branch( "jetsPartE", "vector<float>", &jetsPartE);
 		RUNAtree->Branch( "muonsPt", "vector<float>", &muonsPt);
 		RUNAtree->Branch( "numMuon", &numMuon, "numMuon/I" );
 		RUNAtree->Branch( "elesPt", "vector<float>", &elesPt);
@@ -1053,6 +1146,7 @@ void RUNResolvedAnalysis::fillDescriptions(edm::ConfigurationDescriptions & desc
 	desc.add<double>("cutDelta", 180);
 	desc.add<double>("cutDeltaEtaDijetSyst", .75);
 	desc.add<bool>("isData", false);
+	desc.add<bool>("isSignal", false);
 	desc.add<bool>("LHEcont", false);
 	desc.add<bool>("mkTree", false);
 	desc.add<string>("pairingMethod", "deltaR");
@@ -1070,6 +1164,7 @@ void RUNResolvedAnalysis::fillDescriptions(edm::ConfigurationDescriptions & desc
 	desc.add<InputTag>("Event", 	InputTag("eventInfo:evtInfoEventNumber"));
 	desc.add<InputTag>("generator", 	InputTag("generator"));
 	desc.add<InputTag>("extLHEProducer", 	InputTag("externalLHEProducer"));
+	desc.add<InputTag>("genParticles", 	InputTag("filteredPrunedGenParticles"));
 	desc.add<InputTag>("bunchCross", 	InputTag("eventUserData:puBX"));
 	desc.add<InputTag>("rho", 	InputTag("vertexInfo:rho"));
 	desc.add<InputTag>("puNumInt", 	InputTag("eventUserData:puNInt"));

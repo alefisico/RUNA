@@ -41,14 +41,17 @@ def calcROCs( BkgSamples, SigSamples, treename, varList, window, cutsList ):
 	outputFile = TFile( 'test.root', "RECREATE" )
 	
 	allHistos = {}
+	allSumw2 = {}
 	for var in varList: 
 		allHistos[ var[0]+"_Sig" ] = TH1F( var[0]+"_Sig", var[0]+"_Sig", var[1], var[2], var[3] )
+		allHistos[ var[0]+"_Sig" ].Sumw2()
+		allSumw2[ var[0]+"_Sig" ] = 0
 		for bkgSample in BkgSamples: 
 			allHistos[ var[0]+'_'+bkgSample ] = TH1F( var[0]+"_"+bkgSample, var[0]+"_"+bkgSample, var[1], var[2], var[3] )
+			allHistos[ var[0]+'_'+bkgSample ].Sumw2()
+			allSumw2[ var[0]+"_"+bkgSample  ] = 0
 			allHistos[ var[0]+"_"+bkgSample+"_BkgROC"] = TH1F( var[0]+"_"+bkgSample+"_BkgROC", var[0]+"_"+bkgSample+"_BkgROC; "+var[0], var[1], var[2], var[3] )
 			allHistos[ var[0]+"_"+bkgSample+"_SigROC"] = TH1F( var[0]+"_"+bkgSample+"_SigROC", var[0]+"_"+bkgSample+"_SigROC; "+var[0], var[1], var[2], var[3] )
-	
-	for h in allHistos: allHistos[h].Sumw2()
 
 	massAve = 'prunedMassAve' if 'Boosted' in args.boosted else 'massAve'
 	SF = TCut( 'lumiWeight * puWeight * '+str(args.lumi) )
@@ -69,6 +72,7 @@ def calcROCs( BkgSamples, SigSamples, treename, varList, window, cutsList ):
 		print '---- processing... ', sigVar[0]
 
 
+		#allSumw2[ sigVar[0]+"_Sig" ] += sigSF*sigSF
 
 
 	allROCs = {}
@@ -99,6 +103,7 @@ def calcROCs( BkgSamples, SigSamples, treename, varList, window, cutsList ):
 			SigROCLowEdge = []	
 			firstBin =  SigHisto.FindFirstBinAbove( 0, 1 )
 			lastBin =  SigHisto.FindLastBinAbove( 0, 1 )+1 
+			#print 'Bfore', allSumw2[ bkgVar[0]+"_"+bkgSample ], TMath.Sqrt( allSumw2[ bkgVar[0]+"_"+bkgSample ] )
 			#errorVal = Double(0)
 			#ingral = BkgHisto.IntegralAndError( 0, 1, errorVal )
 			#print '0'*10, ingral, errorVal
@@ -116,6 +121,7 @@ def calcROCs( BkgSamples, SigSamples, treename, varList, window, cutsList ):
 					#print '1'*10, ingral, errorVal
 					#print BkgHisto.GetSumOfWeights()
 					#for i in BkgHisto.GetSumw2(): print i
+					#print allSumw2[ var[0]+"_"+bkgSample ], TMath.Sqrt( allSumw2[ var[0]+"_"+bkgSample ] )
 
 					try: effSig = SigHisto.Integral( firstBin, ibin ) / SigTotal 
 					except ZeroDivisionError: effSig = 0
@@ -340,7 +346,7 @@ def calcOptimizeDelta( BkgSamples, SigSamples, nameInRoot, massList ):
 	"""docstring for calcOptimizeDelta"""
 
 	QCDHisto = BkgSamples.Get( nameInRoot+'_QCD'+args.qcd+'All' )
-	QCDHisto.Scale( 36000 )
+	QCDHisto.Scale( QCDSF* args.lumi )
 
 	signalHistos = OrderedDict()
 	SOsqrtSB = []
@@ -349,7 +355,7 @@ def calcOptimizeDelta( BkgSamples, SigSamples, nameInRoot, massList ):
 		NAME = 'RPVStopStopToJets_'+args.decay+'_M-'+str( xmass )
 		signalInputFile = TFile( SigSamples.replace( str(args.mass), str(xmass) ) )
 		signalHistos[ xmass ] = signalInputFile.Get( nameInRoot+'_'+NAME )
-		signalHistos[ xmass ].Scale( 36000 )
+		signalHistos[ xmass ].Scale( args.lumi )
 		minMass = signalHistos[ xmass ].GetXaxis().FindBin( xmass-50 )
 		maxMass = signalHistos[ xmass ].GetXaxis().FindBin( xmass+50 )
 		bkgError = Double(0)
@@ -357,19 +363,38 @@ def calcOptimizeDelta( BkgSamples, SigSamples, nameInRoot, massList ):
 		sigError = Double(0)
 		sigIntegral = signalHistos[ xmass ].IntegralAndError( minMass, maxMass, sigError )
 
-		sqrtSigBkg = sigIntegral / TMath.Sqrt( bkgIntegral + sigIntegral )
-		sigBkgErr = TMath.Sqrt( (bkgError*bkgError) + (sigError*sigError) ) / (2*TMath.Sqrt( bkgIntegral + sigIntegral )) 
-		totalErrSOsqrtSB = TMath.Sqrt( TMath.Power( (sigError/sigIntegral), 2 ) + TMath.Power( (sigBkgErr/TMath.Sqrt( bkgIntegral + sigIntegral )), 2) )
+		sqrtSigBkg = sigIntegral / TMath.Sqrt( bkgIntegral )
+		#sigBkgErr = TMath.Sqrt( (bkgError*bkgError) + (sigError*sigError) ) / (2*TMath.Sqrt( bkgIntegral + sigIntegral )) 
+		#totalErrSOsqrtSB = TMath.Sqrt( TMath.Power( (sigError/sigIntegral), 2 ) + TMath.Power( (sigBkgErr/TMath.Sqrt( bkgIntegral + sigIntegral )), 2) )
+		totalErrSOsqrtSB = sqrtSigBkg * TMath.Sqrt( TMath.Power( sigError/sigIntegral, 2 ) + (0.25 * TMath.Power( bkgError,2 )/bkgIntegral ) )  ### Error in s/sqrt(B)
+		#print minMass, maxMass, bkgIntegral, bkgError, sigIntegral, sigError, totalErrSOsqrtSB
+
 		SOsqrtSB.append( sqrtSigBkg )
 		SOsqrtSBError.append( totalErrSOsqrtSB )
 
-	graphSOsqrtSB = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', SOsqrtSB ), array('d', [0]*len(massList) ), array('d', SOsqrtSBError) )
+	#graphSOsqrtSB = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', SOsqrtSB ), array('d', [0]*len(massList) ), array('d', SOsqrtSBError) )
+	graphSOsqrtSB = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', SOsqrtSB ), array('d', [0]*len(massList) ), array('d', [0]*len(SOsqrtSB) ) )
 	return graphSOsqrtSB
 	
 def optimizeDelta( BkgSamples, SigSamples, massList ):
 	"""docstring for optimizeDelta"""
-
+	
+	outputName = 'Plots/massAve_Btag_DeltaOptimization'+args.version+'.'+args.ext
 	graphs = OrderedDict()
+	'''
+	graphs[ 'with delta' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta', massList )
+	graphs[ 'without delta' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_deltaEta', massList )
+	'''
+	'''
+	graphs[ 'delta150' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta150', massList )
+	graphs[ 'delta200' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta200', massList )
+	graphs[ 'delta250' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta250', massList )
+	graphs[ 'delta300' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta300', massList )
+	graphs[ 'delta350' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta350', massList )
+	graphs[ 'delta400' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta400', massList )
+	graphs[ 'delta450' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta450', massList )
+	graphs[ 'delta500' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta500', massList )
+	'''
 	graphs[ 'Nominal' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta', massList )
 	graphs[ '+ 1CSVL' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta_1CSVv2L', massList )
 	graphs[ '+ 2CSVL' ] = calcOptimizeDelta( BkgSamples, SigSamples, 'massAve_delta_2CSVv2L', massList )
@@ -389,7 +414,7 @@ def optimizeDelta( BkgSamples, SigSamples, massList ):
 	can = TCanvas('c1', 'c1',  10, 10, 1000, 750 )
 	can.SetGrid()
 
-	legend=TLegend(0.15,0.15,0.45,0.45)
+	legend=TLegend(0.70,0.45,0.95,0.90)
 	legend.SetFillStyle(0)
 	legend.SetTextSize(0.03)
 	dummy=1
@@ -405,9 +430,9 @@ def optimizeDelta( BkgSamples, SigSamples, massList ):
 	multiGraph.Draw("ALP")
 	multiGraph.GetYaxis().SetTitleOffset(0.95)
 	multiGraph.GetXaxis().SetTitle('Average dijet mass [GeV]')
-	multiGraph.GetYaxis().SetTitle('S/#sqrt{S+B}')
+	multiGraph.GetYaxis().SetTitle('S/#sqrt{B}')
 	legend.Draw()
-	can.SaveAs('Plots/massAve_delta_Btag_DeltaOptimization'+args.version+'.'+args.ext)
+	can.SaveAs(outputName)
 	del can
 
 #----------------------------------------------------------------------
@@ -614,7 +639,7 @@ if __name__ == '__main__':
 	parser.add_argument( '-p', '--process', action='store',  dest='process', default='Simple', help='Process: simple or TMVA' )
 	parser.add_argument( '-b', '--boosted', action='store',  dest='boosted', default='Boosted', help='Boosted or Resolved version' )
 	parser.add_argument( '-e', '--eff', action='store', dest='effS', type=int, default=0, help='Mass of the Stop' )
-	parser.add_argument( '-l', '--lumi', action='store', dest='lumi', type=int, default=2643, help='Mass of the Stop' )
+	parser.add_argument( '-l', '--lumi', action='store', dest='lumi', type=int, default=35870, help='Mass of the Stop' )
 	parser.add_argument( '-E', '--extension', action='store', dest='ext', default='png', help='Extension of plots.' )
 	parser.add_argument( '-B', '--batchSys', action='store',  dest='batchSys', type=bool, default=False, help='BatchSys: False (lxplus), True hexfarm.' )
 	parser.add_argument( '-v', '--version', action='store', default='v01', help='Version: v01, v02.' )
@@ -629,6 +654,7 @@ if __name__ == '__main__':
 
 	if args.batchSys: folder = '/cms/gomez/archiveEOS/Archive/v8020/Analysis/'+args.version+'/'
 	else: folder = 'Rootfiles/'
+	QCDSF = ( 0.24 if 'Resolved' in args.boosted else ( 1 if 'Puppi' in args.grooming else 0.366 ) )  ### v09
 
 	bkgSamples = OrderedDict()
 	bkgSamples[ 'QCD'+args.qcd+'All' ] = [ folder+'/RUNAnalysis_QCD'+args.qcd+'All_80X_V2p4_'+args.version+'.root', kBlue-4 ]
@@ -698,7 +724,7 @@ if __name__ == '__main__':
 	elif 'delta' in args.process:
 		optimizeDelta( TFile( folder+'/RUNMiniResolvedAnalysis_QCD'+args.qcd+'All_Moriond17_80X_V2p4_'+args.version+'.root' ),
 			folder+'/RUNMiniResolvedAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p4_'+args.version+'.root',
-			( [ 240, 350, 450, 550, 650, 750, 850, 950] if '312' in args.decay else [280, 500, 600, 700] ) ) 
+			[ 200, 240, 300, 400, 500, 600, 700, 800, 900] ) 
 
 	elif 'TMVA' in args.process:
 		variables = [ x[1] for x in var if ( args.boosted in x[0] ) ]
