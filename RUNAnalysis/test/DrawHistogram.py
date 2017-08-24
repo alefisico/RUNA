@@ -449,11 +449,11 @@ def plotCutFlow( signalFiles, bkgFiles, listOfCuts, name, xmax ):
 	dictCF = OrderedDict()
 	dictTotalBkgCF = OrderedDict()
 	if 'Resolved' in args.boosted: 
-		dictCF[(2 if 'Boosted' in args.boosted else 1)] = ''
-		dictCF[3] = ''
+		dictCF[2] = ''
+		#dictCF[3] = ''
 		dictCF[4] = ''
-		dictTotalBkgCF[(2 if 'Boosted' in args.boosted else 1)] = 0
-		dictTotalBkgCF[3] = 0
+		dictTotalBkgCF[2] = 0
+		#dictTotalBkgCF[3] = 0
 		dictTotalBkgCF[4] = 0
 	for icut in listOfCuts: 
 		dictCF[icut] = ''
@@ -466,7 +466,7 @@ def plotCutFlow( signalFiles, bkgFiles, listOfCuts, name, xmax ):
 			#preCF.Scale( signalFiles[ iSignal ][1] )
 			if 'Resolved' in args.boosted: 
 				signalTotalNumber = preCF.GetBinContent(1)
-				for i in ( [2,3,4] if 'Boosted' in args.boosted else [ 1, 3, 4 ]):
+				for i in ( [2,3,4] if 'Boosted' in args.boosted else [ 2, 4 ]):
 					signalEventsPerBin = preCF.GetBinContent(i)
 					signalPercentage = round( signalEventsPerBin / signalTotalNumber, 2 )*100
 					signalCF = ' & $'+str( round(signalEventsPerBin,2) )+' \pm '+ str( round(TMath.Sqrt(signalEventsPerBin),2) )+'$ & $'+str(signalPercentage)+'$ '
@@ -474,12 +474,14 @@ def plotCutFlow( signalFiles, bkgFiles, listOfCuts, name, xmax ):
 					dictCF[ i ] = dictCF[ i ] + signalCF
  
 			for icut in listOfCuts:
-				miniFile = TFile( 'Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(iSignal)+'_Moriond17_80X_V2p4_'+args.version+'p2.root' )
+				miniFile = TFile( 'Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(iSignal)+'_Moriond17_80X_V2p4_'+args.version+'p1.root' )
 				histos[ iSignal ] = miniFile.Get(name+'_'+icut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(iSignal))
 				if signalFiles[ iSignal ][1] != 1: histos[ iSignal ].Scale( signalFiles[ iSignal ][1] ) 
 				if ('Boosted' in args.boosted) and (icut == listOfCuts[0]): signalTotalNumber = histos[ iSignal ].Integral()
-				signalIntErr = Double(0)
-				signalInt =  histos[ iSignal ].IntegralAndError( 0, xmax, signalIntErr )
+				#signalIntErr = Double(0)
+				#signalInt =  histos[ iSignal ].IntegralAndError( 0, xmax, signalIntErr )
+				signalInt = histos[ iSignal ].GetEntries()
+				signalIntErr = TMath.Sqrt( signalInt )
 				signalPercentage = round( signalInt / signalTotalNumber, 2 )*100
 				signalCF = '& $'+str( round(signalInt,2) )+' \pm '+str( round(signalIntErr,2) )+'$ & $'+str(signalPercentage)+'$ '
 				line = line + signalCF
@@ -493,7 +495,7 @@ def plotCutFlow( signalFiles, bkgFiles, listOfCuts, name, xmax ):
 			#preCF.Scale( bkgFiles[ iBkg ][1] )
 			if 'Resolved' in args.boosted: 
 				bkgTotalNumber = preCF.GetBinContent(1)
-				for i in ( [2,3,4] if 'Boosted' in args.boosted else [ 1, 3, 4 ]):
+				for i in ( [2,3,4] if 'Boosted' in args.boosted else [ 2, 4 ]):
 					bkgEventsPerBin = preCF.GetBinContent(i)
 					bkgPercentage = ( bkgEventsPerBin / bkgTotalNumber)*100
 					bkgCF = ' & $'+str( round(bkgEventsPerBin,2) )+' \pm '+ str( round(TMath.Sqrt(bkgEventsPerBin),2) )+'$ & $'+str(round(bkgPercentage,2))+'$ '
@@ -502,12 +504,15 @@ def plotCutFlow( signalFiles, bkgFiles, listOfCuts, name, xmax ):
 					dictCF[ i ] = dictCF[ i ] + bkgCF
 
 			for icut in listOfCuts:
-				miniFile = TFile( 'Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_'+iBkg+'_Moriond17_80X_V2p4_'+args.version+'p2.root' )
+				miniFile = TFile( 'Rootfiles/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_'+iBkg+'_Moriond17_80X_V2p4_'+args.version+'p1.root' )
 				histos[ iBkg ] = miniFile.Get(name+'_'+icut+'_'+iBkg)
-				if bkgFiles[ iBkg ][1] != 1: histos[ iBkg ].Scale( bkgFiles[ iBkg ][1] ) 
-				if ('Boosted' in args.boosted) and  (icut == listOfCuts[0]): bkgTotalNumber = histos[ iBkg ].Integral()
-				bkgIntErr = Double(0)
-				bkgInt =  histos[ iBkg ].IntegralAndError( 0, xmax, bkgIntErr )
+				#if bkgFiles[ iBkg ][1] != 1: histos[ iBkg ].Scale( bkgFiles[ iBkg ][1] ) 
+				#if ('Boosted' in args.boosted) and  (icut == listOfCuts[0]): bkgTotalNumber = histos[ iBkg ].Integral()
+				#bkgIntErr = Double(0)
+				#bkgInt =  histos[ iBkg ].IntegralAndError( 0, xmax, bkgIntErr )
+				bkgInt = histos[ iBkg ].GetEntries()
+				bkgIntErr = TMath.Sqrt( bkgInt )
+				#bkgInt =  histos[ iBkg ].IntegralAndError( 0, xmax, bkgIntErr )
 				#print '*'*20, iBkg, icut, bkgInt, histos[iBkg].Integral()
 				#if 'cutBestPair' in icut: bkgTotalNumber = bkgInt 
 				bkgPercentage = ( bkgInt / bkgTotalNumber )*100
@@ -517,7 +522,7 @@ def plotCutFlow( signalFiles, bkgFiles, listOfCuts, name, xmax ):
 				dictTotalBkgCF[ icut ] +=  bkgInt
 			print line 
 		
-	totalBkg = dictTotalBkgCF[('preSel' if 'Boosted' in args.boosted else 1 )]
+	totalBkg = dictTotalBkgCF[('preSel' if 'Boosted' in args.boosted else 2 )]
 	for j in dictTotalBkgCF:
 		bkgTotalPercentage = (dictTotalBkgCF[j]/totalBkg)*100
 		bkgCF = ' & $'+str( round(dictTotalBkgCF[j],2) )+' \pm '+ str( round(TMath.Sqrt(dictTotalBkgCF[j]),2) )+'$ & $'+str(round(bkgTotalPercentage,2))+'$ '
@@ -1237,6 +1242,7 @@ if __name__ == '__main__':
 		signalFiles[ args.mass ] = [ TFile.Open(folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = '+str(args.mass)+' GeV', kRed]
 		#signalFiles[ args.mass ] = [ TFile.Open('~/mySpace/archiveEOS/Archive/v7414/RUNAnalysis_RPVSt350tojj_13TeV_pythia8RunIISpring15MiniAODv2-74X_Asympt25ns_v09_v01.root'), args.lumi, 'M_{#tilde{t}} = '+str(args.mass)+' GeV', kRed]
 		if ( 'Norm' in args.process ) or ( 'DATA' in args.process ) or ( 'CF' in args.process ): 
+			signalFiles[ 500 ] = [ TFile.Open(folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(500)+'_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = '+str(500)+' GeV', kRed]
 			otherMass = ( 180 if args.boosted == 'Boosted' else 700 )
 			signalFiles[ otherMass ] = [ TFile.Open(folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(otherMass)+'_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = '+str(otherMass)+' GeV', kRed]
 			#signalFiles[ '800' ] = [ TFile.Open('~/mySpace/archiveEOS/Archive/v7414/RUNAnalysis_RPVStopStopToJets_UDD312_M-800-madgraph_RunIISpring15MiniAODv2-74X_Asympt25ns_v09_v03.root'), args.lumi, 'M_{#tilde{t}} = 800 GeV', kRed]

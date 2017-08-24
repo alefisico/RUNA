@@ -711,7 +711,7 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 			for par in range( 1, len(bkgFuncParameters[0][bF]) ):
 				datacard.write( bF+'p'+str(par)+'\tparam\t'+str(bkgFuncParameters[0][bF][par])+'\t'+str(bkgFuncParameters[1][bF][par])+'\n' )
 				#datacard.write( bF+'p'+str(par)+'\tflatParam\n')
-		datacard.write("lumi\tlnN\t1.062\t-\n")
+		datacard.write("lumi\tlnN\t1.025\t-\n")
 		datacard.write("trigger\tlnN\t1.05\t-\n")
 		datacard.write("sigSigma\tparam\t"+str(SignalParameters[0]['gaus'][1])+'\t'+str(SignalParameters[1]['gaus'][1])+"\n")
 		datacard.write("sigMean\tparam\t"+str(SignalParameters[0]['gaus'][2])+'\t'+str(SignalParameters[1]['gaus'][2])+"\n")
@@ -1126,7 +1126,7 @@ def rooFitter( dataFile, bkgFile, inFileSignal, hist, scale, P4, minX, maxX, reb
 	outputfile.write("process       0          1\n")
 	outputfile.write('rate          '+str( round( myWS.var("nsig").getVal() ) )+' '+str( round( myWS.var("nbkg").getVal() ) )+' \n')
 	outputfile.write("-------------------------------\n")
-	outputfile.write("# lumi    lnN     1.045         -     \n")
+	outputfile.write("# lumi    lnN     1.025         -     \n")
 	outputfile.write("# GausSigma  param       45.1220       5.7784  \n")
 	outputfile.write("# GausMean  param       1000.0000       10.0000  \n")
 	outputfile.write("# SigNormFit   lnN    1.0600       - \n")
