@@ -251,7 +251,7 @@ Matching::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 		for( auto & dau : daughtersCollection ) {
 			//LogWarning( "daughters") << "Parent" << part.pdgId() << " daughter " << dau.pdgId();
 			//LogWarning("AK8 check") << " ";
-			pat::Jet tmpAK8Jet = checkDeltaR( dau, AK8jets, 0.6, histos1D_[ "p1AK8DeltaR" ], histos1D_[ "minP1AK8DeltaR" ] );
+			pat::Jet tmpAK8Jet = checkDeltaR( dau, AK8jets, 0.7, histos1D_[ "p1AK8DeltaR" ], histos1D_[ "minP1AK8DeltaR" ] );
 			if( tmpAK8Jet.pt() > 0 ) ak8JetsMatched.push_back( tmpAK8Jet );
 			/*if( tmpAK8Jet.pt() > 0 ) { 
 				tmpNumDauAK8+=1;
@@ -288,8 +288,10 @@ Matching::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	bool cutAK8HT = false, cutAK4HT = false;
 	for( unsigned int j=0; j<AK8jets->size(); j++ ) AK8HT += (*AK8jets)[j].pt();
 	if (AK8HT > 900 ) cutAK8HT = true; 
+	histos1D_[ "numBoostedJets" ]->Fill( AK8jets->size() );
 	for( unsigned int j=0; j<AK4jets->size(); j++ ) AK4HT += (*AK4jets)[j].pt();
 	if (AK4HT > 900 ) cutAK4HT = true; 
+	histos1D_[ "numResolvedJets" ]->Fill( AK4jets->size() );
 	
 	double numBoosted = 0;
 	double numResolved = 0;
@@ -550,6 +552,10 @@ void Matching::beginJob() {
 	histos1D_[ "p1AK4DeltaR" ]->SetXTitle( "#Delta R( jet, parton)" );
 	histos1D_[ "minP1AK4DeltaR" ] = fileService->make< TH1D >( "minP1AK4DeltaR", "minP1AK4DeltaR", 50, 0., 5. );
 	histos1D_[ "minP1AK4DeltaR" ]->SetXTitle( "min #Delta R( jet, parton)" );
+	histos1D_[ "numBoostedJets" ] = fileService->make< TH1D >( "numBoostedJets", "numBoostedJets", 10, 0., 10 );
+	histos1D_[ "numBoostedJets" ]->SetXTitle( "Number of Boosted Jets" );
+	histos1D_[ "numResolvedJets" ] = fileService->make< TH1D >( "numResolvedJets", "numResolvedJets", 10, 0., 10 );
+	histos1D_[ "numResolvedJets" ]->SetXTitle( "Number of Resolved Jets" );
 
 	histos1D_[ "jet1ak8Mass_TwoBoostedFourResolved" ] = fileService->make< TH1D >( "jet1ak8Mass_TwoBoostedFourResolved", "jet1ak8Mass_TwoBoostedFourResolved", 1200, 0., 1200. );
 	histos1D_[ "jet1ak8Mass_TwoBoostedFourResolved" ]->SetXTitle( "2 boosted matched Mass Jet [GeV]" );
