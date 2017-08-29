@@ -1405,6 +1405,7 @@ def plot2DBkgEstimation( rootFile, dataFile, sample, nameInRoot, scale, titleXAx
 			bkgHistos[ samples ].Scale( scale )
 			hBkg.Add( bkgHistos[ samples ].Clone() )
 	else: 
+		print nameInRoot+'_'+sample+('_'+args.numBtags if 'UDD323' in args.decay else '')+'_A' 
 		bkgHistos[ sample+'_A' ] = Rebin2D( rootFile.Get( nameInRoot+'_'+sample+('_'+args.numBtags if 'UDD323' in args.decay else '')+'_A' ), rebinx, rebiny )
 		bkgHistos[ sample+'_B' ] = Rebin2D( rootFile.Get( nameInRoot+'_'+sample+('_'+args.numBtags if 'UDD323' in args.decay else '')+'_B' ), rebinx, rebiny )
 		bkgHistos[ sample+'_C' ] = Rebin2D( rootFile.Get( nameInRoot+'_'+sample+('_'+args.numBtags if 'UDD323' in args.decay else '')+'_C' ), rebinx, rebiny )

@@ -593,7 +593,8 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 
 	combineCards = 'combineCards.py '
 	accDict = OrderedDict()
-	for ibin in range( lowEdgeWindow, highEdgeWindow ):
+	#for ibin in range( lowEdgeWindow, highEdgeWindow ):
+	for ibin in range( 12, 70 ):
 
 		### Signal
 		sigAcc = hSignal.GetBinContent( ibin )
@@ -674,11 +675,11 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 				datacard.write(sample+'StatUnc\t\tlnN\t' + '\t'.join([ str(acc[1]) if tmp==i else '-' for i in range(len(accDict)) ]) + '\n' )
 				tmp+=1
 
-			datacard.write('JESshape\t\tlnN\t'+ '\t'.join( [ '-' if i==0 else str(sigShapeJESDown)+'/'+str(sigShapeJESUp) for i in range(len(accDict)) ] ) +'\n' ) 
-			#datacard.write('JESaccept\t\tlnN\t'+ '\t'.join( [ '-' if i==0 else str(1+sysJESUnc) for i in range(len(accDict)) ] ) +'\n' ) 
+			#datacard.write('JESshape\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(sigShapeJESDown)+'/'+str(sigShapeJESUp) for i in range(len(accDict)) ] ) +'\n' ) 
+			#datacard.write('JESaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(1+sysJESUnc) for i in range(len(accDict)) ] ) +'\n' ) 
 
-			datacard.write('JERshape\t\tlnN\t'+ '\t'.join( [ '-' if i==0 else str(sigShapeJERDown)+'/'+str(sigShapeJERUp) for i in range(len(accDict)) ] ) +'\n' ) 
-			#datacard.write('JERaccept\t\tlnN\t'+ '\t'.join( [ '-' if i==0 else str(1+sysJERUnc) for i in range(len(accDict)) ] ) +'\n' ) 
+			datacard.write('JERshape\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(sigShapeJERDown)+'/'+str(sigShapeJERUp) for i in range(len(accDict)) ] ) +'\n' ) 
+			#datacard.write('JERaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(1+sysJERUnc) for i in range(len(accDict)) ] ) +'\n' ) 
 
 
 		datacard.close()
@@ -687,7 +688,7 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 	print ' |----> Running combinedCards.py:\n', currentDir+'/Datacards/datacard_'+outputName+'_bins.txt'
 	subprocess.call(  combineCards+' > '+currentDir+'/Datacards/datacard_'+outputName+'_bins.txt', shell=True  )
 	print ' |----> Running combine -M Asymptotic:'
-	subprocess.call( 'combine -M Asymptotic '+currentDir+'/Datacards/datacard_'+outputName+'_bins.txt -n '+outputName, shell=True )
+	subprocess.call( 'combine -M Asymptotic '+currentDir+'/Datacards/datacard_'+outputName+'_bins.txt -n _'+outputName+'_fullShape', shell=True )
 	print ' |----> Done. Have a wonderful day. :D'
 
 

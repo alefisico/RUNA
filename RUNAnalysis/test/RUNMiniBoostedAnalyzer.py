@@ -40,8 +40,8 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 	print '--- Sample ', sample
 	sf = scaleFactor(sample)
 	if 'JetHT' in sample: sample = 'JetHT_Run2016'
-	elif 'QCD_HT' in sample: sample = 'QCDHTAll'
-	elif 'QCD_Pt' in sample: sample = 'QCDPtAll'
+	#elif 'QCD_HT' in sample: sample = 'QCDHTAll'
+	#elif 'QCD_Pt' in sample: sample = 'QCDPtAll'
 	
 	allHistos[ "massAve_preSel_"+sample ] = TH1F( "massAve_preSel_"+sample, "massAve_preSel_"+sample, massBins, massXmin, massXmax )
 	allHistos[ "HT_preSel_"+sample ] = TH1F( "HT_preSel_"+sample, "HT_preSel_"+sample, 5000, 0, 5000 )
@@ -239,7 +239,7 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 			SF,
 			sel, 
 			allHistos[ 'massAve_deltaEtaDijet_'+sample ], 
-			( 0.10 if 'JetHT' in sample else 1 ) ) 
+			1 ) #( 0.10 if 'JetHT' in sample else 1 ) ) 
 
 	getHistoFromTree( fileSample, treeName,
 			'jet1Pt', 
@@ -464,7 +464,7 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 ######################################
 def myAnalyzer( fileSample, listCuts, sample, UNC ):
 
-	outputFileName = 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p1.root' 
+	outputFileName = 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p3.root' 
 	outputFile = TFile( outputFileName, 'RECREATE' )
 
 
@@ -474,8 +474,8 @@ def myAnalyzer( fileSample, listCuts, sample, UNC ):
 	massXmax = 500.
 	listOfOptions = [ [ j,k] for j in range(len(listCuts)-1) for k in range(1, len(listCuts) ) if k > j ]
 
-	print '--- Sample ', sample
-	sf = scaleFactor(sample)
+	#print '--- Sample ', sample
+	#sf = scaleFactor(sample)
 	if 'JetHT' in sample: sample = 'JetHT_Run2016'
 	elif 'QCD_HT' in sample: sample = 'QCDHTAll'
 	elif 'QCD_Pt' in sample: sample = 'QCDPtAll'
@@ -540,137 +540,130 @@ def myAnalyzer( fileSample, listCuts, sample, UNC ):
 
 	for h in allHistos: allHistos[h].Sumw2()
 
-	################################################################################################## Running the Analysis
+	####### Get GenTree 
+	inputFile, events, numEntries = getTree( fileSample, ('BoostedAnalysisPlotsPuppi'+( '' if 'PDF' in UNC else UNC)+'/RUNATree' if 'Puppi' in args.grooming else 'BoostedAnalysisPlots'+( '' if 'PDF' in UNC else UNC)+'/RUNATree' ) )
 	print '-'*40
-	#lumiWeight = ( 1 if 'JetHT' in sample else sf  )
-	#SF = 'puWeight*'+str(lumiWeight)
-	SF = TCut('lumiWeight * puWeight') # * '+str(args.lumi))
-	preselection = TCut('HT>900') * TCut("numJets==2") * TCut( SF )
-	stringSel = '' 
-	for var in listCuts: stringSel = stringSel+'('+var[0]+'<'+str(var[1])+')'
-	stringSel = stringSel.replace(')(',') * (')
-	print '---- Cuts applied: ', stringSel, preselection * TCut( stringSel )
-#	for sample in dictSamples:
-#
-#		####### Get GenTree 
-#		inputFile, events, numEntries = getTree( dictSamples[ sample ], ('BoostedAnalysisPlotsPuppi'+( '' if 'PDF' in UNC else UNC)+'/RUNATree' if 'Puppi' in args.grooming else 'BoostedAnalysisPlots'+( '' if 'PDF' in UNC else UNC)+'/RUNATree' ) )
-#		print '-'*40
-#		print '------> ', sample
-#		print '------> Number of events: '+str(numEntries)
-#		d = 0
-#		cutFlowList = OrderedDict()
-#		cutFlowScaledList = OrderedDict()
-#		cutFlowScaledListWeights = OrderedDict()
-#		cutFlowList[ 'Process' ] = 0
-#		cutFlowList[ 'Preselection' ] = 0
-#		cutFlowScaledList[ 'Process' ] = 0
-#		cutFlowScaledList[ 'Preselection' ] = 0
-#		cutFlowScaledListWeights[ 'Process' ] = 0
-#		cutFlowScaledListWeights[ 'Preselection' ] = 0
-#		for k in listCuts: 
-#			cutFlowList[ k[0] ] = 0
-#			cutFlowScaledList[ k[0] ] = 0
-#			cutFlowScaledListWeights[ k[0] ] = 0
-#		cutFlowList[ 'btag' ] = 0
-#		cutFlowScaledList[ 'btag' ] = 0
-#		cutFlowScaledListWeights[ 'btag' ] = 0
-#
-#		for i in xrange(numEntries):
-#			events.GetEntry(i)
-#
-#			#---- progress of the reading --------
-#			fraction = 10.*i/(1.*numEntries)
-#			if TMath.FloorNint(fraction) > d: print str(10*TMath.FloorNint(fraction))+'%' 
-#			d = TMath.FloorNint(fraction)
-#			#if ( i > 100000 ): break
-#
-#			Run      = events.run
-#			Lumi     = events.lumi
-#			NumEvent = events.event
-#			puWeight	= events.puWeight
-#			if 'v06' in args.version: pdfWeight	= events.pdfWeight
-#			lumiWeight	= events.lumiWeight
-#			HT		= events.HT
-#			MET		= events.MET
-#			numJets		= events.numJets
-#			massAve		= getattr( events, (args.grooming+"MassAve").replace('Puppi','') )
-#			jet1Mass	= getattr( events, 'jet1'+(args.grooming+"Mass").replace('pruned','Pruned').replace('soft','Soft').replace('Puppi',''))
-#			jet2Mass	= getattr( events, 'jet2'+(args.grooming+"Mass").replace('pruned','Pruned').replace('soft','Soft').replace('Puppi',''))
-#			jet1Pt          = events.jet1Pt
-#			jet2Pt          = events.jet2Pt
-#			jet1Eta          = events.jet1Eta
-#			jet2Eta          = events.jet2Eta
-#			jet1CosThetaStar	= events.jet1CosThetaStar
-#			jet2CosThetaStar	= events.jet2CosThetaStar
-#			jet1BtagCSV		= ( events.jet1btagCSVv2 > 0.800 )
-#			jet2BtagCSV		= ( events.jet2btagCSVv2 > 0.800 )
-#			
-#			#print 'Entry ', Run, ':', Lumi, ':', NumEvent
-#
-#			if 'DATA' in sample: scale = 1
-#			#elif 'RPV' in sample: scale = 2606 * puWeight * SF
-#			else: scale = 2666 * puWeight * lumiWeight
-#
-#			if 'PDF' in UNC:
-#				if 'Up' in UNC: scale = scale*(1+pdfWeight)
-#				else: scale = scale*(1-pdfWeight)
-#
-#			cutFlowList[ 'Process' ] += 1
-#			cutFlowScaledList[ 'Process' ] += scale
-#			cutFlowScaledList[ 'Process' ] += (puWeight*puWeight)
-#
-#			########## DDT
-#			jet1RhoDDT = TMath.Log( jet1Mass*jet1Mass/jet1Pt )
-#			jet2RhoDDT = TMath.Log( jet2Mass*jet2Mass/jet2Pt )
-#			jet1Tau21DDT = events.jet1Tau21 + 0.063 * jet1RhoDDT 
-#			jet2Tau21DDT = events.jet2Tau21 + 0.063 * jet2RhoDDT 
-#			
-#			#### Pre-selection
-#			HTCut = ( HT > 900 )
-#			dijetCut =  ( numJets > 1 )
-#			#jetPtCut =  ( jet1Pt > 500 ) and ( jet2Pt > 450 )
-#			jetPtCut =  ( jet1Pt > 150 ) and ( jet2Pt > 150 )
-#			
-#			#if HTCut and dijetCut and jetPtCut:
-#			if HTCut and dijetCut :
+	print '------> ', sample
+	print '------> Number of events: '+str(numEntries)
+	d = 0
+	cutFlowList = OrderedDict()
+	cutFlowScaledList = OrderedDict()
+	cutFlowScaledListWeights = OrderedDict()
+	cutFlowList[ 'Process' ] = 0
+	cutFlowList[ 'Preselection' ] = 0
+	cutFlowScaledList[ 'Process' ] = 0
+	cutFlowScaledList[ 'Preselection' ] = 0
+	cutFlowScaledListWeights[ 'Process' ] = 0
+	cutFlowScaledListWeights[ 'Preselection' ] = 0
+	for k in listCuts: 
+		cutFlowList[ k[0] ] = 0
+		cutFlowScaledList[ k[0] ] = 0
+		cutFlowScaledListWeights[ k[0] ] = 0
+	cutFlowList[ 'btag' ] = 0
+	cutFlowScaledList[ 'btag' ] = 0
+	cutFlowScaledListWeights[ 'btag' ] = 0
+
+	for i in xrange(numEntries):
+		events.GetEntry(i)
+
+		#---- progress of the reading --------
+		fraction = 10.*i/(1.*numEntries)
+		if TMath.FloorNint(fraction) > d: print str(10*TMath.FloorNint(fraction))+'%' 
+		d = TMath.FloorNint(fraction)
+		#if ( i > 100000 ): break
+
+		Run      = events.run
+		Lumi     = events.lumi
+		NumEvent = events.event
+		puWeight	= events.puWeight
+		pdfWeight	= events.pdfWeight
+		lumiWeight	= events.lumiWeight
+		HT		= events.HT
+		MET		= events.MET
+		numJets		= events.numJets
+		massAve		= getattr( events, (args.grooming+"MassAve").replace('Puppi','') )
+		jet1Mass	= getattr( events, 'jet1'+(args.grooming+"Mass").replace('pruned','Pruned').replace('soft','Soft').replace('Puppi',''))
+		jet2Mass	= getattr( events, 'jet2'+(args.grooming+"Mass").replace('pruned','Pruned').replace('soft','Soft').replace('Puppi',''))
+		jet1Pt          = events.jet1Pt
+		jet2Pt          = events.jet2Pt
+		jet1Eta          = events.jet1Eta
+		jet2Eta          = events.jet2Eta
+		#jet1CosThetaStar	= events.jet1CosThetaStar
+		#jet2CosThetaStar	= events.jet2CosThetaStar
+		jet1BtagCSV		= ( events.jet1btagCSVv2 > 0.5426 )
+		jet2BtagCSV		= ( events.jet2btagCSVv2 > 0.5426 )
+		
+		#print 'Entry ', Run, ':', Lumi, ':', NumEvent
+
+		if 'JetHT' in sample: scale = 1
+		#elif 'RPV' in sample: scale = 2606 * puWeight * SF
+		else: scale = args.lumi * puWeight * lumiWeight
+
+		if 'PDF' in UNC:
+			if 'Up' in UNC: scale = scale*(1+pdfWeight)
+			else: scale = scale*(1-pdfWeight)
+
+		cutFlowList[ 'Process' ] += 1
+		cutFlowScaledList[ 'Process' ] += scale
+		cutFlowScaledList[ 'Process' ] += (puWeight*puWeight)
+
+		########## DDT
+		##jet1RhoDDT = TMath.Log( jet1Mass*jet1Mass/jet1Pt )
+		##jet2RhoDDT = TMath.Log( jet2Mass*jet2Mass/jet2Pt )
+		##jet1Tau21DDT = events.jet1Tau21 + 0.063 * jet1RhoDDT 
+		##jet2Tau21DDT = events.jet2Tau21 + 0.063 * jet2RhoDDT 
+		
+		#### Pre-selection
+		HTCut = ( HT > 900 )
+		dijetCut =  ( numJets == 2 )
+		#jetPtCut =  ( jet1Pt > 500 ) and ( jet2Pt > 450 )
+		jetPtCut =  ( jet1Pt > 150 ) and ( jet2Pt > 150 )
+		
+		#if HTCut and dijetCut and jetPtCut:
+		if HTCut and dijetCut :
+			if ( events.jet1Tau32 > 0.57 ) and  ( events.jet2Tau32 > 0.57 ) and ( events.jet1Tau21 < 0.45 ) and  ( events.jet2Tau21 < 0.45 ) and ( events.prunedMassAsym < 0.10 ) and  ( events.deltaEtaDijet < 1.5 ):
+					allHistos[ 'massAve_deltaEtaDijet_'+sample ].Fill( massAve, scale )
+					if ( jet1BtagCSV and jet2BtagCSV ): 
+						print str(Run)+':'+str(Lumi)+':'+str(NumEvent)
+
 #				cutFlowList[ 'Preselection' ] += 1
 #				cutFlowScaledList[ 'Preselection' ] += scale
 #				cutFlowScaledList[ 'Preselection' ] += (puWeight*puWeight)
 #				sigCutsList = []
-#				allHistos[ "HT_"+sam ].Fill( HT, scale )
-#				allHistos[ "MET_"+sam ].Fill( MET, scale )
-#				allHistos[ "massAve_"+sam ].Fill( massAve, scale )
-#				allHistos[ "numJets_"+sam ].Fill( numJets, scale )
-#				allHistos[ "jet1Pt_"+sam ].Fill( jet1Pt, scale )
-#				allHistos[ "jet2Pt_"+sam ].Fill( jet2Pt, scale )
-#				allHistos[ "jet1RhoDDT_"+sam ].Fill( jet1RhoDDT, scale )
-#				allHistos[ "jet2RhoDDT_"+sam ].Fill( jet2RhoDDT, scale )
-#				allHistos[ "jet1Tau21VsRhoDDT_"+sam ].Fill( events.jet1Tau21, jet1RhoDDT, scale )
-#				allHistos[ "jet2Tau21VsRhoDDT_"+sam ].Fill( events.jet2Tau21, jet2RhoDDT, scale )
-#				allHistos[ "jet1Tau21DDT_"+sam ].Fill( jet1Tau21DDT, scale )
-#				allHistos[ "jet2Tau21DDT_"+sam ].Fill( jet2Tau21DDT, scale )
-#				allHistos[ "jet1Tau21DDTVsRhoDDT_"+sam ].Fill( jet1Tau21DDT, jet1RhoDDT, scale )
-#				allHistos[ "jet2Tau21DDTVsRhoDDT_"+sam ].Fill( jet2Tau21DDT, jet2RhoDDT, scale )
-#				allHistos[ "prunedMassAsym_"+sam ].Fill( events.prunedMassAsym, scale )
-#				allHistos[ "deltaEtaDijet_"+sam ].Fill( events.deltaEtaDijet, scale )
-#				allHistos[ "jet1CosThetaStar_"+sam ].Fill( jet1CosThetaStar, scale )
-#				allHistos[ "jet2CosThetaStar_"+sam ].Fill( jet2CosThetaStar, scale )
-#				allHistos[ "jet1Tau21_"+sam ].Fill( events.jet1Tau21, scale )
-#				allHistos[ "jet2Tau21_"+sam ].Fill( events.jet2Tau21, scale )
-#				allHistos[ "jet1Tau31_"+sam ].Fill( events.jet1Tau31, scale )
-#				allHistos[ "jet2Tau31_"+sam ].Fill( events.jet2Tau31, scale )
-#				allHistos[ "jet1Tau32_"+sam ].Fill( events.jet1Tau32, scale )
-#				allHistos[ "jet2Tau32_"+sam ].Fill( events.jet2Tau32, scale )
-#				allHistos[ "jet1SubjetPtRatio_"+sam ].Fill( events.jet1SubjetPtRatio, scale )
-#				allHistos[ "jet2SubjetPtRatio_"+sam ].Fill( events.jet2SubjetPtRatio, scale )
-#				allHistos[ "jet1BtagCSV_"+sam ].Fill( 1 if jet1BtagCSV else 0 )
-#				allHistos[ "jet2BtagCSV_"+sam ].Fill( 1 if jet1BtagCSV else 0 )
+#				allHistos[ "HT_"+sample ].Fill( HT, scale )
+#				allHistos[ "MET_"+sample ].Fill( MET, scale )
+#				allHistos[ "massAve_"+sample ].Fill( massAve, scale )
+#				allHistos[ "numJets_"+sample ].Fill( numJets, scale )
+#				allHistos[ "jet1Pt_"+sample ].Fill( jet1Pt, scale )
+#				allHistos[ "jet2Pt_"+sample ].Fill( jet2Pt, scale )
+#				allHistos[ "jet1RhoDDT_"+sample ].Fill( jet1RhoDDT, scale )
+#				allHistos[ "jet2RhoDDT_"+sample ].Fill( jet2RhoDDT, scale )
+#				allHistos[ "jet1Tau21VsRhoDDT_"+sample ].Fill( events.jet1Tau21, jet1RhoDDT, scale )
+#				allHistos[ "jet2Tau21VsRhoDDT_"+sample ].Fill( events.jet2Tau21, jet2RhoDDT, scale )
+#				allHistos[ "jet1Tau21DDT_"+sample ].Fill( jet1Tau21DDT, scale )
+#				allHistos[ "jet2Tau21DDT_"+sample ].Fill( jet2Tau21DDT, scale )
+#				allHistos[ "jet1Tau21DDTVsRhoDDT_"+sample ].Fill( jet1Tau21DDT, jet1RhoDDT, scale )
+#				allHistos[ "jet2Tau21DDTVsRhoDDT_"+sample ].Fill( jet2Tau21DDT, jet2RhoDDT, scale )
+#				allHistos[ "prunedMassAsym_"+sample ].Fill( events.prunedMassAsym, scale )
+#				allHistos[ "deltaEtaDijet_"+sample ].Fill( events.deltaEtaDijet, scale )
+#				allHistos[ "jet1CosThetaStar_"+sample ].Fill( jet1CosThetaStar, scale )
+#				allHistos[ "jet2CosThetaStar_"+sample ].Fill( jet2CosThetaStar, scale )
+#				allHistos[ "jet1Tau21_"+sample ].Fill( events.jet1Tau21, scale )
+#				allHistos[ "jet2Tau21_"+sample ].Fill( events.jet2Tau21, scale )
+#				allHistos[ "jet1Tau31_"+sample ].Fill( events.jet1Tau31, scale )
+#				allHistos[ "jet2Tau31_"+sample ].Fill( events.jet2Tau31, scale )
+#				allHistos[ "jet1Tau32_"+sample ].Fill( events.jet1Tau32, scale )
+#				allHistos[ "jet2Tau32_"+sample ].Fill( events.jet2Tau32, scale )
+#				allHistos[ "jet1SubjetPtRatio_"+sample ].Fill( events.jet1SubjetPtRatio, scale )
+#				allHistos[ "jet2SubjetPtRatio_"+sample ].Fill( events.jet2SubjetPtRatio, scale )
+#				allHistos[ "jet1BtagCSV_"+sample ].Fill( 1 if jet1BtagCSV else 0 )
+#				allHistos[ "jet2BtagCSV_"+sample ].Fill( 1 if jet1BtagCSV else 0 )
 #
 #				bothBtag = ( jet1BtagCSV and jet2BtagCSV )
 #				oneBtag = ( jet1BtagCSV or jet2BtagCSV )
-#				if bothBtag: allHistos[ "jetsBtagCSV_"+sam ].Fill( 2 )
-#				elif oneBtag: allHistos[ "jetsBtagCSV_"+sam ].Fill( 1 )
-#				else: allHistos[ "jetsBtagCSV_"+sam ].Fill( 0 )
+#				if bothBtag: allHistos[ "jetsBtagCSV_"+sample ].Fill( 2 )
+#				elif oneBtag: allHistos[ "jetsBtagCSV_"+sample ].Fill( 1 )
+#				else: allHistos[ "jetsBtagCSV_"+sample ].Fill( 0 )
 #
 #				for var in listCuts:
 #					#allHistos[ var[0]+'_'+sample ].Fill( getattr( events, var[0] ), scale )
@@ -685,11 +678,11 @@ def myAnalyzer( fileSample, listCuts, sample, UNC ):
 #						allHistos[ 'jet2Tau21_'+var[0]+'_'+sample ].Fill( events.jet2Tau21, scale )
 #						allHistos[ 'prunedMassAsym_'+var[0]+'_'+sample ].Fill( events.prunedMassAsym, scale )
 #						allHistos[ 'deltaEtaDijet_'+var[0]+'_'+sample ].Fill( events.deltaEtaDijet, scale )
-#						allHistos[ "HT_"+var[0]+"_"+sam ].Fill( HT, scale )
-#						allHistos[ "MET_"+var[0]+"_"+sam ].Fill( MET, scale )
-#						allHistos[ "numJets_"+var[0]+"_"+sam ].Fill( numJets, scale )
-#						allHistos[ "jet1Pt_"+var[0]+"_"+sam ].Fill( jet1Pt, scale )
-#						allHistos[ "jet2Pt_"+var[0]+"_"+sam ].Fill( jet2Pt, scale )
+#						allHistos[ "HT_"+var[0]+"_"+sample ].Fill( HT, scale )
+#						allHistos[ "MET_"+var[0]+"_"+sample ].Fill( MET, scale )
+#						allHistos[ "numJets_"+var[0]+"_"+sample ].Fill( numJets, scale )
+#						allHistos[ "jet1Pt_"+var[0]+"_"+sample ].Fill( jet1Pt, scale )
+#						allHistos[ "jet2Pt_"+var[0]+"_"+sample ].Fill( jet2Pt, scale )
 #						cutFlowList[ var[0] ] += 1
 #						cutFlowScaledList[ var[0] ] += scale
 #						cutFlowScaledList[ var[0] ] += (puWeight*puWeight)
@@ -700,11 +693,11 @@ def myAnalyzer( fileSample, listCuts, sample, UNC ):
 #					allHistos[ 'jet2Tau21_btag_'+sample ].Fill( events.jet2Tau21, scale )
 #					allHistos[ 'prunedMassAsym_btag_'+sample ].Fill( events.prunedMassAsym, scale )
 #					allHistos[ 'deltaEtaDijet_btag_'+sample ].Fill( events.deltaEtaDijet, scale )
-#					allHistos[ "HT_btag_"+sam ].Fill( HT, scale )
-#					allHistos[ "MET_btag_"+sam ].Fill( MET, scale )
-#					allHistos[ "numJets_btag_"+sam ].Fill( numJets, scale )
-#					allHistos[ "jet1Pt_btag_"+sam ].Fill( jet1Pt, scale )
-#					allHistos[ "jet2Pt_btag_"+sam ].Fill( jet2Pt, scale )
+#					allHistos[ "HT_btag_"+sample ].Fill( HT, scale )
+#					allHistos[ "MET_btag_"+sample ].Fill( MET, scale )
+#					allHistos[ "numJets_btag_"+sample ].Fill( numJets, scale )
+#					allHistos[ "jet1Pt_btag_"+sample ].Fill( jet1Pt, scale )
+#					allHistos[ "jet2Pt_btag_"+sample ].Fill( jet2Pt, scale )
 #					cutFlowList[ 'btag' ] += 1
 #					cutFlowScaledList[ 'btag' ] += scale
 #					cutFlowScaledList[ 'btag' ] += (puWeight*puWeight)
@@ -905,6 +898,6 @@ if __name__ == '__main__':
 			else: 
 				p = Process( target=myPlotAnalyzer, args=( dictSamples[sample], cuts, sample, '' ) )
 		else:
-			p = Process( target=myAnalyzer, args=( dictSamples[sample], preselection, cuts, sample, '' ) )
+			p = Process( target=myAnalyzer, args=( dictSamples[sample], cuts, sample, '' ) )
 	p.start()
 	p.join()

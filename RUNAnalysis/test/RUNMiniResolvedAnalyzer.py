@@ -476,11 +476,11 @@ def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 
 	print '--- Sample ', sample
 	if 'JetHT' in sample: sample = 'JetHT_Run2016'
-	'''
 	allHistos[ "jet0deltaR_"+sample ] = TH1F( "jet0deltaR_"+sample, "jet0deltaR_"+sample, 50, 0., 5 )
 	allHistos[ "jet1deltaR_"+sample ] = TH1F( "jet1deltaR_"+sample, "jet1deltaR_"+sample, 50, 0., 5 )
 	allHistos[ "jet2deltaR_"+sample ] = TH1F( "jet2deltaR_"+sample, "jet2deltaR_"+sample, 50, 0., 5 )
 	allHistos[ "jet3deltaR_"+sample ] = TH1F( "jet3deltaR_"+sample, "jet3deltaR_"+sample, 50, 0., 5 )
+	'''
 	allHistos[ "HT_cutBestPair_"+sample ] = TH1F( "HT_cutBestPair_"+sample, "HT_cutBestPair_"+sample, 5000, 0., 5000 )
 	allHistos[ "massAve_cutBestPair_"+sample ] = TH1F( "massAve_cutBestPair_"+sample, "massAve_cutBestPair_"+sample, 3000, 0., 3000 )
 	allHistos[ "massAsym_cutBestPair_"+sample ] = TH1F( "massAsym_cutBestPair_"+sample, "massAsym_cutBestPair_"+sample, 20, 0., 1 )
@@ -692,53 +692,55 @@ def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 
 			############ Delta R
 			varDeltaR = dijetVar( listOfPairsDeltaR ) 
-			allHistos[ 'minDeltaR_'+sample ].Fill( listDeltaR[0], SF )
-			allHistos[ 'massAveVsMinDeltaR_'+sample ].Fill( varDeltaR[0], listDeltaR[0], SF )
-			allHistos[ "massAve_minDeltaR_cutBestPair_"+sample ].Fill( varDeltaR[0], SF )
-			allHistos[ "deltaEta_minDeltaR_cutBestPair_"+sample ].Fill( varDeltaR[4], SF )
-			allHistos[ "massAsym_minDeltaR_cutBestPair_"+sample ].Fill( varDeltaR[5], SF )
-			allHistos[ 'deltavsMassAve_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[0], varDeltaR[8], SF )
-			allHistos[ 'deltavsMassAve_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[0], varDeltaR[9], SF )
-			allHistos[ 'deltaSumvsMassAve_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[0], varDeltaR[8]+varDeltaR[9], SF )
-			allHistos[ 'avgDeltavsMassAve_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[0], (varDeltaR[8]+varDeltaR[9])/2, SF )
-			allHistos[ 'cosThetaStar_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[10], SF )
-			allHistos[ 'massAveVscosThetaStar_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[0], varDeltaR[10], SF )
-			#allHistos[ 'xi_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[11], SF )
-			#allHistos[ 'massAveVsXi_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[0], varDeltaR[11], SF )
-			allHistos[ 'jet12vsjet34Mass_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[12], varDeltaR[13], SF )
-			allHistos[ 'massAvevsjet34Mass_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[0], varDeltaR[13], SF )
-			allHistos[ 'massAvevsjet12Mass_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[0], varDeltaR[12], SF )
-			if len(listDeltaR)>1: 
-				allHistos[ 'secondMinDeltaR_'+sample ].Fill( listDeltaR[1], SF )
-				allHistos[ 'minVsSecondMinDeltaR_'+sample ].Fill( listDeltaR[0], listDeltaR[1], SF )
+#			allHistos[ 'minDeltaR_'+sample ].Fill( listDeltaR[0], SF )
+#			allHistos[ 'massAveVsMinDeltaR_'+sample ].Fill( varDeltaR[0], listDeltaR[0], SF )
+#			allHistos[ "massAve_minDeltaR_cutBestPair_"+sample ].Fill( varDeltaR[0], SF )
+#			allHistos[ "deltaEta_minDeltaR_cutBestPair_"+sample ].Fill( varDeltaR[4], SF )
+#			allHistos[ "massAsym_minDeltaR_cutBestPair_"+sample ].Fill( varDeltaR[5], SF )
+#			allHistos[ 'deltavsMassAve_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[0], varDeltaR[8], SF )
+#			allHistos[ 'deltavsMassAve_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[0], varDeltaR[9], SF )
+#			allHistos[ 'deltaSumvsMassAve_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[0], varDeltaR[8]+varDeltaR[9], SF )
+#			allHistos[ 'avgDeltavsMassAve_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[0], (varDeltaR[8]+varDeltaR[9])/2, SF )
+#			allHistos[ 'cosThetaStar_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[10], SF )
+#			allHistos[ 'massAveVscosThetaStar_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[0], varDeltaR[10], SF )
+#			#allHistos[ 'xi_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[11], SF )
+#			#allHistos[ 'massAveVsXi_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[0], varDeltaR[11], SF )
+#			allHistos[ 'jet12vsjet34Mass_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[12], varDeltaR[13], SF )
+#			allHistos[ 'massAvevsjet34Mass_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[0], varDeltaR[13], SF )
+#			allHistos[ 'massAvevsjet12Mass_minDeltaR_cutBestPair_'+sample ].Fill( varDeltaR[0], varDeltaR[12], SF )
+#			if len(listDeltaR)>1: 
+#				allHistos[ 'secondMinDeltaR_'+sample ].Fill( listDeltaR[1], SF )
+#				allHistos[ 'minVsSecondMinDeltaR_'+sample ].Fill( listDeltaR[0], listDeltaR[1], SF )
 			if ( varDeltaR[4] < 1.0 ):
-				allHistos[ "massAve_minDeltaR_cutDeltaEta_"+sample ].Fill( varDeltaR[0], SF )
-				allHistos[ "deltaEta_minDeltaR_cutDeltaEta_"+sample ].Fill( varDeltaR[4], SF )
-				allHistos[ "massAsym_minDeltaR_cutDeltaEta_"+sample ].Fill( varDeltaR[5], SF )
-				allHistos[ 'deltavsMassAve_minDeltaR_cutDeltaEta_'+sample ].Fill( varDeltaR[0], varDeltaR[8], SF )
-				allHistos[ 'deltavsMassAve_minDeltaR_cutDeltaEta_'+sample ].Fill( varDeltaR[0], varDeltaR[9], SF )
+#				allHistos[ "massAve_minDeltaR_cutDeltaEta_"+sample ].Fill( varDeltaR[0], SF )
+#				allHistos[ "deltaEta_minDeltaR_cutDeltaEta_"+sample ].Fill( varDeltaR[4], SF )
+#				allHistos[ "massAsym_minDeltaR_cutDeltaEta_"+sample ].Fill( varDeltaR[5], SF )
+#				allHistos[ 'deltavsMassAve_minDeltaR_cutDeltaEta_'+sample ].Fill( varDeltaR[0], varDeltaR[8], SF )
+#				allHistos[ 'deltavsMassAve_minDeltaR_cutDeltaEta_'+sample ].Fill( varDeltaR[0], varDeltaR[9], SF )
 				if (( varDeltaR[8] > 200 ) and ( varDeltaR[9] > 200 )):
-					allHistos[ "massAve_minDeltaR_cutDelta_"+sample ].Fill( varDeltaR[0], SF )
-					allHistos[ "deltaEta_minDeltaR_cutDelta_"+sample ].Fill( varDeltaR[4], SF )
-					allHistos[ "massAsym_minDeltaR_cutDelta_"+sample ].Fill( varDeltaR[5], SF )
-					allHistos[ 'deltavsMassAve_minDeltaR_cutDelta_'+sample ].Fill( varDeltaR[0], varDeltaR[8], SF )
-					allHistos[ 'deltavsMassAve_minDeltaR_cutDelta_'+sample ].Fill( varDeltaR[0], varDeltaR[9], SF )
-					allHistos[ 'cosThetaStar_minDeltaR_cutDelta_'+sample ].Fill( varDeltaR[10], SF )
-					allHistos[ 'massAveVscosThetaStar_minDeltaR_cutDelta_'+sample ].Fill( varDeltaR[0], varDeltaR[10], SF )
-					#allHistos[ 'xi_minDeltaR_cutDelta_'+sample ].Fill( varDeltaR[11], SF )
-					#allHistos[ 'massAveVsXi_minDeltaR_cutDelta_'+sample ].Fill( varDeltaR[0], varDeltaR[11], SF )
-					#if ( varDeltaR[11] > .5 ):
-					#	allHistos[ "massAve_minDeltaR_cutXi_"+sample ].Fill( varDeltaR[0], SF )
+#					allHistos[ "massAve_minDeltaR_cutDelta_"+sample ].Fill( varDeltaR[0], SF )
+#					allHistos[ "deltaEta_minDeltaR_cutDelta_"+sample ].Fill( varDeltaR[4], SF )
+#					allHistos[ "massAsym_minDeltaR_cutDelta_"+sample ].Fill( varDeltaR[5], SF )
+#					allHistos[ 'deltavsMassAve_minDeltaR_cutDelta_'+sample ].Fill( varDeltaR[0], varDeltaR[8], SF )
+#					allHistos[ 'deltavsMassAve_minDeltaR_cutDelta_'+sample ].Fill( varDeltaR[0], varDeltaR[9], SF )
+#					allHistos[ 'cosThetaStar_minDeltaR_cutDelta_'+sample ].Fill( varDeltaR[10], SF )
+#					allHistos[ 'massAveVscosThetaStar_minDeltaR_cutDelta_'+sample ].Fill( varDeltaR[0], varDeltaR[10], SF )
+#					#allHistos[ 'xi_minDeltaR_cutDelta_'+sample ].Fill( varDeltaR[11], SF )
+#					#allHistos[ 'massAveVsXi_minDeltaR_cutDelta_'+sample ].Fill( varDeltaR[0], varDeltaR[11], SF )
+#					#if ( varDeltaR[11] > .5 ):
+#					#	allHistos[ "massAve_minDeltaR_cutXi_"+sample ].Fill( varDeltaR[0], SF )
 					if ( varDeltaR[5] < .1 ):
-						allHistos[ "massAve_minDeltaR_cutMassAsym_"+sample ].Fill( varDeltaR[0], SF )
-						allHistos[ 'jet12vsjet34Mass_minDeltaR_cutDelta_'+sample ].Fill( varDeltaR[12], varDeltaR[13], SF )
-						allHistos[ 'massAvevsjet34Mass_minDeltaR_cutDelta_'+sample ].Fill( varDeltaR[0], varDeltaR[13], SF )
-						allHistos[ 'massAvevsjet12Mass_minDeltaR_cutDelta_'+sample ].Fill( varDeltaR[0], varDeltaR[12], SF )
-
-						if( ( (listOfPairsDeltaR[0][1] > 0.8484) or (listOfPairsDeltaR[1][1] > 0.8484) ) and ( (listOfPairsDeltaR[2][1] > 0.8484) or (listOfPairsDeltaR[3][1] > 0.8484) ) ):
-							allHistos[ "massAve_minDeltaR_cut2CSVv2M_"+sample ].Fill( varDeltaR[0], SF )
+#						if varDeltaR[0] > 160: print str(Run)+':'+str(Lumi)+':'+str(NumEvent)
+#						allHistos[ "massAve_minDeltaR_cutMassAsym_"+sample ].Fill( varDeltaR[0], SF )
+#						allHistos[ 'jet12vsjet34Mass_minDeltaR_cutDelta_'+sample ].Fill( varDeltaR[12], varDeltaR[13], SF )
+#						allHistos[ 'massAvevsjet34Mass_minDeltaR_cutDelta_'+sample ].Fill( varDeltaR[0], varDeltaR[13], SF )
+#						allHistos[ 'massAvevsjet12Mass_minDeltaR_cutDelta_'+sample ].Fill( varDeltaR[0], varDeltaR[12], SF )
+#
 						if( ( (listOfPairsDeltaR[0][1] > 0.5426) or (listOfPairsDeltaR[1][1] > 0.5426) ) and ( (listOfPairsDeltaR[2][1] > 0.5426) or (listOfPairsDeltaR[3][1] > 0.5426) ) ):
-							allHistos[ "massAve_minDeltaR_cut2CSVv2L_"+sample ].Fill( varDeltaR[0], SF )
+							if varDeltaR[0] > 160: print str(Run)+':'+str(Lumi)+':'+str(NumEvent)
+#							allHistos[ "massAve_minDeltaR_cut2CSVv2M_"+sample ].Fill( varDeltaR[0], SF )
+#						if( ( (listOfPairsDeltaR[0][1] > 0.5426) or (listOfPairsDeltaR[1][1] > 0.5426) ) and ( (listOfPairsDeltaR[2][1] > 0.5426) or (listOfPairsDeltaR[3][1] > 0.5426) ) ):
+#							allHistos[ "massAve_minDeltaR_cut2CSVv2L_"+sample ].Fill( varDeltaR[0], SF )
 
 
 			#allHistos[ "minChi2vsminDeltaR_"+sample ].Fill( listMinChi[0], listDeltaR[0], SF )
