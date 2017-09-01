@@ -513,7 +513,7 @@ def createGausShapes( massList, name, xmin, xmax, rebinX, labX, labY, log, plot=
 
 	return newGausFunct
 
-def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist, signalMass, signalMassWidth, sysJESUnc, sysJERUnc, minMass, maxMass, outputName ):
+def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist, signalMass, sysJESUnc, sysJERUnc, minMass, maxMass, outputName ):
 	"""docstring for binByBinCards"""
 
 	####################### Data
@@ -534,6 +534,10 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 			hSignal.Rebin( args.reBin )
 			hSignal.Scale( args.lumi )
 		hSignal.Scale ( twoProngSF )
+		sigGaus = TF1( 'sigGaus', 'gaus', 0, 500 )
+		hSignal.Fit( sigGaus, 'MIR', '', signalMass-30, signalMass+30)
+		signalMassWidth = sigGaus.GetParameter(2)
+
 		hSigSyst = signalUnc( hSignal, signalMass ) 
 		if args.signalInjec and (signalMass == 100):
 			print ' |----> Runnning PseudoData'
@@ -584,17 +588,15 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 	if not args.ttbarAsSignal:
 		lowEdgeWindow = int(signalMass/args.reBin - 2*( int( signalMassWidth )/args.reBin ))
 		highEdgeWindow = int(signalMass/args.reBin + 2*( int( signalMassWidth )/args.reBin ))
-		#lowEdgeWindow = int(signalMass/args.reBin - (1 if 'UDD323' in args.decay else 2 )*( int( signalMassWidth )/args.reBin ))
-		#highEdgeWindow = int(signalMass/args.reBin + (1 if 'UDD323' in args.decay else 2 )*( int( signalMassWidth )/args.reBin ))
 	else: 
+		signalMassWidht = 20 ## dummy
 		lowEdgeWindow = 30
 		highEdgeWindow = 40
 	print '%'*30, signalMassWidth, lowEdgeWindow*args.reBin, highEdgeWindow*args.reBin
 
 	combineCards = 'combineCards.py '
 	accDict = OrderedDict()
-	#for ibin in range( lowEdgeWindow, highEdgeWindow ):
-	for ibin in range( 12, 70 ):
+	for ibin in range( lowEdgeWindow, highEdgeWindow ):
 
 		### Signal
 		sigAcc = hSignal.GetBinContent( ibin )
@@ -672,10 +674,10 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 			### statistical uncertanties
 			tmp = 0
 			for sample, acc in accDict.items():
-				datacard.write(sample+'StatUnc\t\tlnN\t' + '\t'.join([ str(acc[1]) if tmp==i else '-' for i in range(len(accDict)) ]) + '\n' )
+				datacard.write(sample+'StatUnc'+str(ibin)+'\t\tlnN\t' + '\t'.join([ str(acc[1]) if tmp==i else '-' for i in range(len(accDict)) ]) + '\n' )
 				tmp+=1
 
-			#datacard.write('JESshape\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(sigShapeJESDown)+'/'+str(sigShapeJESUp) for i in range(len(accDict)) ] ) +'\n' ) 
+			datacard.write('JESshape\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(sigShapeJESDown)+'/'+str(sigShapeJESUp) for i in range(len(accDict)) ] ) +'\n' ) 
 			#datacard.write('JESaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(1+sysJESUnc) for i in range(len(accDict)) ] ) +'\n' ) 
 
 			datacard.write('JERshape\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(sigShapeJERDown)+'/'+str(sigShapeJERUp) for i in range(len(accDict)) ] ) +'\n' ) 
@@ -688,7 +690,8 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 	print ' |----> Running combinedCards.py:\n', currentDir+'/Datacards/datacard_'+outputName+'_bins.txt'
 	subprocess.call(  combineCards+' > '+currentDir+'/Datacards/datacard_'+outputName+'_bins.txt', shell=True  )
 	print ' |----> Running combine -M Asymptotic:'
-	subprocess.call( 'combine -M Asymptotic '+currentDir+'/Datacards/datacard_'+outputName+'_bins.txt -n _'+outputName+'_fullShape', shell=True )
+	subprocess.call( 'combine -M Asymptotic '+currentDir+'/Datacards/datacard_'+outputName+'_bins.txt -n _'+outputName, shell=True )
+	#subprocess.call( 'combine -M Asymptotic '+currentDir+'/Datacards/datacard_'+outputName+'_bins.txt -n _'+outputName+'_2sigma', shell=True )
 	print ' |----> Done. Have a wonderful day. :D'
 
 
@@ -751,7 +754,6 @@ if __name__ == '__main__':
 		else: massList = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 280, 300, 350 ]
 		jesUncAcc = [1]*len(massList)
 		#massList = [ 90 ]
-		#massWidthList = [ 8.445039648677378 ]
 		jesUncAcc = {}
 		jesUncAcc[ 80 ] = 0.042
 		#jesUncAcc[ 90 ] =  0.056
@@ -835,7 +837,6 @@ if __name__ == '__main__':
 						signalSample, 
 						'massAve_'+( '2btag' if 'UDD323' in args.decay else 'deltaEtaDijet' ), 
 						mass, 
-						( 0 if args.ttbarAsSignal else 10 ), #massWidthList[ mass ] ), 
 						jesUncAcc[ mass ], 
 						jerUncAcc[ mass ], 
 						minMass, maxMass, 

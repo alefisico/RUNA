@@ -306,6 +306,83 @@ def plotLimits( listMasses  ):
 	print 'Processing.......', fileName
 	c.SaveAs( 'Plots/'+fileName )
 
+def compareLimits( listMasses, diffVersions ):
+	"""docstring for compareLimits"""
+	
+	masses = array('d', listMasses )
+	xs_theory = array('d')
+
+	diffLimitsDict = OrderedDict()
+	for ver in diffVersions:
+		diffLimitsDict[ ver+'_' ] = array('d')
+	
+	for mass in listMasses:
+
+		XS = search( dictXS, 'RPVStopStopToJets_'+args.decay+'_M-'+str(mass) )
+		xs_theory.append( XS )
+
+		for ver in diffVersions:
+			combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(mass)+args.grooming+'_'+args.sys+'_'+args.version+ver+'.'+args.method+".mH120.root"
+			tmpFile, tmpTree, tmpEntries = getTree( combineFile, "limit" )
+			for i in xrange(tmpEntries):
+				tmpTree.GetEntry(i)
+				tmp = round( tmpTree.quantileExpected, 2)
+				#if tmp == 0.03: diffLimits[ ver+'_' ]_2sigma.append( tmpTree.limit * XS )
+				#if tmp == 0.16: diffLimits[ ver+'_' ]_1sigma.append( tmpTree.limit * XS )
+				if tmp == 0.5: diffLimitsDict[ ver+'_' ].append( tmpTree.limit * XS )
+				#if tmp == 0.84: diffLimits[ ver+'_' ]_1sigma_up.append( tmpTree.limit * XS )
+				#if tmp == 0.98: diffLimits[ ver+'_' ]_2sigma_up.append( tmpTree.limit * XS ) 
+				#if tmp == -1: xs_obs_limits.append( tmpTree.limit * XS )
+
+	legend = TLegend(.45,.60,.90,.88)
+	legend.SetTextSize(0.03)
+	legend.SetBorderSize(0)
+	legend.SetFillColor(0)
+	legend.SetFillStyle(0)
+	legend.SetTextFont(42)
+
+	graph_xs_th = TGraph(len(masses),masses,xs_theory)
+	shadow_graph_xs_th = graph_xs_th.Clone()
+	graph_xs_th.SetLineWidth(3)
+	graph_xs_th.SetLineStyle(2)
+	graph_xs_th.SetLineColor(kMagenta)
+	shadow_graph_xs_th.SetLineWidth(10)
+	shadow_graph_xs_th.SetLineColorAlpha(kMagenta, 0.15);
+        legend.AddEntry(graph_xs_th,"Top squark pair production #lambda_{"+("312" if '312' in args.decay else '323')+"}^{''} (#tilde{t} #rightarrow "+("qq)" if '312' in args.decay else 'bq)' ),"l")
+
+	diffLimitsGraphDict = OrderedDict()
+	dummy=1
+	for l in diffLimitsDict:
+		diffLimitsGraphDict[ l ] = TGraph( len(masses), masses, diffLimitsDict[l] ) 
+		diffLimitsGraphDict[ l ].SetLineWidth(3)
+		diffLimitsGraphDict[ l ].SetLineStyle(2)
+		diffLimitsGraphDict[ l ].SetLineColor(dummy)
+		legend.AddEntry(diffLimitsGraphDict[ l ], ( 'Nominal' if '_' == l else l.replace('_', '') ),"lp")
+		dummy+=1
+
+	c = TCanvas("c", "",800,600)
+	c.cd()
+
+	diffLimitsGraphDict[ diffVersions[-1]+'_' ].GetXaxis().SetTitle("Resonance mass [GeV]")
+	diffLimitsGraphDict[ diffVersions[-1]+'_' ].GetYaxis().SetTitle("#sigma #times #it{B} [pb]")
+	diffLimitsGraphDict[ diffVersions[-1]+'_' ].GetYaxis().SetTitleOffset(1.1)
+	if 'Boosted' in args.boosted: diffLimitsGraphDict[ diffVersions[-1]+'_' ].GetYaxis().SetRangeUser(3,1e+04)
+	elif 'Resolved' in args.boosted: diffLimitsGraphDict[ diffVersions[-1]+'_' ].GetYaxis().SetRangeUser(0.01,100)
+	else: diffLimitsGraphDict[ diffVersions[-1]+'_' ].GetYaxis().SetRangeUser(0.01,10000)
+
+	diffLimitsGraphDict[ diffVersions[-1]+'_' ].Draw("AL")
+	for l in diffLimitsDict: diffLimitsGraphDict[l].Draw("L")
+	graph_xs_th.Draw("L")
+    	legend.Draw()
+
+	CMS_lumi.relPosX = 0.13
+	CMS_lumi.CMS_lumi(c, 4, 0)
+
+	c.SetLogy()
+	fileName = 'xs_limit_RPVStop_'+args.decay+''+args.grooming+'_'+args.boosted+'_'+args.sys+'_'+args.method+'_diff_'+(''.join(diffVersions))+'_'+args.version+'.'+args.ext
+	print 'Processing.......', fileName
+	c.SaveAs( 'Plots/'+fileName )
+
 if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser()
@@ -352,4 +429,6 @@ if __name__ == '__main__':
 		else: 
 			listMass = range( 80, 300, 20) + range( 300, 1050, 50 ) + [ 1100, 1200 ]
 			listMass.remove( 260 )
-	plotLimits( listMass  )
+
+	if 'compare' in args.process: compareLimits( listMass, ['_1sigma', '_2sigma', '_4sigma', '_10sigma' ] )
+	else: plotLimits( listMass  )
