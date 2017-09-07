@@ -3,7 +3,6 @@
 #from ROOT import TFile, TH1F, THStack, TCanvas, TMath, gROOT, gPad
 from ROOT import *
 import ROOT as rt
-from cuts import selection
 
 varLabels = {}
 varLabels[ 'prunedMassAsym' ] = 'Asym'

@@ -14,7 +14,7 @@ import warnings
 import random
 import numpy as np
 import subprocess
-from multiprocessing import Process
+#from multiprocessing import Process
 try: 
 	from RUNA.RUNAnalysis.scaleFactors import *
 	from RUNA.RUNAnalysis.commonFunctions import *
@@ -674,10 +674,11 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 			### statistical uncertanties
 			tmp = 0
 			for sample, acc in accDict.items():
-				datacard.write(sample+'StatUnc'+str(ibin)+'\t\tlnN\t' + '\t'.join([ str(acc[1]) if tmp==i else '-' for i in range(len(accDict)) ]) + '\n' )
+				if not 'qcd' in sample:
+					datacard.write(sample+'StatUnc'+str(ibin)+'\t\tlnN\t' + '\t'.join([ str(acc[1]) if tmp==i else '-' for i in range(len(accDict)) ]) + '\n' )
 				tmp+=1
 
-			datacard.write('JESshape\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(sigShapeJESDown)+'/'+str(sigShapeJESUp) for i in range(len(accDict)) ] ) +'\n' ) 
+			#datacard.write('JESshape\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(sigShapeJESDown)+'/'+str(sigShapeJESUp) for i in range(len(accDict)) ] ) +'\n' ) 
 			#datacard.write('JESaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(1+sysJESUnc) for i in range(len(accDict)) ] ) +'\n' ) 
 
 			datacard.write('JERshape\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(sigShapeJERDown)+'/'+str(sigShapeJERUp) for i in range(len(accDict)) ] ) +'\n' ) 
@@ -690,8 +691,8 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 	print ' |----> Running combinedCards.py:\n', currentDir+'/Datacards/datacard_'+outputName+'_bins.txt'
 	subprocess.call(  combineCards+' > '+currentDir+'/Datacards/datacard_'+outputName+'_bins.txt', shell=True  )
 	print ' |----> Running combine -M Asymptotic:'
-	subprocess.call( 'combine -M Asymptotic '+currentDir+'/Datacards/datacard_'+outputName+'_bins.txt -n _'+outputName, shell=True )
-	#subprocess.call( 'combine -M Asymptotic '+currentDir+'/Datacards/datacard_'+outputName+'_bins.txt -n _'+outputName+'_2sigma', shell=True )
+	#subprocess.call( 'combine -M Asymptotic '+currentDir+'/Datacards/datacard_'+outputName+'_bins.txt -n _'+outputName, shell=True )
+	subprocess.call( 'combine -M Asymptotic '+currentDir+'/Datacards/datacard_'+outputName+'_bins.txt -n _'+outputName+'_2sigma', shell=True )
 	print ' |----> Done. Have a wonderful day. :D'
 
 
@@ -832,6 +833,15 @@ if __name__ == '__main__':
 		print '#'*50  
 
 		if 'bin' in args.job: 
+			binByBinCards( dataFileHistos, bkgFileHistos, signalFileHistos, 
+						signalSample, 
+						'massAve_'+( '2btag' if 'UDD323' in args.decay else 'deltaEtaDijet' ), 
+						mass, 
+						jesUncAcc[ mass ], 
+						jerUncAcc[ mass ], 
+						minMass, maxMass, 
+						outputName ) 
+		'''
 			p = Process( target=binByBinCards, 
 					args=( dataFileHistos, bkgFileHistos, signalFileHistos, 
 						signalSample, 
@@ -852,3 +862,4 @@ if __name__ == '__main__':
 					outputFileTheta ) )
 		p.start()
 		p.join()
+		'''

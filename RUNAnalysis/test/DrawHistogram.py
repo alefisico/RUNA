@@ -15,7 +15,6 @@ from collections import OrderedDict
 try:
 	from RUNA.RUNAnalysis.histoLabels import labels, labelAxis, finalLabels, setSelection
 	from RUNA.RUNAnalysis.scaleFactors import * #scaleFactor as SF
-	from RUNA.RUNAnalysis.cuts import selection 
 	import RUNA.RUNAnalysis.CMS_lumi as CMS_lumi 
 	import RUNA.RUNAnalysis.tdrstyle as tdrstyle
 	from RUNA.RUNAnalysis.commonFunctions import *
@@ -23,7 +22,6 @@ except ImportError:
 	sys.path.append('../python')
 	from histoLabels import labels, labelAxis, finalLabels
 	from scaleFactors import * #scaleFactor as SF
-	from cuts import selection 
 	import CMS_lumi as CMS_lumi 
 	import tdrstyle as tdrstyle
 	from commonFunctions import *
@@ -250,7 +248,7 @@ def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax
 				hRatio.Reset()
 				allBkgWindow = 0
 				allSigWindow = 0
-				for ibin in range((args.mass-40)/rebinX, (args.mass+40)/rebinX+1 ): 
+				for ibin in range((args.mass-20)/rebinX, (args.mass+20)/rebinX+1 ): 
 					binContSignal = signalHistos[ args.mass ].GetBinContent(ibin)
 					allSigWindow += binContSignal
 					binContBkg = hBkg.GetBinContent(ibin)
@@ -482,7 +480,7 @@ def plotCutFlow( signalFiles, bkgFiles, listOfCuts, name, xmax ):
 				#signalInt =  histos[ iSignal ].IntegralAndError( 0, xmax, signalIntErr )
 				signalInt = histos[ iSignal ].GetEntries()
 				signalIntErr = TMath.Sqrt( signalInt )
-				signalPercentage = round( signalInt / signalTotalNumber, 2 )*100
+				signalPercentage = round( signalInt / signalTotalNumber, 3 )*100
 				signalCF = '& $'+str( round(signalInt,2) )+' \pm '+str( round(signalIntErr,2) )+'$ & $'+str(signalPercentage)+'$ '
 				line = line + signalCF
 				dictCF[ icut ] = dictCF[ icut ]+signalCF
@@ -1319,9 +1317,9 @@ if __name__ == '__main__':
 		[ '1D', 'Boosted', 'jet2Eta', -3, 3, 1, '', '', False],
 		[ '1D', 'Boosted', 'jet2Mass', 0, massMaxX, 1, '', '', False],
 		[ '1D', 'Boosted', 'massAve', 60, 350, 5, 0.92, 0.85, True, False],
-		[ '1DDATA', 'Boosted', 'massAve', 60, 350, (5 if 'deltaEtaDijet' in args.cut else 10 ), 0.92, 0.85, True, False],
-		#[ '1DData', 'Boosted', 'massAve', 60, 350, (1 if args.miniTree else 5), 0.92, 0.85, True, False],
-		#[ '1DDATA', 'Resolved', 'massAve', 0, 1000, 20, 0.92, 0.85, False, False],
+		[ '1dDATA', 'Boosted', 'massAve', 60, 350, (5 if 'deltaEtaDijet' in args.cut else 10 ), 0.92, 0.85, True, False],
+		#[ '1dData', 'Boosted', 'massAve', 60, 350, (1 if args.miniTree else 5), 0.92, 0.85, True, False],
+		#[ '1dDATA', 'Resolved', 'massAve', 0, 1000, 20, 0.92, 0.85, False, False],
 
 		[ '1D', 'Resolved', 'HT', 700, 5000, 2, '', '', True, False],
 		[ '1D', 'Resolved', 'jet1Pt', 100, 1500, 2, '', '', True, False],
