@@ -58,7 +58,7 @@ process.source = cms.Source("PoolSource",
 #		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD312_M-200_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2/130000/9C3C781C-49F7-E611-852B-02163E01A627.root',
 
 
-		#### 300
+		#### 300 UDD312
 #		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD312_M-300_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2/130000/42CDB861-AAF7-E611-833B-0025901AC182.root',
 #		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD312_M-300_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2/130000/7A5103A1-CDF7-E611-907B-D4AE526DF2E3.root',
 #		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD312_M-300_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2/130000/406D0E0B-D2F6-E611-96EC-FA163E5F989F.root',
@@ -71,11 +71,19 @@ process.source = cms.Source("PoolSource",
 #		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD312_M-300_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2/130000/A42BAA3F-34F7-E611-83C1-02163E0143A8.root',
 #		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD312_M-300_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2/130000/8EE6D70C-44F7-E611-A46D-02163E01A793.root',
 #		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD312_M-300_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2/130000/7E3132EB-57F7-E611-9C17-02163E013709.root',
+		#### UDD323 300
+		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD323_M-300_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/70000/18975FE7-45D1-E611-9761-6CC2173BC1A0.root',
+		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD323_M-300_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/70000/4AF776F7-7DD0-E611-9119-047D7BD6DD9A.root',
+		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD323_M-300_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/70000/BCF42E07-46D1-E611-801D-047D7BD6DE5C.root',
+		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD323_M-300_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/70000/5E8D9C57-43D1-E611-A536-848F69FD3D0D.root',
+#		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD323_M-300_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/70000/A028ACC7-45D1-E611-AE77-00259029ED1A.root',
+#		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD323_M-300_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/70000/06BB7BB9-45D1-E611-8B62-FA163EF17138.root',
+
 		#### 500
-		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD312_M-500_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2/130000/3CC1EB8E-7AF7-E611-A101-FA163EE55D2F.root',
-		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD312_M-500_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2/130000/9C2396EE-76F7-E611-BF7C-001E67E6F7BA.root',
-		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD312_M-500_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2/130000/6E68BB71-71F7-E611-9067-02163E01A61B.root',
-		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD312_M-500_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2/130000/C21D60F4-77F7-E611-B561-02163E01379D.root',
+#		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD312_M-500_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2/130000/3CC1EB8E-7AF7-E611-A101-FA163EE55D2F.root',
+#		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD312_M-500_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2/130000/9C2396EE-76F7-E611-BF7C-001E67E6F7BA.root',
+#		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD312_M-500_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2/130000/6E68BB71-71F7-E611-9067-02163E01A61B.root',
+#		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD312_M-500_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2/130000/C21D60F4-77F7-E611-B561-02163E01379D.root',
 		#### 800
 #		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD312_M-800_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2/130000/D059EB4C-C3F6-E611-9C7C-28924A35056E.root',
 #		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD312_M-800_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2/130000/5000BB60-C3F6-E611-85E4-D8D385AF8ACC.root',
@@ -84,7 +92,7 @@ process.source = cms.Source("PoolSource",
 #		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD312_M-800_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2/130000/0E1FD325-C3F6-E611-9765-6CC2173C9150.root',
 #		'/store/mc/RunIISummer16MiniAODv2/RPVStopStopToJets_UDD312_M-800_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2/130000/B65B5F22-C4F6-E611-8EC3-0025905C54C6.root',
 		) )
-process.TFileService=cms.Service("TFileService", fileName=cms.string('simpleMatching_RPVStop500.root'))
+process.TFileService=cms.Service("TFileService", fileName=cms.string('simpleMatching_RPVStop323300.root'))
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( 50000 ) )
     
 process.selectedPatJetsAK4 = cms.EDFilter("PATJetSelector",

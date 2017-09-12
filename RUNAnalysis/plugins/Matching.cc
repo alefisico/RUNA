@@ -176,7 +176,6 @@ pat::Jet checkDeltaR(reco::Candidate & p1, Handle<pat::JetCollection> jets, doub
 			deltaR = tmpdeltaR;
 			if( deltaR < minDeltaR ) { 
 				matchedJet = p2;
-				//edm::LogWarning("final deltaR") << j << " "  << tmpdeltaR << " " << matchedJet.pt();
 			}
 		}
 	}
@@ -245,7 +244,7 @@ Matching::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 		reco::CandidateCollection daughtersCollection = checkDaughters( part, finalParticlesCollection ); 
 		
-		pat::JetCollection ak8JetsMatched, ak4JetsMatched;
+		pat::JetCollection ak8JetsMatched, ak4JetsMatched, ak4BJetsMatched, ak4LightJetsMatched;
 		//double tmpAK8JetPt = 999, tmpAK4JetPt = 999;
 		//int tmpNumDauAK8 = 0; 
 		for( auto & dau : daughtersCollection ) {
@@ -267,6 +266,19 @@ Matching::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 				ak4JetsMatched.push_back( tmpAK4Jet );
 				tmpAK4JetPt = tmpAK4Jet.pt();
 			}*/
+			if( TMath::Abs( dau.pdgId() ) == 5 ){
+				pat::Jet tmpBAK4Jet = checkDeltaR( dau, AK4jets, 0.3, histos1D_[ "p1AK4DeltaR" ], histos1D_[ "minP1AK4DeltaR" ] );
+				if( tmpBAK4Jet.pt() > 0 ) {
+					double bRatio = tmpBAK4Jet.pt() / dau.pt() ;
+					histos1D_[ "ratioBpartvsjet" ]->Fill( bRatio );
+				}
+			} else {
+				pat::Jet tmplightAK4Jet = checkDeltaR( dau, AK4jets, 0.3, histos1D_[ "p1AK4DeltaR" ], histos1D_[ "minP1AK4DeltaR" ] );
+				if( tmplightAK4Jet.pt() > 0 ) {
+					double lightRatio = tmplightAK4Jet.pt() / dau.pt() ;
+					histos1D_[ "ratiolightpartvsjet" ]->Fill( lightRatio );
+				}
+			}
 		}
 
 		//for( auto & ak8J : ak8JetsMatched ) LogWarning("matched AK8") << ak8J.pt();
@@ -309,13 +321,26 @@ Matching::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 				numResolved += parent.AK4matchedJets.size();
 				//LogWarning("matched ak4") << parent.AK4matchedJets[0].pt() << " " << parent.AK4matchedJets[1].pt();
 			}
+
+			for (int i = 0; i < 2; i++) {
+					//LogWarning("btag") << i << " " << parent.AK4matchedJets[i].partonFlavour() << " " << parent.AK4matchedJets[i].pt();
+				if ( TMath::Abs( parent.AK4matchedJets[i].partonFlavour() ) == 5 ) {
+					//LogWarning("btag") << i << " " << parent.AK4matchedJets[i].partonFlavour() << " " << parent.AK4matchedJets[i].pt();
+					histos1D_[ "p1Daughters1JetPt" ]->Fill( parent.AK4matchedJets[i].pt() );
+				} else {
+					histos1D_[ "p1Daughters2JetPt" ]->Fill( parent.AK4matchedJets[i].pt() );
+				}
+			}
 		}
 
 		for( auto & dau : parent.daughters ){
 			histos1D_[ "p1DaughtersPdgId" ]->Fill( dau.pdgId() );
+
 		}
 		
 		if ( parent.daughters.size() == 2 ) {
+			
+
 			double dau1Pt = parent.daughters[0].pt();
 			double dau2Pt = parent.daughters[1].pt();
 			if ( dau1Pt > dau2Pt ) {
@@ -542,6 +567,10 @@ void Matching::beginJob() {
 	histos1D_[ "p1Daughters12Eta" ] = fileService->make< TH1D >( "p1Daughters12Eta", "p1Daughters12Eta", 40, -5, 5 );
 	histos1D_[ "p1Daughters12Eta" ]->SetXTitle( "p1Collection daughters 12 Eta" );
 	histos2D_[ "p1Daughters2DPt" ] = fileService->make< TH2D >( "p1Daughters2DPt", "p1Daughters2DPt", 1000, 0, 1000, 1000, 0, 1000 );
+	histos1D_[ "p1Daughters1JetPt" ] = fileService->make< TH1D >( "p1Daughters1JetPt", "p1Daughters1JetPt", 1000, 0, 1000 );
+	histos1D_[ "p1Daughters1JetPt" ]->SetXTitle( "p1Collection daughters 1 Jet Pt" );
+	histos1D_[ "p1Daughters2JetPt" ] = fileService->make< TH1D >( "p1Daughters2JetPt", "p1Daughters2JetPt", 1000, 0, 1000 );
+	histos1D_[ "p1Daughters2JetPt" ]->SetXTitle( "p1Collection daughters 2 Jet Pt" );
 
 
 	histos1D_[ "p1AK8DeltaR" ] = fileService->make< TH1D >( "p1AK8DeltaR", "p1AK8DeltaR", 150, 0., 1.5 );
@@ -556,6 +585,10 @@ void Matching::beginJob() {
 	histos1D_[ "numBoostedJets" ]->SetXTitle( "Number of Boosted Jets" );
 	histos1D_[ "numResolvedJets" ] = fileService->make< TH1D >( "numResolvedJets", "numResolvedJets", 10, 0., 10 );
 	histos1D_[ "numResolvedJets" ]->SetXTitle( "Number of Resolved Jets" );
+	histos1D_[ "ratioBpartvsjet" ] = fileService->make< TH1D >( "ratioBpartvsjet", "ratioBpartvsjet", 20, 0., 2. );
+	histos1D_[ "ratioBpartvsjet" ]->SetXTitle( "Ratio b particle/jets" );
+	histos1D_[ "ratiolightpartvsjet" ] = fileService->make< TH1D >( "ratiolightpartvsjet", "ratiolightpartvsjet", 20, 0., 2. );
+	histos1D_[ "ratiolightpartvsjet" ]->SetXTitle( "Ratio light particle/jets" );
 
 	histos1D_[ "jet1ak8Mass_TwoBoostedFourResolved" ] = fileService->make< TH1D >( "jet1ak8Mass_TwoBoostedFourResolved", "jet1ak8Mass_TwoBoostedFourResolved", 1200, 0., 1200. );
 	histos1D_[ "jet1ak8Mass_TwoBoostedFourResolved" ]->SetXTitle( "2 boosted matched Mass Jet [GeV]" );
