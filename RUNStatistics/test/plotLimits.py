@@ -322,7 +322,8 @@ def compareLimits( listMasses, diffVersions ):
 		xs_theory.append( XS )
 
 		for ver in diffVersions:
-			combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(mass)+args.grooming+'_'+args.sys+'_'+args.version+ver+'.'+args.method+".mH120.root"
+			if 'Resolved' in args.boosted: combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(mass)+args.grooming+'_'+ver+'_'+args.version+'.'+args.method+".mH120.root"
+			else: combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(mass)+args.grooming+'_'+args.sys+'_'+args.version+ver+'.'+args.method+".mH120.root"
 			tmpFile, tmpTree, tmpEntries = getTree( combineFile, "limit" )
 			for i in xrange(tmpEntries):
 				tmpTree.GetEntry(i)
@@ -395,7 +396,7 @@ if __name__ == '__main__':
 	parser.add_argument('-l', '--lumi', dest='lumi', action='store', type=float, default=149.9, help='Luminosity, example: 1.' )
 	parser.add_argument('-e', '--extension', dest='ext', action='store', default='png', help='Extension of plots.' )
 	parser.add_argument('-s', '--sys', dest='sys', action='store', default='NOSys', help='With systematics or not.' )
-	parser.add_argument('-m', '--method', dest='method', action='store', default='Asymptotic', help='Limit method: Asymptotic, HybridNew' )
+	parser.add_argument('-m', '--method', dest='method', action='store', default='AsymptoticLimits', help='Limit method: Asymptotic, HybridNew' )
 	parser.add_argument('-a', '--addComparison', dest='addComparison', action='store', type=bool, default=False, help='Adding comparisons to plots.' )
 
 	try:
@@ -430,5 +431,5 @@ if __name__ == '__main__':
 			listMass = range( 80, 300, 20) + range( 300, 1050, 50 ) + [ 1100, 1200 ]
 			listMass.remove( 260 )
 
-	if 'compare' in args.process: compareLimits( listMass, ['_1sigma', '_2sigma', '_4sigma', '_10sigma' ] )
+	if 'compare' in args.process: compareLimits( listMass, (['_1sigma', '_2sigma', '_4sigma', '_10sigma' ] if 'Boosted' in args.boosted else [ 'delta_massWindow', 'delta_2CSVv2L_massWindow' ] ) )#'delta_massWindow' ] ) ) 
 	else: plotLimits( listMass  )

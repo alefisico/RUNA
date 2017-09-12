@@ -42,7 +42,7 @@ do
 
 	if [ $2 == "Resolved" ]
 	then
-		combine -M Asymptotic Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_${version}.txt -n _RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_${version}
+		combine -M AsymptoticLimits Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_${version}.txt -n _RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_${version}
 
 	elif [ $2 == "Bias" ]
 	then

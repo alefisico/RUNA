@@ -13,7 +13,7 @@ gROOT.SetBatch()
 def main():
 
      #inputFileWorkspace = TFile("Rootfiles/workspace_RPVStopStopToJets_UDD312_M-300_Resolved_delta_BiasTest_v08p0.root") 
-     inputFileWorkspace = TFile("Rootfiles/workspace_RPVStopStopToJets_UDD312_M-200_Resolved_delta_v09p1.root") 
+     inputFileWorkspace = TFile("Rootfiles/workspace_RPVStopStopToJets_UDD312_M-400_Resolved_delta_v09p1.root") 
      #inputFileWorkspace = TFile("test.root") 
 
      workspace = inputFileWorkspace.Get("myWS")
@@ -59,15 +59,16 @@ def main():
 #     #print "signal_TH1_fineBinning integral = ", signal_TH1_fineBinning.Integral()
 
      canvas = TCanvas()
-     #canvas.SetLogy()
-     #xframe = workspace.var("mass").frame()
-     #workspace.pdf("background").plotOn(xframe)
+     canvas.SetLogy()
+     xframe = workspace.var("mass").frame()
+     data.plotOn(xframe)
+     workspace.pdf("background").plotOn(xframe)
      #workspace.pdf("landau_pdf").plotOn(xframe)
-     #workspace.pdf("signal").plotOn(xframe)
-     #xframe.Draw()
+     workspace.pdf("signal").plotOn(xframe)
+     xframe.Draw()
 
      #data_TH1_fineBinning.Rebin(10)    
-     data_TH1_fineBinning.Draw()    
+     #data_TH1_fineBinning.Draw()    
      #signal_TH1_fineBinning.Rebin(10)
      #signal_TH1_fineBinning.Draw('')    
      #signalUp_TH1_fineBinning.Draw("hist same")    
