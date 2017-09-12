@@ -55,13 +55,14 @@ def createPseudoExperiment( rawFunction, parRawFunction, numEvents, minX, maxX, 
 	"""docstring for createPseudoExperiment"""
 
 	randomNumEventsQCD = random.randint( int(numEvents-round(TMath.Sqrt(numEvents))), int(numEvents+round(TMath.Sqrt(numEvents))) )
-	print "randomNumber Of PseudoExperiment events", randomNumEventsQCD
+	print "randomNumber Of PseudoExperiment events", randomNumEventsQCD, numEvents
 	hMainPSE = TH1D("hbkgPSE", "hbkgPSE", int( (maxX-minX) ) , minX, maxX)
 	hMainPSE.SetBinErrorOption(TH1.kPoisson)
 	if isinstance( rawFunction, TH1 ):
 		hMainPSE.FillRandom( rawFunction, int(randomNumEventsQCD) )
 	else:
 		fitFunction = rawFunction[0][0].Clone() 
+		fitFunction.SetRange( minX, maxX )
 		fitFunction.SetName(rawFunction[0][0].GetName()+"PSE")
 		#### giving initial values to fit
 		for k in range( len(parRawFunction) ): fitFunction.SetParameter(k, parRawFunction[rawFunction[0][0].GetName()][k] )
@@ -90,8 +91,11 @@ def rootFitter( inFile, hist, scale, fitFunctions, minX, maxX, rebinX, plot, log
 
 	tmpBinContent = []
 	tmpBinError = []
-	minBinX = int(minX/(rebinX if args.miniTree else rebinX*10 ))+1
-	maxBinX = int(maxX/(rebinX if args.miniTree else rebinX*10 ))+1
+	#minBinX = int(minX/(rebinX if args.miniTree else rebinX*10 ))+1
+	#maxBinX = int(maxX/(rebinX if args.miniTree else rebinX*10 ))+1
+	minBinX = int(minX/rebinX)+1
+	maxBinX = int(maxX/rebinX)+1
+	#print minX, maxX, minBinX, maxBinX
 
 	#### Initial histo
 	if isinstance( inFile, TFile ):
@@ -102,10 +106,11 @@ def rootFitter( inFile, hist, scale, fitFunctions, minX, maxX, rebinX, plot, log
 	rawHisto.Rebin( rebinX )
 
 	#### extracting bin contents and dividing by bin size
-	print '|----> Creating histograms from bin', minBinX, '(', rawHisto.GetBinLowEdge(minBinX),') to ', maxBinX, '(', rawHisto.GetBinLowEdge(maxBinX),')'
+	print '|----> Creating histograms from bin', minBinX, '(', rawHisto.GetBinLowEdge(minBinX),') to ', maxBinX, '(', rawHisto.GetBinLowEdge(maxBinX),'), initial integral: ', rawHisto.Integral()
 	for ibin in range( minBinX, maxBinX ):
 		tmpBinContent.append( rawHisto.GetBinContent(ibin) / rebinX )
-		tmpBinError.append( ( rawHisto.GetBinError(ibin) if ( rawHisto.GetBinContent(ibin) > 0 ) else 1.8 ) / rebinX )
+		if 'Data' in args.process: tmpBinError.append( ( rawHisto.GetBinError(ibin) if ( rawHisto.GetBinContent(ibin) > 0 ) else 1.8 ) / rebinX ) ## not needed because of kPoisson errors defined below
+		else: tmpBinError.append( rawHisto.GetBinError(ibin)  / rebinX )
 		#print rawHisto.GetBinLowEdge( ibin ), rawHisto.GetBinContent(ibin) , rebinX, rawHisto.GetBinError(ibin)
 
 	binContents = np.array(tmpBinContent)
@@ -116,11 +121,12 @@ def rootFitter( inFile, hist, scale, fitFunctions, minX, maxX, rebinX, plot, log
 	#### creating histo for fitting
 	numBins = maxBinX - minBinX
 	finalHisto = TH1D("finalHisto", "finalHisto", numBins, minX, maxX)
-	finalHisto.Sumw2()
+	finalHisto.Sumw2(False)
 	for ibin in range( 0, numBins ):
 		finalHisto.SetBinContent( ibin+1, binContents[ibin] )
 		finalHisto.SetBinError( ibin+1, binError[ibin] )
-	print '|----> Number of events: ', finalHisto.Integral()
+	finalHisto.SetBinErrorOption(TH1.kPoisson)
+	print '|----> Number of events: ', finalHisto.Integral(), ', bin size:', finalHisto.GetBinWidth(1)
 
 	fitParameters = OrderedDict()
 	fitParErrors = OrderedDict()
@@ -160,12 +166,13 @@ def rootFitter( inFile, hist, scale, fitFunctions, minX, maxX, rebinX, plot, log
 			c1 = TCanvas('c1', 'c1',  10, 10, 750, 500 )
 			if log: c1.SetLogy()
 			finalHisto.GetXaxis().SetTitle( histYaxis )
-			finalHisto.GetYaxis().SetTitle('dN/dm_{av} / '+str(round(rebinX))+' GeV' ) 
+			finalHisto.GetYaxis().SetTitle('dN/dm_{av} / '+str(round(finalHisto.GetBinWidth(1)))+' GeV' ) 
 			finalHisto.GetYaxis().SetTitleOffset(0.9);
 			finalHisto.GetXaxis().SetRangeUser( minX-50, maxX+50 )
 			finalHisto.SetTitle("")
 			finalHisto.Draw()
 			c1.SaveAs(outputDir+hist.replace('ResolvedAnalysisPlots/','')+"_"+args.process+"_"+fitFunc[0].GetName()+"Fit_ResolvedAnalysis_"+args.version+"."+args.extension)
+			print finalHisto.GetBinWidth(1)
 			del c1
 	
 	return [ fitParameters, fitParErrors, binContents, binError ]
@@ -253,6 +260,8 @@ def residualAndPulls(dataPoints, dataErrPoints, function, histo, minX, maxX, ext
 			hResidual.SetBinContent(ibin, diff)
 			hResidual.SetBinError(ibin, binErr/valIntegral )
 
+		#print '|---> Significance of high mass bins: ', binCont, valIntegral, pull
+
 	NDoF = nof - function.GetNpar() - 1
 	print '|----> ############### chi2 and nof: ', chi2, nof
 
@@ -287,7 +296,14 @@ def FitterCombination( inFileData, inFileBkg, inFileSignalName, hist, scale, bkg
 	if (not args.bkgAsData) or (args.pseudoExperiment):
 		print "|----> Fitting Data"
 		if args.pseudoExperiment:
-			inFileData = createPseudoExperiment( inFileBkg.Get( hist+('QCD'+args.qcd+'All' if args.miniTree else '') ), bkgParameters, sum(bkgpoints), minX, maxX, True )
+			#inFileData = createPseudoExperiment( bkgFunction, bkgParameters, sum(bkgpoints), minX, maxX, True )
+			#rawHistoForPSE = inFileBkg.Get( hist+('QCD'+args.qcd+'All' if args.miniTree else '') )
+			#rawHistoForPSE.Scale( scale*QCDSF )
+			#numBkgEvents = rawHistoForPSE.Integral()
+			rawHistoForPSE = inFileData.Get( hist+('JetHT_Run2016' if args.miniTree else '') )
+			numBkgEvents = rawHistoForPSE.Integral()
+			inFileData = createPseudoExperiment( rawHistoForPSE, bkgParameters, numBkgEvents, 0, 3000, True )
+
 		DataParameters = rootFitter( inFileData, 
 				hist+('JetHT_Run2016' if args.miniTree else ''), 
 				1,
@@ -310,7 +326,7 @@ def FitterCombination( inFileData, inFileBkg, inFileSignalName, hist, scale, bkg
 			signalFuncs = OrderedDict()
 			hSBPulls = OrderedDict()
 			hSBResiduals = OrderedDict()
-			for imass in [ args.mass, 700 ]:
+			for imass in [ args.mass, 400 ]:
 				signalFileName = inFileSignalName.replace(str(args.mass), str(imass) )
 				SignalParameters = rootFitter( TFile( signalFileName ), 
 						hist+('RPVStopStopToJets_'+args.decay+'_M-'+str(imass) if args.miniTree else ''), 
@@ -516,7 +532,7 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 					bkgFunctions, 
 					minX, 
 					maxX, 
-					1, #rebinX, 
+					rebinX, 
 					( False if args.bkgAsData else True ))
 
 	########## Storing parameters in RooRealVar
@@ -534,9 +550,10 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 	hData = TH1D("hData", "hData", len(bkgFuncParameters[2]) , minX, maxX)
 	hData.Sumw2()
 	for ibin in range(0, len( bkgFuncParameters[2] ) ):
+		#print ibin+1, bkgFuncParameters[2][ibin]
 		hData.SetBinContent( ibin+1, bkgFuncParameters[2][ibin] )
 		hData.SetBinError( ibin+1, bkgFuncParameters[3][ibin] )
-
+	print '|---> Events in data: ', hData.Integral()
 
 	########### Starting signal fits
 	listAcceptance = []
@@ -545,23 +562,29 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 	for imass in listMass:
 
 		######## Fitting signal and extracting parameters
-		tmpResolution = 9.73 + ( 0.029 * imass)
+		TMPResolution = 9.73 + ( 0.029 * imass)
 		print '|----> Signal'
-		print '|----> tmp resolution', tmpResolution
+		if (TMPResolution/rebinX) < 1 : tmpResolution = rebinX
+		else: tmpResolution = rebinX* round(TMPResolution/rebinX)
+		print '|----> tmp resolution', TMPResolution, tmpResolution
 		SignalParameters = rootFitter( TFile.Open( inFileSignal.replace( str(args.mass), str(imass) ) ), 
 						hist+('RPVStopStopToJets_'+args.decay+'_M-'+str(imass) if args.miniTree else ''), 
 						scale, 
 						[ [ fitFunctions['gaus'][0], [ 1, imass, tmpResolution ] ] ], 
-						imass-(tmpResolution*2), # (100 if (imass < 800 ) else 200 ), 
-						imass+(tmpResolution*1.5), # (100 if (imass < 800 ) else 200 ), 
+						int(imass-(tmpResolution*5)), # (100 if (imass < 800 ) else 200 ), 
+						int(imass+(tmpResolution*5)), # (100 if (imass < 800 ) else 200 ), 
 						rebinX, 
 						True,
 						False )
 
-		print SignalParameters[0]['gaus'][2]
+		jmass = int(SignalParameters[0]['gaus'][1])
 		massWindow = int(SignalParameters[0]['gaus'][2])*2		### size of search
-		print 'mass window', massWindow
-		mass = RooRealVar( 'mass', 'mass', imass-massWindow, imass+massWindow )
+		lowerLimitSearch = ( jmass-massWindow if args.window else minX )
+		upperLimitSearch = ( jmass+massWindow if args.window else maxX )
+
+		print '|----> mass window', massWindow, ', lowerLimitSearch', lowerLimitSearch, ', upperLimitSearch', upperLimitSearch, ', sigma: ',  SignalParameters[0]['gaus'][2]
+		mass = RooRealVar( 'mass', 'mass', lowerLimitSearch, upperLimitSearch )
+		#mass.setBins((upperLimitSearch-lowerLimitSearch))
 		mypdfs = RooArgList()
 
 		### creating RooStats objects for data
@@ -570,26 +593,18 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		rooDataHist.Print()
 
 		### creating RooStats objects for signal
-		sigMean = RooRealVar('sigMean', 'sigMean', imass )
-		sigSigma = RooRealVar('sigSigma', 'sigSigma', SignalParameters[0]['gaus'][2] )
+		sigMean = RooRealVar('sigMean', 'sigMean', SignalParameters[0]['gaus'][1]) #, -100, 100  ) 
+		sigSigma = RooRealVar('sigSigma', 'sigSigma', SignalParameters[0]['gaus'][2]) #, -100, 100 )
 		signal = RooGaussian( 'signal', 'signal', mass, sigMean, sigSigma )
 		signal.Print()
 
-		signalGaus = TF1( "RPVStop"+str(imass), "gaus", imass-massWindow, imass+massWindow )
+		signalGaus = TF1( "RPVStop"+str(imass), "gaus", lowerLimitSearch, upperLimitSearch )
 		signalGaus.SetParameter( 0, SignalParameters[0]['gaus'][0] ) 
-		signalGaus.SetParameter( 1, imass ) 
+		signalGaus.SetParameter( 1, SignalParameters[0]['gaus'][1] ) #jmass ) 
 		signalGaus.SetParameter( 2, SignalParameters[0]['gaus'][2] ) 
-		sigAcc = round( signalGaus.Integral( imass-massWindow, imass+massWindow ), 2 )
-		print '|----> Signal events:', sigAcc
-
-		eventsInAccep = sigAcc / ( scaleFactor( 'RPVStopStopToJets_'+args.decay+'_M-'+str( imass ) )* scale ) ### because sigAcc is scaled
-		totalEvents = search( dictEvents, 'RPVStopStopToJets_'+args.decay+'_M-'+str( imass ) )[0]
-		failedEvents = totalEvents - eventsInAccep
-		accXeff = eventsInAccep / totalEvents 
-		accXeffErr = TMath.Sqrt( (1/failedEvents) + (1/eventsInAccep) ) * failedEvents * eventsInAccep / TMath.Power( ( totalEvents ), 2 )
-		listAcceptance.append( accXeff ) 
-		listAccepError.append( accXeffErr )
-
+		sigAcc = round( signalGaus.Integral( lowerLimitSearch, upperLimitSearch ), 2 )
+		#sigAcc = round( signalGaus.Integral( minX, maxX ), 2 )
+		print '|----> Signal events:', sigAcc, ', total number of events:', signalGaus.Integral(0, 500)
 
 		'''
 		if args.jesUnc:
@@ -614,8 +629,13 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 			tmpBkgFunct = bkgFunc[0].Clone()
 			for p in range( 0, tmpBkgFunct.GetNpar()): 
 				tmpBkgFunct.SetParameter( p, bkgFuncParameters[0][ tmpBkgFunct.GetName() ][p] )
-			bkgAcc = round( tmpBkgFunct.Integral( imass-massWindow, imass+massWindow ), 2 )
-			print '|----> Background events in mass (', imass, '):', bkgAcc
+			bkgAcc = round( tmpBkgFunct.Integral( lowerLimitSearch, upperLimitSearch ), 2 )
+			print '|----> Background events in mass (', imass, '):', bkgAcc 
+			#c1 = TCanvas('c1', 'c1',  10, 10, 750, 500 )
+			#c1.SetLogy()
+			#tmpBkgFunct.Draw()
+			#hData.Draw("hist same")
+			#c1.SaveAs("test.png")
 		
 			tmpList = RooArgList() 
 			tmpList.add( mass ) 
@@ -639,19 +659,19 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 				background.Print()
 
 		#### S+B model this is to fit in RooFit
-		#signal_norm = RooRealVar( 'signal_norm', 'signal_norm', sigAcc, 0, 20.*TMath.Sqrt(sigAcc))
+		signal_norm = RooRealVar( 'signal_norm', 'signal_norm', sigAcc , (sigAcc-TMath.Sqrt(sigAcc)), (sigAcc+TMath.Sqrt(sigAcc)) )
 		#signal_norm = RooRealVar( 'signal_norm', 'signal_norm', sigAcc, 0, 10000000000 ) #+(20.*TMath.Sqrt(sigAcc)))
 		#signal_norm.setConstant()
-		#signal_norm.Print()
-		#background_norm = RooRealVar('background_norm','background_norm', bkgAcc, 0., 20.*TMath.Sqrt(bkgAcc))
-		#background_norm.Print()
+		signal_norm.Print()
+		background_norm = RooRealVar('background_norm','background_norm', bkgAcc, (bkgAcc-TMath.Sqrt(bkgAcc)), (bkgAcc+TMath.Sqrt(bkgAcc))) #, 0., 20.*TMath.Sqrt(bkgAcc))
+		background_norm.Print()
 		#model = RooAddPdf("model","s+b",RooArgList(background,signal),RooArgList(background_norm,signal_norm))
 		#res = model.fitTo(rooDataHist, RooFit.Save(kTRUE), RooFit.Strategy(0), RooFit.SumW2Error(kFALSE))
 		#res.Print()
 		###################################################
 
 		##### creating workspace
-		outputRootFile = '/afs/cern.ch/work/a/algomez/RPVStops/CMSSW_8_0_20/src/RUNA/RUNStatistics/test/Rootfiles/workspace_RPVStopStopToJets_'+args.decay+'_M-'+str(imass)+'_Resolved_'+args.cut+'_'+('BiasTest_' if 'Bias' in args.process else '')+('QCD_' if args.bkgAsData else '' )+args.version+'.root' 
+		outputRootFile = '/afs/cern.ch/work/a/algomez/RPVStops/CMSSW_8_0_20/src/RUNA/RUNStatistics/test/Rootfiles/workspace_RPVStopStopToJets_'+args.decay+'_M-'+str(imass)+'_Resolved_'+args.cut+'_'+('BiasTest_' if 'Bias' in args.process else '')+('QCD_' if args.bkgAsData else '' )+('massWindow_' if args.window else '' )+args.version+'.root' 
 		if 'Bias' in args.process:
 			cat = RooCategory( "pdf_index", "Index of Pdf which is active" )
 			multipdf = RooMultiPdf( "roomultipdf", "All Pdfs", cat, mypdfs )
@@ -681,13 +701,16 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 			getattr(myWS,'import')(background, RooCmdArg())
 			getattr(myWS,'import')(signal)
 			getattr(myWS,'import')(rooDataHist2) 
+			##### IF included _norm, then the rate should be 1
+			#getattr(myWS,'import')(background_norm)
+			#getattr(myWS,'import')(signal_norm)
 			myWS.Print()
 			myWS.writeToFile(outputRootFile, True)
 
 		print '|----> Workspace created:', outputRootFile
 
 		##### write a datacard
-		datacard = open('/afs/cern.ch/work/a/algomez/RPVStops/CMSSW_8_0_20/src/RUNA/RUNStatistics/test/Datacards/datacard_RPVStopStopToJets_'+args.decay+'_M-'+str(imass)+'_Resolved_'+args.cut+'_'+('BiasTest_' if 'Bias' in args.process else '')+('QCD_' if args.bkgAsData else '' )+args.version+'.txt','w')
+		datacard = open('/afs/cern.ch/work/a/algomez/RPVStops/CMSSW_8_0_20/src/RUNA/RUNStatistics/test/Datacards/datacard_RPVStopStopToJets_'+args.decay+'_M-'+str(imass)+'_Resolved_'+args.cut+'_'+('BiasTest_' if 'Bias' in args.process else '')+('QCD_' if args.bkgAsData else '' )+('massWindow_' if args.window else '' )+args.version+'.txt','w')
 		datacard.write('imax 1\n')
 		datacard.write('jmax 1\n')
 		datacard.write('kmax *\n')
@@ -705,26 +728,34 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		datacard.write('process      signal     background\n')
 		datacard.write('process      0          1\n')
 		datacard.write('rate         '+str(sigAcc)+'      '+str(bkgAcc)+'\n')
+		#datacard.write('rate         1		1\n')    ##### rate is 1 is _norm are included
 		datacard.write('------------------------------\n')
 		if 'Bias' in args.process: datacard.write('pdf_index\tdiscrete\n')
-		for bF in bkgFuncParameters[0]:
-			for par in range( 1, len(bkgFuncParameters[0][bF]) ):
-				datacard.write( bF+'p'+str(par)+'\tparam\t'+str(bkgFuncParameters[0][bF][par])+'\t'+str(bkgFuncParameters[1][bF][par])+'\n' )
-				#datacard.write( bF+'p'+str(par)+'\tflatParam\n')
 		datacard.write("lumi\tlnN\t1.025\t-\n")
 		datacard.write("trigger\tlnN\t1.05\t-\n")
-		datacard.write("sigSigma\tparam\t"+str(SignalParameters[0]['gaus'][1])+'\t'+str(SignalParameters[1]['gaus'][1])+"\n")
-		datacard.write("sigMean\tparam\t"+str(SignalParameters[0]['gaus'][2])+'\t'+str(SignalParameters[1]['gaus'][2])+"\n")
+		datacard.write("sigMean\tparam\t"+str(round(SignalParameters[0]['gaus'][1],3))+'\t'+str(round(SignalParameters[1]['gaus'][1],3))+"\n")
+		datacard.write("sigSigma\tparam\t"+str(round(SignalParameters[0]['gaus'][2],3))+'\t'+str(round(SignalParameters[1]['gaus'][2],3))+"\n")
 		#datacard.write("# SigNormPDF   lnN    1.0300       - \n")
 		datacard.write("SigNormJES\tlnN\t1.03\t-\n")
 		datacard.write("SigNormJER\tlnN\t1.10\t-\n")
-		datacard.write("# SigNormPU   lnN    1.0200        - \n")
+		datacard.write("SigNormPU   lnN    1.0200        - \n")
 		#datacard.write("# SigNormISR   lnN    1.1000        - \n")
 		#datacard.write("# SigNormBtag   lnN    1.0000       - -\n")
 		datacard.close()
 		print '|----> Datacard created:', datacard
 	
-	if ('Limit' in args.process ) and not args.bkgAsData :
+		if args.acceptance:
+			##### For acceptance
+			eventsInAccep = sigAcc / ( scaleFactor( 'RPVStopStopToJets_'+args.decay+'_M-'+str( imass ) )* scale ) ### because sigAcc is scaled
+			totalEvents = search( dictEvents, 'RPVStopStopToJets_'+args.decay+'_M-'+str( imass ) )[0]
+			failedEvents = totalEvents - eventsInAccep
+			accXeff = eventsInAccep / totalEvents 
+			accXeffErr = TMath.Sqrt( (1/failedEvents) + (1/eventsInAccep) ) * failedEvents * eventsInAccep / TMath.Power( ( totalEvents ), 2 )
+			listAcceptance.append( accXeff ) 
+			listAccepError.append( accXeffErr )
+
+
+	if args.acceptance:
 
 		print '|----> Creating acceptance plots'
 		print listMass, listAcceptance, listAccepError
@@ -772,8 +803,6 @@ def FisherTest( dataFile, hist, bkgFunctions, minX, maxX, rebinX ):
 	"""docstring for FisherTest"""
 
 	if args.bkgAsData:
-		if args.pseudoExperiment:
-			dataFile = createPseudoExperiment( inFileBkg.Get( hist+('QCD'+args.qcd+'All' if args.miniTree else '') ), bkgParameters, sum(bkgpoints), minX, maxX, True )
 		fitParameters = rootFitter( dataFile, 
 				hist+( 'QCD'+args.qcd+'All' if args.miniTree else ''), 
 				scale, 
@@ -783,6 +812,10 @@ def FisherTest( dataFile, hist, bkgFunctions, minX, maxX, rebinX ):
 				rebinX, 
 				False )
 	else:
+		if args.pseudoExperiment:
+			rawHistoForPSE = dataFile.Get( hist+('JetHT_Run2016' if args.miniTree else '') )
+			numBkgEvents = rawHistoForPSE.Integral()
+			dataFile = createPseudoExperiment( rawHistoForPSE, '', numBkgEvents, 0, 3000, True )
 		fitParameters = rootFitter( dataFile, 
 				hist+( 'JetHT_Run2016' if args.miniTree else ''), 
 				1, 
@@ -1216,6 +1249,8 @@ if __name__ == '__main__':
 	parser.add_argument('-C', '--cut', action='store', default='delta', help='cut, example: cutDEta' )
 	parser.add_argument('-F', '--func', action='store', default='P3', help='Function, example: P3, P4, P5' )
 	parser.add_argument('-P', '--pseudoExperiment', action='store_true', default=False, help='Run pseudoexperiment.' )
+	parser.add_argument('-a', '--acceptance', action='store_true', default=False, help='Create acceptance plots.' )
+	parser.add_argument('-W', '--window', action='store_true', default=False, help='Create acceptance plots.' )
 
 	try:
 		args = parser.parse_args()
@@ -1250,7 +1285,7 @@ if __name__ == '__main__':
 	###### Input parameters
 	histYaxis = "Average dijet mass [GeV]"
 	minFit = 160
-	maxFit = 1260
+	maxFit = 1300
 	CMS_lumi.lumi_13TeV = str( round( (args.lumi/1000.), 1 ) )+" fb^{-1}"
 	CMS_lumi.extraText = "Preliminary Simulation"
 
@@ -1258,7 +1293,7 @@ if __name__ == '__main__':
 	fitFunctions = {}
 	fitFunctions['P5'] = [ TF1("P5", "[0]*TMath::Power(1-(x/13000.0),[1])/(TMath::Power(x/13000.0,[2]+([3]*TMath::Log(x/13000.))+([4]*TMath::Power(TMath::Log(x/13000.),2))))",0,2000), 
 			#[ 1, 100, 2, 0.1, 0.01], 
-			[ 1, 100, 1, .1, 0.01], 
+			[ 1, 80, 0, .001, 0.0001], 
 			'(pow(1-@0/13000,@1)/pow(@0/13000,@2+@3*log(@0/13000)+@4*pow(log(@0/13000),2))' ]
 
 	fitFunctions['P4'] = [ TF1("P4", "[0]*TMath::Power(1-(x/13000.0),[1])/(TMath::Power(x/13000.0,[2]+([3]*TMath::Log(x/13000.))))",0,2000), 
@@ -1319,7 +1354,7 @@ if __name__ == '__main__':
 				hist, 
 				scale, 
 				[fitFunctions['P3']], 
-				minFit, maxFit, 10 ) )
+				minFit, maxFit, 1 ) ) #rebinX ) )
 
 	elif 'Bias' in args.process:
 		p = Process( target=createCards, args=( ( bkgFile if args.bkgAsData else dataFile ), 
@@ -1334,8 +1369,9 @@ if __name__ == '__main__':
 	elif 'Fisher' in args.process:
 		p = Process( target=FisherTest, args=( ( bkgFile if args.bkgAsData else dataFile ), 
 			hist, 
-			[ fitFunctions['P2'], fitFunctions['P3'], fitFunctions['P4'], fitFunctions['P5'] ], 
-			minFit, maxFit, 10 ) )
+			#[ fitFunctions['P2'], fitFunctions['P3'], fitFunctions['P4'], fitFunctions['P5'] ], 
+			[ fitFunctions['P4'], fitFunctions['P5'] ], 
+			minFit, maxFit, rebinX ) )
 
 	elif 'biasDraw' in args.process: 
 		p = Process( target=drawBiasTest, args=( listMass,
