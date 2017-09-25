@@ -103,14 +103,15 @@ def rootFitter( inFile, hist, scale, fitFunctions, minX, maxX, rebinX, plot, log
 		rawHisto.SetBinErrorOption(TH1.kPoisson)
 	else: rawHisto = inFile
 	rawHisto.Scale( scale )
+	print '|----> Raw number of events: ', rawHisto.Integral(), ', bin size:', rawHisto.GetBinWidth(1)
 	rawHisto.Rebin( rebinX )
 
 	#### extracting bin contents and dividing by bin size
 	print '|----> Creating histograms from bin', minBinX, '(', rawHisto.GetBinLowEdge(minBinX),') to ', maxBinX, '(', rawHisto.GetBinLowEdge(maxBinX),'), initial integral: ', rawHisto.Integral()
 	for ibin in range( minBinX, maxBinX ):
-		tmpBinContent.append( rawHisto.GetBinContent(ibin) / rebinX )
-		if 'Data' in args.process: tmpBinError.append( ( rawHisto.GetBinError(ibin) if ( rawHisto.GetBinContent(ibin) > 0 ) else 1.8 ) / rebinX ) ## not needed because of kPoisson errors defined below
-		else: tmpBinError.append( rawHisto.GetBinError(ibin)  / rebinX )
+		tmpBinContent.append( rawHisto.GetBinContent(ibin) ) #/ rebinX )
+		if 'Data' in args.process: tmpBinError.append( ( rawHisto.GetBinError(ibin) if ( rawHisto.GetBinContent(ibin) > 0 ) else 1.8 ) ) #/ rebinX ) ## not needed because of kPoisson errors defined below
+		else: tmpBinError.append( rawHisto.GetBinError(ibin) ) # / rebinX )
 		#print rawHisto.GetBinLowEdge( ibin ), rawHisto.GetBinContent(ibin) , rebinX, rawHisto.GetBinError(ibin)
 
 	binContents = np.array(tmpBinContent)
@@ -166,16 +167,17 @@ def rootFitter( inFile, hist, scale, fitFunctions, minX, maxX, rebinX, plot, log
 			c1 = TCanvas('c1', 'c1',  10, 10, 750, 500 )
 			if log: c1.SetLogy()
 			finalHisto.GetXaxis().SetTitle( histYaxis )
-			finalHisto.GetYaxis().SetTitle('dN/dm_{av} / '+str(round(finalHisto.GetBinWidth(1)))+' GeV' ) 
+			finalHisto.GetYaxis().SetTitle('Events / '+str(round(finalHisto.GetBinWidth(1)))+' GeV' ) 
 			finalHisto.GetYaxis().SetTitleOffset(0.9);
 			finalHisto.GetXaxis().SetRangeUser( minX-50, maxX+50 )
 			finalHisto.SetTitle("")
 			finalHisto.Draw()
+			#rawHisto.Draw("histe same")
 			c1.SaveAs(outputDir+hist.replace('ResolvedAnalysisPlots/','')+"_"+args.process+"_"+fitFunc[0].GetName()+"Fit_ResolvedAnalysis_"+args.version+"."+args.extension)
 			print finalHisto.GetBinWidth(1)
 			del c1
 	
-	return [ fitParameters, fitParErrors, binContents, binError ]
+	return [ fitParameters, fitParErrors, binContents, binError, chi2Ndf ]
 
 
 
@@ -260,7 +262,7 @@ def residualAndPulls(dataPoints, dataErrPoints, function, histo, minX, maxX, ext
 			hResidual.SetBinContent(ibin, diff)
 			hResidual.SetBinError(ibin, binErr/valIntegral )
 
-		#print '|---> Significance of high mass bins: ', binCont, valIntegral, pull
+		#print '|---> Significance of high mass bins: ', binCont, valIntegral, binErr, pull
 
 	NDoF = nof - function.GetNpar() - 1
 	print '|----> ############### chi2 and nof: ', chi2, nof
@@ -319,7 +321,7 @@ def FitterCombination( inFileData, inFileBkg, inFileSignalName, hist, scale, bkg
 		hMain, mainP4 = histoFunctionFit( 'Data', bkgFunction[0][0], DataParameters[0], DataParameters[1], points, pointsErr, minX, maxX )
 		legend.AddEntry( hMain, ('PseudoExperiment' if args.pseudoExperiment else 'Data'), 'ep' )
 		legend.AddEntry( mainP4, 'Background Fit', 'l' )
-		hMCQCD, qcdMCP4 = histoFunctionFit( 'QCD'+args.qcd+'All', bkgFunction[0][0], bkgParameters, bkgParErrors, bkgpoints, bkgpointsErr, minX, maxX )
+		#hMCQCD, qcdMCP4 = histoFunctionFit( 'QCD'+args.qcd+'All', bkgFunction[0][0], bkgParameters, bkgParErrors, bkgpoints, bkgpointsErr, minX, maxX )
 		#legend.AddEntry( qcdMCP4, 'Fit to MC QCD pythia', 'l' )
 
 		if args.final:
@@ -419,14 +421,15 @@ def FitterCombination( inFileData, inFileBkg, inFileSignalName, hist, scale, bkg
 	pad1.cd()
 	pad1.SetLogy()
 	hMain.SetMarkerStyle(8)
-	hMain.GetYaxis().SetTitle("dN/dm_{av} / "+ str(hMain.GetBinWidth(1)) +" GeV" ) # dN/dM_{bbjj} [GeV^{-1}]")
+	#hMain.GetYaxis().SetTitle("dN/dm_{av} / "+ str(hMain.GetBinWidth(1)) +" GeV" ) # dN/dM_{bbjj} [GeV^{-1}]")
+	hMain.GetYaxis().SetTitle("Events / "+ str(hMain.GetBinWidth(1)) +" GeV" ) # dN/dM_{bbjj} [GeV^{-1}]")
 	hMain.GetXaxis().SetTitle( histYaxis )
 	hMain.GetXaxis().SetTitleSize(0.055)
 	hMain.GetYaxis().SetTitleOffset(1.15);
 	hMain.SetTitle("")
 	hMain.SetMarkerStyle(20)
 	#hMain.SetMaximum( 1.5 * hMain.GetMaximum() )
-	hMain.SetMaximum( 200 )
+	#hMain.SetMaximum( 200 )
 	hMain.SetMinimum( 0.01 )
 	hMain.Draw('E0')
 	hMain.GetXaxis().SetRangeUser( minX, maxXPlot  )
@@ -558,7 +561,13 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 	########### Starting signal fits
 	listAcceptance = []
 	listAccepError = []
+	listChi2 = []
+	listMean = []
+	listMeanError = []
+	listSigma = []
+	listSigmaError = []
 	listMass.sort()
+
 	for imass in listMass:
 
 		######## Fitting signal and extracting parameters
@@ -570,10 +579,13 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		SignalParameters = rootFitter( TFile.Open( inFileSignal.replace( str(args.mass), str(imass) ) ), 
 						hist+('RPVStopStopToJets_'+args.decay+'_M-'+str(imass) if args.miniTree else ''), 
 						scale, 
+						#[ [ fitFunctions['gaus'][0], [ 1, 300, 100, 1, imass, tmpResolution ] ] ], 
+						#100,
+						#900,
 						[ [ fitFunctions['gaus'][0], [ 1, imass, tmpResolution ] ] ], 
-						int(imass-(tmpResolution*5)), # (100 if (imass < 800 ) else 200 ), 
-						int(imass+(tmpResolution*5)), # (100 if (imass < 800 ) else 200 ), 
-						rebinX, 
+						uncDict[imass][(9 if 'UDD312' in args.decay else 10)][0], #int(imass-(tmpResolution*uncDict[imass][9][0])), 
+						uncDict[imass][(9 if 'UDD312' in args.decay else 10)][1], #int(imass+(tmpResolution*uncDict[imass][9][0])),
+						uncDict[imass][(9 if 'UDD312' in args.decay else 10)][2], ##rebinX, 
 						True,
 						False )
 
@@ -593,30 +605,34 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		rooDataHist.Print()
 
 		### creating RooStats objects for signal
-		sigMean = RooRealVar('sigMean', 'sigMean', SignalParameters[0]['gaus'][1]) #, -100, 100  ) 
-		sigSigma = RooRealVar('sigSigma', 'sigSigma', SignalParameters[0]['gaus'][2]) #, -100, 100 )
+		sigMean = RooRealVar('sigMean', 'sigMean', SignalParameters[0]['gaus'][1]) 
+		sigSigma = RooRealVar('sigSigma', 'sigSigma', SignalParameters[0]['gaus'][2]) 
 		signal = RooGaussian( 'signal', 'signal', mass, sigMean, sigSigma )
+		'''
+		sigConst1 = RooRealVar('sigConst1', 'sigConst1', 0.24 ) #SignalParameters[0]['gaus'][0]) 
+		signal1 = RooGaussian( 'signal1', 'signal1', mass, sigMean, sigSigma )
+		sigConst2 = RooRealVar('sigConst2', 'sigConst2', 0.76 ) #SignalParameters[0]['gaus'][3]) 
+		sigMean2 = RooRealVar('sigMean2', 'sigMean2', SignalParameters[0]['gaus'][4]) 
+		sigSigma2 = RooRealVar('sigSigma2', 'sigSigma2', SignalParameters[0]['gaus'][5]) 
+		signal2 = RooGaussian( 'signal2', 'signal2', mass, sigMean2, sigSigma2 )
+		signal = RooAddPdf( 'signal', "signal1+signal2", RooArgList(signal1, signal2), RooArgList(sigConst1, sigConst2) )
+		'''
 		signal.Print()
 
-		signalGaus = TF1( "RPVStop"+str(imass), "gaus", lowerLimitSearch, upperLimitSearch )
+		#signalGaus = TF1( "RPVStop"+str(imass), "gaus", lowerLimitSearch, upperLimitSearch )
+		signalGaus = TF1( "RPVStop"+str(imass), "gaus(0)+gaus(3)", 100, 900 )
 		signalGaus.SetParameter( 0, SignalParameters[0]['gaus'][0] ) 
-		signalGaus.SetParameter( 1, SignalParameters[0]['gaus'][1] ) #jmass ) 
+		signalGaus.SetParameter( 1, SignalParameters[0]['gaus'][1] ) 
 		signalGaus.SetParameter( 2, SignalParameters[0]['gaus'][2] ) 
-		sigAcc = round( signalGaus.Integral( lowerLimitSearch, upperLimitSearch ), 2 )
-		#sigAcc = round( signalGaus.Integral( minX, maxX ), 2 )
-		print '|----> Signal events:', sigAcc, ', total number of events:', signalGaus.Integral(0, 500)
-
+		sigAcc = round( signalGaus.Integral( lowerLimitSearch, upperLimitSearch )/uncDict[imass][(9 if 'UDD312' in args.decay else 10)][2], 2 ) #( 10 if (imass < 400 ) else 20 ), 2 )
 		'''
-		if args.jesUnc:
-			print ' |---> Adding JES'
-			hSigSyst['JESUp'] = hSignal.Clone()
-			hSigSyst['JESDown'] = hSignal.Clone()
-
-		if args.jerUnc:
-			print ' |---> Adding JER'
-			hSigSyst['JERUp'] = hSignal.Clone()
-			hSigSyst['JERDown'] = hSignal.Clone()
+		signalGaus.SetParameter( 3, SignalParameters[0]['gaus'][3] ) 
+		signalGaus.SetParameter( 4, SignalParameters[0]['gaus'][4] ) 
+		signalGaus.SetParameter( 5, SignalParameters[0]['gaus'][5] ) 
+		sigAcc = round( signalGaus.Integral( minX, maxX )/uncDict[imass][9][2], 2 )
 		'''
+		print '|----> Signal events:', sigAcc, ', total number of events:', signalGaus.Integral(0, 2000)
+
 		#hBkg = inFileBkg.Get(hist)
 		#hData = hBkg.Clone()
 		#hData.Add( hSignal )
@@ -733,14 +749,15 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		if 'Bias' in args.process: datacard.write('pdf_index\tdiscrete\n')
 		datacard.write("lumi\tlnN\t1.025\t-\n")
 		datacard.write("trigger\tlnN\t1.05\t-\n")
-		datacard.write("sigMean\tparam\t"+str(round(SignalParameters[0]['gaus'][1],3))+'\t'+str(round(SignalParameters[1]['gaus'][1],3))+"\n")
-		datacard.write("sigSigma\tparam\t"+str(round(SignalParameters[0]['gaus'][2],3))+'\t'+str(round(SignalParameters[1]['gaus'][2],3))+"\n")
-		#datacard.write("# SigNormPDF   lnN    1.0300       - \n")
-		datacard.write("SigNormJES\tlnN\t1.03\t-\n")
-		datacard.write("SigNormJER\tlnN\t1.10\t-\n")
-		datacard.write("SigNormPU   lnN    1.0200        - \n")
-		#datacard.write("# SigNormISR   lnN    1.1000        - \n")
-		#datacard.write("# SigNormBtag   lnN    1.0000       - -\n")
+		#datacard.write("sigMean\tparam\t"+str(round(SignalParameters[0]['gaus'][1],3))+'\t'+str(round((SignalParameters[0]['gaus'][1])*0.02,3))+"\t### jes shape unc.\n")
+		#datacard.write("sigSigma\tparam\t"+str(round(SignalParameters[0]['gaus'][2],3))+'\t'+str(round((SignalParameters[0]['gaus'][2])*0.1,3))+"\t### jer shape unc.\n")
+		datacard.write("sigMean\tparam\t"+str(round(SignalParameters[0]['gaus'][1],3))+'\t'+str(round(SignalParameters[1]['gaus'][1],3))+"\t### statistical unc.\n")
+		datacard.write("sigSigma\tparam\t"+str(round(SignalParameters[0]['gaus'][2],3))+'\t'+str(round(SignalParameters[1]['gaus'][2],3))+"\t### statistical unc.\n")
+		datacard.write("SigNormJES\tlnN\t"+str(1+uncDict[imass][(1 if 'UDD312' in args.decay else 5)])+"\t-\n")
+		datacard.write("SigNormJER\tlnN\t"+str(1+uncDict[imass][(2 if 'UDD312' in args.decay else 6)])+"\t-\n")
+		datacard.write("SigNormPU\tlnN\t"+str(1+uncDict[imass][(3 if 'UDD312' in args.decay else 7)])+"\t-\n")
+		datacard.write("SigNormPDF\tlnN\t"+str(1+uncDict[imass][(4 if 'UDD312' in args.decay else 8)])+"\t-\n")
+		if 'UDD323' in args.decay: datacard.write('SigNormBtag\tlnN\t'+str(1+uncDict[imass][0])+"\t-\n") 
 		datacard.close()
 		print '|----> Datacard created:', datacard
 	
@@ -753,6 +770,12 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 			accXeffErr = TMath.Sqrt( (1/failedEvents) + (1/eventsInAccep) ) * failedEvents * eventsInAccep / TMath.Power( ( totalEvents ), 2 )
 			listAcceptance.append( accXeff ) 
 			listAccepError.append( accXeffErr )
+
+			listMean.append( SignalParameters[0]['gaus'][1] )
+			listMeanError.append( SignalParameters[1]['gaus'][1] )
+			listSigma.append( SignalParameters[0]['gaus'][2] )
+			listSigmaError.append( SignalParameters[1]['gaus'][2] )
+			listChi2.append( SignalParameters[4] )
 
 
 	if args.acceptance:
@@ -782,6 +805,57 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		canAccep.SaveAs( 'Plots/signalAcceptance_massAve_'+args.cut+'_'+args.decay+'_ResolvedAnalysis_'+args.version+'.'+args.extension )
 		del canAccep
 
+		meanXeffGraph = TGraphErrors(len(listMass), array('d',listMass), array('d',listMean), array('d',[0]*len(listMass)), array('d',listMeanError) )
+		canMean = TCanvas('canMean', 'canMean',  10, 10, 750, 500 )
+		meanXeffGraph.SetLineColor(kRed)
+		meanXeffGraph.SetLineWidth(2)
+		meanXeffGraph.SetMarkerStyle(8)
+		meanXeffGraph.Draw("ap")
+		meanXeffGraph.GetYaxis().SetTitle( 'Mean' )
+		meanXeffGraph.GetXaxis().SetTitle( "Resonance mass [GeV]" )
+		meanXeffGraph.GetYaxis().SetTitleOffset( 0.8 )
+		#meanXeffGraph.GetYaxis().SetRangeUser( 0.0001, 0.1  )
+		CMS_lumi.extraText = "Simulation Preliminary"
+		CMS_lumi.lumi_13TeV = ''
+		CMS_lumi.relPosX = 0.12
+		CMS_lumi.CMS_lumi(canMean, 4, 0)
+		canMean.SaveAs( 'Plots/signalMean_massAve_'+args.cut+'_'+args.decay+'_ResolvedAnalysis_'+args.version+'.'+args.extension )
+		del canMean
+
+		sigmaXeffGraph = TGraphErrors(len(listMass), array('d',listMass), array('d',listSigma), array('d',[0]*len(listMass)), array('d',listSigmaError) )
+		canSigma = TCanvas('canSigma', 'canSigma',  10, 10, 750, 500 )
+		sigmaXeffGraph.SetLineColor(kRed)
+		sigmaXeffGraph.SetLineWidth(2)
+		sigmaXeffGraph.SetMarkerStyle(8)
+		sigmaXeffGraph.Draw("ap")
+		sigmaXeffGraph.GetYaxis().SetTitle( 'Sigma' )
+		sigmaXeffGraph.GetXaxis().SetTitle( "Resonance mass [GeV]" )
+		sigmaXeffGraph.GetYaxis().SetTitleOffset( 0.8 )
+		#sigmaXeffGraph.GetYaxis().SetRangeUser( 0.0001, 0.1  )
+		CMS_lumi.extraText = "Simulation Preliminary"
+		CMS_lumi.lumi_13TeV = ''
+		CMS_lumi.relPosX = 0.12
+		CMS_lumi.CMS_lumi(canSigma, 4, 0)
+		canSigma.SaveAs( 'Plots/signalSigma_massAve_'+args.cut+'_'+args.decay+'_ResolvedAnalysis_'+args.version+'.'+args.extension )
+		del canSigma
+
+		chi2XeffGraph = TGraph(len(listMass), array('d',listMass), array('d',listChi2) )
+		canchi2 = TCanvas('canchi2', 'canchi2',  10, 10, 750, 500 )
+		canchi2.SetLogy()
+		chi2XeffGraph.SetLineColor(kRed)
+		chi2XeffGraph.SetLineWidth(2)
+		chi2XeffGraph.SetMarkerStyle(8)
+		chi2XeffGraph.Draw("ap")
+		chi2XeffGraph.GetYaxis().SetTitle( 'chi2' )
+		chi2XeffGraph.GetXaxis().SetTitle( "Resonance mass [GeV]" )
+		chi2XeffGraph.GetYaxis().SetTitleOffset( 0.8 )
+		#chi2XeffGraph.GetYaxis().SetRangeUser( 0.0001, 0.1  )
+		CMS_lumi.extraText = "Simulation Preliminary"
+		CMS_lumi.lumi_13TeV = ''
+		CMS_lumi.relPosX = 0.12
+		CMS_lumi.CMS_lumi(canchi2, 4, 0)
+		canchi2.SaveAs( 'Plots/signalchi2_massAve_'+args.cut+'_'+args.decay+'_ResolvedAnalysis_'+args.version+'.'+args.extension )
+		del canchi2
 
 
 def doftest( RSS1, RSS2, NDF1, NDF2, nPar1, nPar2, nBinsFit):
@@ -1267,9 +1341,8 @@ if __name__ == '__main__':
 		listMass = [ args.mass ]
 	else: 
 		if '312' in args.decay: 
-			listMass = [ 200, 220, 240 ] + range( 300, 1050, 50 ) + range( 1100, 1200, 100 ) 
-			listMass.remove(850)
-		else: listMass = range( 200, 320, 20 ) + range( 350, 1050, 50 ) + ( [1100, 1200 ] if 'CSVv2L' in args.cut else [] )
+			listMass = [ 200, 220, 240 ] + range( 300, 1050, 50 ) + range( 1100, 1400, 100 ) 
+		else: listMass = range( 200, 320, 20 ) + range( 350, 1050, 50 ) #+ ( [1100, 1200 ] if 'CSVv2L' in args.cut else [] )
 
 
 	QCDSF = 0.255
@@ -1280,6 +1353,7 @@ if __name__ == '__main__':
 	#bkgFile2 = TFile.Open(filePrefix+'_QCDHTAll_Moriond17_80X_V2p4_'+args.version+'.root')
 	#bkgFile3 = TFile.Open(filePrefix+'_QCDHerwigAll_Moriond17_80X_V2p4_'+args.version+'.root')
 	dataFile = TFile.Open(filePrefix+'_JetHT_Run2016_80X_V2p4_'+args.version+'.root')
+	#dataFile = TFile.Open(filePrefix+'_JetHT_Run2016_80X_V2p4_v09p10.root')
 	
 
 	###### Input parameters
@@ -1292,17 +1366,17 @@ if __name__ == '__main__':
 	######## Fit Functions
 	fitFunctions = {}
 	fitFunctions['P5'] = [ TF1("P5", "[0]*TMath::Power(1-(x/13000.0),[1])/(TMath::Power(x/13000.0,[2]+([3]*TMath::Log(x/13000.))+([4]*TMath::Power(TMath::Log(x/13000.),2))))",0,2000), 
-			#[ 1, 100, 2, 0.1, 0.01], 
-			[ 1, 80, 0, .001, 0.0001], 
+			[ 1, 100, 2, 0.1, 0.01], 
+			#[ 1, 80, 0, .001, 0.0001], 
 			'(pow(1-@0/13000,@1)/pow(@0/13000,@2+@3*log(@0/13000)+@4*pow(log(@0/13000),2))' ]
 
 	fitFunctions['P4'] = [ TF1("P4", "[0]*TMath::Power(1-(x/13000.0),[1])/(TMath::Power(x/13000.0,[2]+([3]*TMath::Log(x/13000.))))",0,2000), 
-			#[ 1, 100, 2, 0.01 ], 
-			[ 3, 80, 1, 0.01],   ### btag
+			[ 1, 100, 2, 0.01 ], 
+			#[ 3, 80, 1, 0.01],   ### btag
 			'pow(1-@0/13000,@1)/pow(@0/13000,@2+@3*log(@0/13000))' ]
 
 	fitFunctions['P3'] = [ TF1("P3", "[0]* TMath::Power(1-(x/13000.0),[1]) / (TMath::Power(x/13000.0,[2]))",0,2000), 
-			[ 0, 100, 2], 
+			[ 1, 100, 2], 
 			'pow(1-@0/13000,@1)/pow(@0/13000,@2)' ]
 
 	fitFunctions['P2'] = [ TF1("P2", "[0] / TMath::Power(x/13000.0,[1])",0,2000), 
@@ -1329,9 +1403,37 @@ if __name__ == '__main__':
 
 	fitFunctions['P1'] = [ TF1("P1", "[0] / (TMath::Power(x/13000.0,[1]))",0,2000), [ 0] ]
 	fitFunctions['gaus'] = [ TF1("gaus", "gaus", 0, 2000), [ ] ]
+	#fitFunctions['gaus'] = [ TF1("gaus", "gaus(0)+gaus(3)", 0, 2000), [ ] ]
 	fitFunctions['P4Gaus'] = [ TF1("P4Gaus", "[0]*pow(1-(x/13000.0),[1])/pow(x/13000.0,[2]+([3]*log(x/13000.)))+gaus(4)",0,2000), [] ]
 
-
+	######## Uncertainties
+	uncDict = {}
+	##      mass   =  btag, 	JES, 	JER, 	PU, 	PDF,	UDD323 JES, 	JER, 	PU, 	PDF	312 fit 	323 fit
+	uncDict[ 200 ] = [ 0.001, 	0.031, 	0.073, 	0.005,	0.175,		0.031, 	0.057, 	0.002, 	0.171,	[180, 225, 5],	[ 180, 225, 5] ]
+	uncDict[ 220 ] = [ 0.001, 	0.028, 	0.028, 	0.005, 	0.172,		0.037, 	0.013, 	0.005, 	0.174,	[200, 250, 5],	[ 190, 250, 5] ]
+	uncDict[ 240 ] = [ 0.001, 	0.019, 	0.007, 	0.011, 	0.17,		0.033,  0.001, 	0.009, 	0.178,	[210, 265, 5],	[ 200, 270, 5] ]
+	uncDict[ 260 ] = [ 0.001, 	0.0, 	0.0, 	0.0, 	0.,		0.027, 	0.01, 	0.005, 	0.163,	[220, 280, 5],	[ 220, 290, 5] ]
+	uncDict[ 280 ] = [ 0.001, 	0.0, 	0.0, 	0.0, 	0.,		0.022,  0.017, 	0.009, 	0.179,	[250, 310, 5],	[ 240, 305, 5] ]
+	uncDict[ 300 ] = [ 0.001, 	0.016, 	0.005, 	0.002, 	0.18,		0.019, 	0.005, 	0.005, 	0.182,	[275, 325, 5],	[ 260, 320, 5] ]
+	uncDict[ 350 ] = [ 0.002, 	0.021, 	0.001, 	0.002, 	0.195,		0.024, 	0.014, 	0.005, 	0.194,	[310, 380, 5],	[ 300, 380, 10] ]
+	uncDict[ 400 ] = [ 0.002, 	0.018, 	0.014, 	0.001, 	0.208,		0.017, 	0.023, 	0.003, 	0.206,	[360, 430, 5],	[ 340, 430, 10] ]
+	uncDict[ 450 ] = [ 0.002, 	0.023, 	0.016, 	0.003, 	0.214,		0.025, 	0.011, 	0.005, 	0.218,	[410, 480, 5],	[ 380, 500, 10] ]
+	uncDict[ 500 ] = [ 0.002, 	0.025, 	0.028, 	0.001, 	0.24,		0.037, 	0.031, 	0.016, 	0.238,	[450, 540, 5],	[ 420, 540, 10] ]
+	uncDict[ 550 ] = [ 0.002, 	0.023, 	0.015, 	0.007, 	0.253,		0.037, 	0.005, 	0.008, 	0.249,	[500, 590, 10],	[ 460, 590, 10] ]
+	uncDict[ 600 ] = [ 0.003, 	0.033, 	0.022, 	0.003, 	0.266,		0.049, 	0.026, 	0.012, 	0.27,	[480, 680, 20],	[ 520, 640, 10] ]
+	uncDict[ 650 ] = [ 0.003, 	0.022, 	0.006, 	0.004, 	0.279,		0.032, 	0.04, 	0.007, 	0.29,	[560, 720, 20],	[ 560, 700, 10] ]
+	uncDict[ 700 ] = [ 0.003, 	0.033, 	0.041, 	0.006, 	0.302,		0.051, 	0.032, 	0.013, 	0.291,	[540, 840, 20],	[ 540, 820, 20] ]
+	uncDict[ 750 ] = [ 0.003, 	0.04, 	0.003, 	0.008, 	0.301,		0.092, 	0.025, 	0.013, 	0.313,	[640, 840, 20],	[ 640, 820, 20] ]
+	uncDict[ 800 ] = [ 0.003, 	0.045, 	0.049, 	0.005, 	0.335,		0.085, 	0.001, 	0.003, 	0.336,	[660, 900, 20],	[ 700, 880, 30 ] ]
+	uncDict[ 850 ] = [ 0.004, 	0.033, 	0.006,	0.011, 	0.358,		0.073, 	0.018, 	0.005, 	0.334,	[720, 960, 30],	[ 740, 950, 30] ]
+	uncDict[ 900 ] = [ 0.003, 	0.024, 	0.024, 	0.019, 	0.365,		0.05, 	0.017, 	0.007, 	0.332,	[750, 990, 30],	[ 750, 1020, 30] ]
+	uncDict[ 950 ] = [ 0.003, 	0.032, 	0.001, 	0.006, 	0.387,		0.05, 	0.001, 	0.001, 	0.381,	[800, 1070, 30],	[ 800, 1100, 30] ]
+	uncDict[ 1000 ] = [ 0.004, 	0.037, 	0.039, 	0.015, 	0.408,		0.044, 	0.023, 	0.047, 	0.398,	[850, 1150, 30],	[ 850, 1150, 30] ]
+	uncDict[ 1100 ] = [ 0.004, 	0.065, 	0.028, 	0.008, 	0.446,		0.095, 	0.001, 	0.032, 	0.435,	[950, 1250, 30],	[ 960, 1280, 40] ]
+	uncDict[ 1200 ] = [ 0.008, 	0.062, 	0.019, 	0.017, 	0.499,		0.089, 	0.035, 	0.028, 	0.488,	[1050, 1350, 30],	[ 1040, 1360, 40] ]
+	uncDict[ 1300 ] = [ 0.008, 	0.062, 	0.019, 	0.017, 	0.499,		0.089, 	0.035, 	0.028, 	0.488,	[1150, 1450, 30],	[ ] ]
+	
+	############ run process
 	if 'Data' in args.process:
 		CMS_lumi.extraText = ('Simulation ' if args.bkgAsData or args.pseudoExperiment else '')+"Preliminary"
 		p = Process( target=FitterCombination, args=( ( bkgFile if args.bkgAsData else dataFile ), 
@@ -1369,8 +1471,8 @@ if __name__ == '__main__':
 	elif 'Fisher' in args.process:
 		p = Process( target=FisherTest, args=( ( bkgFile if args.bkgAsData else dataFile ), 
 			hist, 
-			#[ fitFunctions['P2'], fitFunctions['P3'], fitFunctions['P4'], fitFunctions['P5'] ], 
-			[ fitFunctions['P4'], fitFunctions['P5'] ], 
+			[ fitFunctions['P2'], fitFunctions['P3'], fitFunctions['P4'], fitFunctions['P5'] ], 
+			#[ fitFunctions['P4'], fitFunctions['P5'] ], 
 			minFit, maxFit, rebinX ) )
 
 	elif 'biasDraw' in args.process: 

@@ -130,6 +130,7 @@ def plotLimits( listMasses  ):
 
 		#xs_atlas_masses = array( 'd', [ 250, 350, 350, 250  ] )
 		#xs_atlas = array('d', [ 0.1, 0.1, 100000, 100000 ])
+		'''
 		updateLumi = TMath.Sqrt(15.4/lumi)
 		if 'Boosted' in args.boosted:
 			tmpAtlasmass = [ 250, 275, 300  ]
@@ -137,24 +138,18 @@ def plotLimits( listMasses  ):
 		else:
 			tmpAtlasmass = range( 250, 650, 100 ) 
 			tmpAtlas = [ 6*updateLumi, 1.08*updateLumi, 0.9*updateLumi, 0.6*updateLumi, 0.3*updateLumi ] 
+		'''
 
-		xs_atlas_masses = array( 'd', tmpAtlasmass )
-		xs_atlas = array('d', tmpAtlas )
+		xs_atlas_masses = array( 'd', range( 100, 900, 100 ))
+		xs_atlas = array('d', [ 600, 18, 4, 1.5, 0.6, 0.4, 0.25, 0.08])
 		graph_xs_atlas = TGraph(len(xs_atlas_masses),xs_atlas_masses,xs_atlas)
 		graph_xs_atlas.SetLineWidth(3)
 		#graph_xs_atlas.SetLineStyle(8)
 		graph_xs_atlas.SetLineColor(kMagenta-2)
 		graph_xs_atlas.SetFillColorAlpha(kGreen-2, 0.1)
 
-		xs_atlasbj13TeV_masses = array( 'd', range( 250, 650, 100) )
-		updateLumiAtlas13TeV = TMath.Sqrt(3.2/lumi)
-		xs_atlasbj13TeV = array( 'd',  [ 
-			102*updateLumiAtlas13TeV,
-			44.6*updateLumiAtlas13TeV,
-			10.9*updateLumiAtlas13TeV,
-			3.8*updateLumiAtlas13TeV,
-			1.64*updateLumiAtlas13TeV
-			] )
+		xs_atlasbj13TeV_masses = array( 'd', range( 100, 900, 100) )
+		xs_atlasbj13TeV = array( 'd',  [  400, 6, 1.5, 0.4, 0.4, 0.2, 0.1, 0.1 ] )
 		graph_xs_atlasbj13TeV = TGraph(len(xs_atlasbj13TeV_masses),xs_atlasbj13TeV_masses,xs_atlasbj13TeV)
 		graph_xs_atlasbj13TeV.SetLineWidth(3)
 		#graph_xs_atlasbj13TeV.SetLineStyle(8)
@@ -250,7 +245,7 @@ def plotLimits( listMasses  ):
 	legend.SetHeader('95% CL upper limits')
 
 	graph_exp_2sigma.GetXaxis().SetTitle("Resonance mass [GeV]")
-	graph_exp_2sigma.GetYaxis().SetTitle("#sigma #times #it{B} [pb]")
+	graph_exp_2sigma.GetYaxis().SetTitle("(pp #rightarrow #tilde{t} #tilde{t}, #tilde{t} #rightarrow "+("qq" if 'UDD312' in args.decay else "bq" )+") #sigma #times #it{B} [pb] ")
 	graph_exp_2sigma.GetYaxis().SetTitleOffset(1.1)
 	if 'Boosted' in args.boosted: graph_exp_2sigma.GetYaxis().SetRangeUser(3,1e+04)
 	elif 'Resolved' in args.boosted: graph_exp_2sigma.GetYaxis().SetRangeUser(0.01,100)
@@ -274,23 +269,32 @@ def plotLimits( listMasses  ):
 	#legend.AddEntry(graph_xs_cms13TeV2015,"Expected limit 2015 data","L")
 	if args.addComparison:
 		if 'Boosted' in args.boosted:
-			graph_xs_cms8TeV.Draw("L")
-			graph_xs_atlas.Draw("L")
-			graph_xs_cdf.Draw("L")
-			legend.AddEntry(graph_xs_atlas,"Expected limit, Atlas 13 TeV (resolved) - 15.4 fb^{-1}","L")
-			legend.AddEntry(graph_xs_cms8TeV,"Expected limit, CMS 8 TeV (resolved) - 12.4 fb^{-1}","L")
-			legend.AddEntry(graph_xs_cdf,"Expected limit, CDF 1.96 TeV (resolved) - 6.6 fb^{-1}","L")
+			if '312' in args.decay:
+				graph_xs_cms8TeV.Draw("L")
+				graph_xs_atlas.Draw("L")
+				graph_xs_cdf.Draw("L")
+				graph_xs_cms13TeV2015.Draw("L")
+				legend.AddEntry(graph_xs_atlas,"Expected limit, Atlas 13 TeV (resolved) - 36.7 fb^{-1}","L")
+				legend.AddEntry(graph_xs_cms8TeV,"Expected limit, CMS 8 TeV (resolved) - 12.4 fb^{-1}","L")
+				legend.AddEntry(graph_xs_cdf,"Expected limit, CDF 1.96 TeV (resolved) - 6.6 fb^{-1}","L")
+				legend.AddEntry(graph_xs_cms13TeV2015,"Expected limit CMS 2015 data","L")
+			else:
+				graph_xs_atlasbj8TeV.Draw("L")
+				legend.AddEntry(graph_xs_atlasbj8TeV,"Expected limit, Atlas 8 TeV (boosted - #lambda_{323}) - 17.4 fb^{-1}","l")
+				graph_xs_atlasbj13TeV.Draw("L")
+				legend.AddEntry(graph_xs_atlasbj13TeV,"Expected limit, Atlas 13 TeV (resolved - #lambda_{323}) - 36.7 fb^{-1}","l")
+
 		else: 
 			graph_xs_cms8TeV.Draw("L")
 			legend.AddEntry(graph_xs_cms8TeV,"Excluded mass regions by CMS 8 TeV (resolved) - 19.4 fb^{-1}","L")
 			if '312' in args.decay:
 				graph_xs_atlas.Draw("L")
-				legend.AddEntry(graph_xs_atlas,"Excluded mass regions by Atlas 13 TeV (resolved) - 15.4 fb^{-1}","L")
+				legend.AddEntry(graph_xs_atlas,"Excluded mass regions by Atlas 13 TeV (resolved) - 36.7 fb^{-1}","L")
 			else:
 				graph_xs_atlasbj8TeV.Draw("L")
 				legend.AddEntry(graph_xs_atlasbj8TeV,"Expected limit, Atlas 8 TeV (boosted - #lambda_{323}) - 17.4 fb^{-1}","l")
 				graph_xs_atlasbj13TeV.Draw("L")
-				legend.AddEntry(graph_xs_atlasbj13TeV,"Expected limit, Atlas 13 TeV (resolved - #lambda_{323}) - 3.2fb^{-1}","l")
+				legend.AddEntry(graph_xs_atlasbj13TeV,"Expected limit, Atlas 13 TeV (resolved - #lambda_{323}) - 36.7 fb^{-1}","l")
     	legend.Draw()
 
 	CMS_lumi.relPosX = 0.13
@@ -414,9 +418,8 @@ if __name__ == '__main__':
 	if 'Resolved' in args.boosted: 
 		args.grooming = '_Resolved'
 		if '312' in args.decay:  
-			listMass = [ 200, 220, 240 ] + range( 300, 1050, 50 ) + range( 1100, 1200, 100 ) 
-			listMass.remove( 850 )
-		else: listMass = [ 200, 220, 240, 280, 300, 350 ] + range( 450, 900, 50 ) + [950, 1000, 1100, ] #+  range( 1100, 1600, 100 )
+			listMass = [ 200, 220, 240 ] + range( 300, 1050, 50 ) + range( 1100, 1400, 100 ) 
+		else: listMass = [ 200, 220, 240, 260, 280 ] + range( 300, 1050, 50 ) #+ [1100, 1200 ] 
 
 
 	elif "Boosted" in args.boosted:
@@ -426,10 +429,8 @@ if __name__ == '__main__':
 	else:
 		if '312' in args.decay:  
 			listMass = range( 80, 260, 20) + range( 300, 1050, 50 ) + [ 1100, 1200 ]
-			listMass.remove( 850 )
 		else: 
 			listMass = range( 80, 300, 20) + range( 300, 1050, 50 ) + [ 1100, 1200 ]
-			listMass.remove( 260 )
 
 	if 'compare' in args.process: compareLimits( listMass, (['_1sigma', '_2sigma', '_4sigma', '_10sigma' ] if 'Boosted' in args.boosted else [ 'delta_massWindow', 'delta_2CSVv2L_massWindow' ] ) )#'delta_massWindow' ] ) ) 
 	else: plotLimits( listMass  )
