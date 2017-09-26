@@ -15,7 +15,6 @@ from collections import OrderedDict
 try:
 	from RUNA.RUNAnalysis.histoLabels import labels, labelAxis, finalLabels, setSelection
 	from RUNA.RUNAnalysis.scaleFactors import * #scaleFactor as SF
-	from RUNA.RUNAnalysis.cuts import selection 
 	import RUNA.RUNAnalysis.CMS_lumi as CMS_lumi 
 	import RUNA.RUNAnalysis.tdrstyle as tdrstyle
 	from RUNA.RUNAnalysis.commonFunctions import *
@@ -23,7 +22,6 @@ except ImportError:
 	sys.path.append('../python')
 	from histoLabels import labels, labelAxis, finalLabels
 	from scaleFactors import * #scaleFactor as SF
-	from cuts import selection 
 	import CMS_lumi as CMS_lumi 
 	import tdrstyle as tdrstyle
 	from commonFunctions import *
@@ -1062,10 +1060,12 @@ def tmpplotDiffSample( qcdFile, ttbarFile, signalFile, name, xmin, xmax,reBin,  
 	#histos[ '>4jets' ] = ttbarFile.Get( name+args.cut+'_QCDPtAll' )
 
 	if ( args.mass > 0 ):
-		outputFileName = name+'_'+args.boosted+'_'+args.decay+'RPV'+str(args.mass)+'_'+args.cut+'_DiffBtagPairingMethods.'+args.ext 
+		outputFileName = name+'_'+args.boosted+'_'+args.decay+'RPV'+str(args.mass)+'_'+args.cut+'_DiffNjets.'+args.ext 
 		#histos[ 'DeltaR + btag' ] = qcdFile.Get( name+'_minDeltaR_'+args.cut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
-		histos[ 'DeltaR + btag' ] = qcdFile.Get( name+'_minDeltaR_cutDelta_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
-		histos[ 'DeltaR' ] = ttbarFile.Get( name+'_'+args.cut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
+		#histos[ 'DeltaR + btag' ] = qcdFile.Get( name+'_minDeltaR_cutDelta_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
+		#histos[ 'DeltaR' ] = ttbarFile.Get( name+'_'+args.cut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
+		histos[ 'N=4' ] = qcdFile.Get( name+'_'+args.cut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
+		histos[ 'N>3' ] = ttbarFile.Get( name+'_'+args.cut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
 		'''
 		outputFileName = name+'_'+args.boosted+'_'+args.decay+'RPV'+str(args.mass)+'_'+args.cut+'_4jets_DiffPairingMethods.'+args.ext 
 		#outputFileName = name+'_'+args.boosted+'_'+args.decay+'RPV'+str(args.mass)+args.cut+'_DiffNumJets.'+args.ext 
@@ -1078,10 +1078,12 @@ def tmpplotDiffSample( qcdFile, ttbarFile, signalFile, name, xmin, xmax,reBin,  
 		histos[ 'KinFit + >4 jets' ] = ttbarFile.Get( name+'_minChi_'+args.cut+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) )
 		'''
 	else: 
-		outputFileName = name+'_'+args.boosted+'_QCD_'+args.cut+'_DiffBtagPairingMethods.'+args.ext 
+		outputFileName = name+'_'+args.boosted+'_QCD_'+args.cut+'_DiffNjets.'+args.ext 
 		#histos[ 'DeltaR + btag' ] = qcdFile.Get( name+'_minDeltaR_'+args.cut+'_QCDPtAll' )
-		histos[ 'DeltaR + btag' ] = qcdFile.Get( name+'_minDeltaR_cutDelta_QCDPtAll' )
-		histos[ 'DeltaR' ] = ttbarFile.Get( name+'_'+args.cut+'_QCDPtAll' )
+		#histos[ 'DeltaR + btag' ] = qcdFile.Get( name+'_minDeltaR_cutDelta_QCDPtAll' )
+		#histos[ 'DeltaR' ] = ttbarFile.Get( name+'_'+args.cut+'_QCDPtAll' )
+		histos[ 'N=4' ] = qcdFile.Get( name+'_'+args.cut+'_QCDPtAll' )
+		histos[ 'N>3' ] = ttbarFile.Get( name+'_'+args.cut+'_QCDPtAll' )
 	'''
 		outputFileName = name+'_'+args.boosted+'_QCD_'+args.cut+'_DiffPairingMethods.'+args.ext 
 		#outputFileName = name+'_'+args.boosted+'_QCD_'+args.cut+'_DiffDeltaChi.'+args.ext 
@@ -1185,7 +1187,7 @@ def tmpplotDiffSample( qcdFile, ttbarFile, signalFile, name, xmin, xmax,reBin,  
 	
 	histos.values()[0].SetMaximum( 1.2* max(maxList) )
 	#histos.values()[0].SetMinimum( 0.01 )
-	if ( args.mass > 0 ): histos.values()[0].GetXaxis().SetRangeUser( int(args.mass)-200, int(args.mass)+200 ) 
+	if ( args.mass > 0 ): histos.values()[0].GetXaxis().SetRangeUser( 0, int(args.mass)+200 ) 
 	else: histos.values()[0].GetXaxis().SetRangeUser( 0, xmax )
 
 	can = TCanvas('c1', 'c1',  10, 10, 750, 500 )
@@ -1264,10 +1266,10 @@ if __name__ == '__main__':
 				kRed]
 		if ( 'Norm' in args.process ) or ( 'DATA' in args.process ) or ( 'CF' in args.process ): 
 			otherMass = ( '180' if args.boosted == 'Boosted' else '700' )
-			signalFiles[ otherMass ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+otherMass+'_Moriond17_80X_V2p4_'+args.version+'.root'), 
-					args.lumi, 
-					'M_{#tilde{t}} = '+otherMass+' GeV', 
-					kRed+2]
+			#signalFiles[ otherMass ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+otherMass+'_Moriond17_80X_V2p4_'+args.version+'.root'), 
+			#		args.lumi, 
+			#		'M_{#tilde{t}} = '+otherMass+' GeV', 
+			#		kRed+2]
 
 		if 'Boosted' in args.boosted: 
 			bkgFiles[ 'TT' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_TT_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 't #bar{t} + Jets', kGreen+2 ]
@@ -1280,9 +1282,9 @@ if __name__ == '__main__':
 		signalFiles[ args.mass ] = [ TFile.Open(folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = '+str(args.mass)+' GeV', kRed]
 		#signalFiles[ args.mass ] = [ TFile.Open('~/mySpace/archiveEOS/Archive/v7414/RUNAnalysis_RPVSt350tojj_13TeV_pythia8RunIISpring15MiniAODv2-74X_Asympt25ns_v09_v01.root'), args.lumi, 'M_{#tilde{t}} = '+str(args.mass)+' GeV', kRed]
 		if ( 'Norm' in args.process ) or ( 'DATA' in args.process ) or ( 'CF' in args.process ): 
-			signalFiles[ 500 ] = [ TFile.Open(folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(500)+'_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = '+str(500)+' GeV', kRed]
+			#signalFiles[ 500 ] = [ TFile.Open(folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(500)+'_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = '+str(500)+' GeV', kRed]
 			otherMass = ( 180 if args.boosted == 'Boosted' else 700 )
-			signalFiles[ otherMass ] = [ TFile.Open(folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(otherMass)+'_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = '+str(otherMass)+' GeV', kRed]
+			#signalFiles[ otherMass ] = [ TFile.Open(folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(otherMass)+'_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = '+str(otherMass)+' GeV', kRed]
 			#signalFiles[ '800' ] = [ TFile.Open('~/mySpace/archiveEOS/Archive/v7414/RUNAnalysis_RPVStopStopToJets_UDD312_M-800-madgraph_RunIISpring15MiniAODv2-74X_Asympt25ns_v09_v03.root'), args.lumi, 'M_{#tilde{t}} = 800 GeV', kRed]
 		if 'Boosted' in args.boosted: 
 			bkgFiles[ 'TT' ] = [ TFile.Open(folder+'/RUNAnalysis_TT_80X_V2p4_'+args.version+'.root'), args.lumi, 't #bar{t} + Jets', kGreen+2 ]
@@ -1452,6 +1454,7 @@ if __name__ == '__main__':
 		[ 'Norm', 'Boosted', 'prunedMassAsym', '', '', 1, 0.40, 0.80, False, False],
 		[ 'Norm', 'Boosted', 'deltaEtaDijet', '', '', 5, '', '', False, False],
 		[ 'Norm', 'Boosted', 'jet1Tau32', '', '', 1, taulabX, taulabY, False, True],
+		[ 'Norm', 'Boosted', 'numJets', '', '', 1, taulabX, taulabY, False, True],
 		[ 'Norm', 'Boosted', 'jet2Tau32', '', '', 1, taulabX, taulabY, False, True],
 		[ 'Norm', 'Boosted', 'jet1SubjetPtRatio', '', '', 1, '', '', True, False],
 		[ 'Norm', 'Boosted', 'jet2SubjetPtRatio', '', '', 1, '', '', True, False],
@@ -1559,7 +1562,7 @@ if __name__ == '__main__':
 			plotSimple( inputFileZJetsToQQ, 'ZJets', args.grooming, i[0], i[1], i[2], i[3], i[4] )
 
 		elif 'tmp' in args.process:
-			tmpplotDiffSample( TFile(folder+'/RUNMiniResolvedAnalysis_'+( 'RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) if (args.mass > 0 ) else 'QCDPtAll' )+'_Moriond17_80X_V2p4_v09p2.root'),  #+args.version+'_4jets.root'), 
+			tmpplotDiffSample( TFile(folder+'/RUNMiniResolvedAnalysis_'+( 'RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) if (args.mass > 0 ) else 'QCDPtAll' )+'_Moriond17_80X_V2p4_v09p1_4jetsOnly.root'),  #+args.version+'_4jets.root'), 
 				TFile(folder+'/RUNMiniResolvedAnalysis_'+( 'RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) if (args.mass > 0 ) else 'QCDPtAll' )+'_Moriond17_80X_V2p4_'+args.version+'.root'), 
 				signalFiles[ args.mass ][0], i[0], i[1], i[2], i[3], i[4], i[5], i[6] ) 
 
