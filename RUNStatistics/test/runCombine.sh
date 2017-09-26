@@ -59,13 +59,14 @@ do
 
 	elif [ $2 == "fullCLs" ]
 	then
-		combine -M HybridNew --testStat=LHC --frequentist Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_withMC_altBkg_NOSys_v08p1_bins.txt -T 2000 -H ProfileLikelihood --fork 4 -n ${decay}RPVSt_M-${mass}_Boosted_NOSys_v02
-		combine -M HybridNew --testStat=LHC --frequentist Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_withMC_altBkg_NOSys_v08p1_bins.txt -T 2000 -H ProfileLikelihood --fork 4 -n ${decay}RPVSt_M-${mass}_Boosted_NOSys_v02 --expectedFromGrid 0.025
-		combine -M HybridNew --testStat=LHC --frequentist Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_withMC_altBkg_NOSys_v08p1_bins.txt -T 2000 -H ProfileLikelihood --fork 4 -n ${decay}RPVSt_M-${mass}_Boosted_NOSys_v02 --expectedFromGrid 0.16
-		combine -M HybridNew --testStat=LHC --frequentist Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_withMC_altBkg_NOSys_v08p1_bins.txt -T 2000 -H ProfileLikelihood --fork 4 -n ${decay}RPVSt_M-${mass}_Boosted_NOSys_v02 --expectedFromGrid 0.5
-		combine -M HybridNew --testStat=LHC --frequentist Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_withMC_altBkg_NOSys_v08p1_bins.txt -T 2000 -H ProfileLikelihood --fork 4 -n ${decay}RPVSt_M-${mass}_Boosted_NOSys_v02 --expectedFromGrid 0.84
-		combine -M HybridNew --testStat=LHC --frequentist Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_withMC_altBkg_NOSys_v08p1_bins.txt -T 2000 -H ProfileLikelihood --fork 4 -n ${decay}RPVSt_M-${mass}_Boosted_NOSys_v02 --expectedFromGrid 0.975
-		hadd higgsCombine${decay}RPVSt_M-${mass}_Boosted_NOSys_v02.HybridNewAll.mH120.root higgsCombine${decay}RPVSt_M-${mass}_Boosted_NOSys_v02.HybridNew*root 
+		NAME="_RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_${version}"
+		combine Datacards/datacard${NAME}.txt -M HybridNew --LHCmode LHC-limits -n ${NAME} 
+		combine Datacards/datacard${NAME}.txt -M HybridNew --LHCmode LHC-limits -n ${NAME} --expectedFromGrid 0.025
+		combine Datacards/datacard${NAME}.txt -M HybridNew --LHCmode LHC-limits -n ${NAME} --expectedFromGrid 0.16
+		combine Datacards/datacard${NAME}.txt -M HybridNew --LHCmode LHC-limits -n ${NAME} --expectedFromGrid 0.50
+		combine Datacards/datacard${NAME}.txt -M HybridNew --LHCmode LHC-limits -n ${NAME} --expectedFromGrid 0.84
+		combine Datacards/datacard${NAME}.txt -M HybridNew --LHCmode LHC-limits -n ${NAME} --expectedFromGrid 0.975
+		hadd higgsCombine${NAME}.HybridNewAll.mH120.root higgsCombine${NAME}.HybridNew*root 
 
 	elif [ $2 == "pseudo" ]
 	then

@@ -326,7 +326,13 @@ def compareLimits( listMasses, diffVersions ):
 		xs_theory.append( XS )
 
 		for ver in diffVersions:
-			if 'Resolved' in args.boosted: combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(mass)+args.grooming+'_'+ver+'_'+args.version+'.'+args.method+".mH120.root"
+			if 'Resolved' in args.boosted: 
+				if not ( "doubleGaus" in ver ):
+					combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(mass)+args.grooming+'_'+ver+'_'+args.version+'.'+args.method+".mH120.root"
+				else:
+					if mass in [600, 700, 800]:
+						combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(mass)+args.grooming+'_'+ver+'_'+args.version+'.'+args.method+".mH120.root"
+					else: break
 			else: combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(mass)+args.grooming+'_'+args.sys+'_'+args.version+ver+'.'+args.method+".mH120.root"
 			tmpFile, tmpTree, tmpEntries = getTree( combineFile, "limit" )
 			for i in xrange(tmpEntries):
@@ -358,7 +364,9 @@ def compareLimits( listMasses, diffVersions ):
 	diffLimitsGraphDict = OrderedDict()
 	dummy=1
 	for l in diffLimitsDict:
-		diffLimitsGraphDict[ l ] = TGraph( len(masses), masses, diffLimitsDict[l] ) 
+		if 'doubleGaus' in l: tmpMasses = array( 'd', [ 600, 700, 800 ])
+		else: tmpMasses = masses
+		diffLimitsGraphDict[ l ] = TGraph( len(tmpMasses), tmpMasses, diffLimitsDict[l] ) 
 		diffLimitsGraphDict[ l ].SetLineWidth(3)
 		diffLimitsGraphDict[ l ].SetLineStyle(2)
 		diffLimitsGraphDict[ l ].SetLineColor(dummy)
@@ -368,14 +376,14 @@ def compareLimits( listMasses, diffVersions ):
 	c = TCanvas("c", "",800,600)
 	c.cd()
 
-	diffLimitsGraphDict[ diffVersions[-1]+'_' ].GetXaxis().SetTitle("Resonance mass [GeV]")
-	diffLimitsGraphDict[ diffVersions[-1]+'_' ].GetYaxis().SetTitle("#sigma #times #it{B} [pb]")
-	diffLimitsGraphDict[ diffVersions[-1]+'_' ].GetYaxis().SetTitleOffset(1.1)
-	if 'Boosted' in args.boosted: diffLimitsGraphDict[ diffVersions[-1]+'_' ].GetYaxis().SetRangeUser(3,1e+04)
-	elif 'Resolved' in args.boosted: diffLimitsGraphDict[ diffVersions[-1]+'_' ].GetYaxis().SetRangeUser(0.01,100)
-	else: diffLimitsGraphDict[ diffVersions[-1]+'_' ].GetYaxis().SetRangeUser(0.01,10000)
+	diffLimitsGraphDict[ diffVersions[-2]+'_' ].GetXaxis().SetTitle("Resonance mass [GeV]")
+	diffLimitsGraphDict[ diffVersions[-2]+'_' ].GetYaxis().SetTitle("#sigma #times #it{B} [pb]")
+	diffLimitsGraphDict[ diffVersions[-2]+'_' ].GetYaxis().SetTitleOffset(1.1)
+	if 'Boosted' in args.boosted: diffLimitsGraphDict[ diffVersions[-2]+'_' ].GetYaxis().SetRangeUser(3,1e+04)
+	elif 'Resolved' in args.boosted: diffLimitsGraphDict[ diffVersions[-2]+'_' ].GetYaxis().SetRangeUser(0.01,100)
+	else: diffLimitsGraphDict[ diffVersions[-2]+'_' ].GetYaxis().SetRangeUser(0.01,10000)
 
-	diffLimitsGraphDict[ diffVersions[-1]+'_' ].Draw("AL")
+	diffLimitsGraphDict[ diffVersions[-2]+'_' ].Draw("AL")
 	for l in diffLimitsDict: diffLimitsGraphDict[l].Draw("L")
 	graph_xs_th.Draw("L")
     	legend.Draw()
@@ -432,5 +440,5 @@ if __name__ == '__main__':
 		else: 
 			listMass = range( 80, 300, 20) + range( 300, 1050, 50 ) + [ 1100, 1200 ]
 
-	if 'compare' in args.process: compareLimits( listMass, (['_1sigma', '_2sigma', '_4sigma', '_10sigma' ] if 'Boosted' in args.boosted else [ 'delta_massWindow', 'delta_2CSVv2L_massWindow' ] ) )#'delta_massWindow' ] ) ) 
+	if 'compare' in args.process: compareLimits( listMass, (['_1sigma', '_2sigma', '_4sigma', '_10sigma' ] if 'Boosted' in args.boosted else [ 'delta', 'delta_massWindow', 'delta_doubleGaus' ] ) ) 
 	else: plotLimits( listMass  )

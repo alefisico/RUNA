@@ -173,7 +173,7 @@ def rootFitter( inFile, hist, scale, fitFunctions, minX, maxX, rebinX, plot, log
 			finalHisto.SetTitle("")
 			finalHisto.Draw()
 			#rawHisto.Draw("histe same")
-			c1.SaveAs(outputDir+hist.replace('ResolvedAnalysisPlots/','')+"_"+args.process+"_"+fitFunc[0].GetName()+"Fit_ResolvedAnalysis_"+args.version+"."+args.extension)
+			c1.SaveAs(outputDir+hist.replace('ResolvedAnalysisPlots/','')+"_"+args.process+"_"+('doubleGaus' if args.doubleGaus else fitFunc[0].GetName())+"Fit_ResolvedAnalysis_"+args.version+"."+args.extension)
 			print finalHisto.GetBinWidth(1)
 			del c1
 	
@@ -579,12 +579,9 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		SignalParameters = rootFitter( TFile.Open( inFileSignal.replace( str(args.mass), str(imass) ) ), 
 						hist+('RPVStopStopToJets_'+args.decay+'_M-'+str(imass) if args.miniTree else ''), 
 						scale, 
-						#[ [ fitFunctions['gaus'][0], [ 1, 300, 100, 1, imass, tmpResolution ] ] ], 
-						#100,
-						#900,
-						[ [ fitFunctions['gaus'][0], [ 1, imass, tmpResolution ] ] ], 
-						uncDict[imass][(9 if 'UDD312' in args.decay else 10)][0], #int(imass-(tmpResolution*uncDict[imass][9][0])), 
-						uncDict[imass][(9 if 'UDD312' in args.decay else 10)][1], #int(imass+(tmpResolution*uncDict[imass][9][0])),
+						[ [ fitFunctions['gaus'][0], ( [ 1, 300, 100, 1, imass, tmpResolution ] if args.doubleGaus else [ 1, imass, tmpResolution ] ) ] ], 
+						( minX if args.doubleGaus else uncDict[imass][(9 if 'UDD312' in args.decay else 10)][0]),  
+						( maxX if args.doubleGaus else uncDict[imass][(9 if 'UDD312' in args.decay else 10)][1]), 
 						uncDict[imass][(9 if 'UDD312' in args.decay else 10)][2], ##rebinX, 
 						True,
 						False )
@@ -607,30 +604,31 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		### creating RooStats objects for signal
 		sigMean = RooRealVar('sigMean', 'sigMean', SignalParameters[0]['gaus'][1]) 
 		sigSigma = RooRealVar('sigSigma', 'sigSigma', SignalParameters[0]['gaus'][2]) 
-		signal = RooGaussian( 'signal', 'signal', mass, sigMean, sigSigma )
-		'''
-		sigConst1 = RooRealVar('sigConst1', 'sigConst1', 0.24 ) #SignalParameters[0]['gaus'][0]) 
-		signal1 = RooGaussian( 'signal1', 'signal1', mass, sigMean, sigSigma )
-		sigConst2 = RooRealVar('sigConst2', 'sigConst2', 0.76 ) #SignalParameters[0]['gaus'][3]) 
-		sigMean2 = RooRealVar('sigMean2', 'sigMean2', SignalParameters[0]['gaus'][4]) 
-		sigSigma2 = RooRealVar('sigSigma2', 'sigSigma2', SignalParameters[0]['gaus'][5]) 
-		signal2 = RooGaussian( 'signal2', 'signal2', mass, sigMean2, sigSigma2 )
-		signal = RooAddPdf( 'signal', "signal1+signal2", RooArgList(signal1, signal2), RooArgList(sigConst1, sigConst2) )
-		'''
+		if args.doubleGaus:
+			tmpPer = SignalParameters[0]['gaus'][0] / ( SignalParameters[0]['gaus'][0] + SignalParameters[0]['gaus'][3]) 
+			sigConst1 = RooRealVar('sigConst1', 'sigConst1', tmpPer ) 
+			signal1 = RooGaussian( 'signal1', 'signal1', mass, sigMean, sigSigma )
+			sigConst2 = RooRealVar('sigConst2', 'sigConst2', 1-tmpPer ) 
+			sigMean2 = RooRealVar('sigMean2', 'sigMean2', SignalParameters[0]['gaus'][4]) 
+			sigSigma2 = RooRealVar('sigSigma2', 'sigSigma2', SignalParameters[0]['gaus'][5]) 
+			signal2 = RooGaussian( 'signal2', 'signal2', mass, sigMean2, sigSigma2 )
+			signal = RooAddPdf( 'signal', "signal1+signal2", RooArgList(signal1, signal2), RooArgList(sigConst1, sigConst2) )
+		else:
+			signal = RooGaussian( 'signal', 'signal', mass, sigMean, sigSigma )
 		signal.Print()
 
-		#signalGaus = TF1( "RPVStop"+str(imass), "gaus", lowerLimitSearch, upperLimitSearch )
-		signalGaus = TF1( "RPVStop"+str(imass), "gaus(0)+gaus(3)", 100, 900 )
+		if args.doubleGaus: signalGaus = TF1( "RPVStop"+str(imass), "gaus(0)+gaus(3)", minX, maxX )
+		else: signalGaus = TF1( "RPVStop"+str(imass), "gaus", lowerLimitSearch, upperLimitSearch )
 		signalGaus.SetParameter( 0, SignalParameters[0]['gaus'][0] ) 
 		signalGaus.SetParameter( 1, SignalParameters[0]['gaus'][1] ) 
 		signalGaus.SetParameter( 2, SignalParameters[0]['gaus'][2] ) 
-		sigAcc = round( signalGaus.Integral( lowerLimitSearch, upperLimitSearch )/uncDict[imass][(9 if 'UDD312' in args.decay else 10)][2], 2 ) #( 10 if (imass < 400 ) else 20 ), 2 )
-		'''
-		signalGaus.SetParameter( 3, SignalParameters[0]['gaus'][3] ) 
-		signalGaus.SetParameter( 4, SignalParameters[0]['gaus'][4] ) 
-		signalGaus.SetParameter( 5, SignalParameters[0]['gaus'][5] ) 
-		sigAcc = round( signalGaus.Integral( minX, maxX )/uncDict[imass][9][2], 2 )
-		'''
+		if args.doubleGaus:
+			signalGaus.SetParameter( 3, SignalParameters[0]['gaus'][3] ) 
+			signalGaus.SetParameter( 4, SignalParameters[0]['gaus'][4] ) 
+			signalGaus.SetParameter( 5, SignalParameters[0]['gaus'][5] ) 
+			sigAcc = round( signalGaus.Integral( minX, maxX )/uncDict[imass][9][2], 2 )
+		else: 
+			sigAcc = round( signalGaus.Integral( lowerLimitSearch, upperLimitSearch)/uncDict[imass][(9 if 'UDD312' in args.decay else 10)][2], 2 ) 
 		print '|----> Signal events:', sigAcc, ', total number of events:', signalGaus.Integral(0, 2000)
 
 		#hBkg = inFileBkg.Get(hist)
@@ -647,6 +645,8 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 				tmpBkgFunct.SetParameter( p, bkgFuncParameters[0][ tmpBkgFunct.GetName() ][p] )
 			bkgAcc = round( tmpBkgFunct.Integral( lowerLimitSearch, upperLimitSearch ), 2 )
 			print '|----> Background events in mass (', imass, '):', bkgAcc 
+			#print round( tmpBkgFunct.Integral( 940, 1300), 2 )
+			#sys.exit(0)
 			#c1 = TCanvas('c1', 'c1',  10, 10, 750, 500 )
 			#c1.SetLogy()
 			#tmpBkgFunct.Draw()
@@ -687,7 +687,7 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		###################################################
 
 		##### creating workspace
-		outputRootFile = '/afs/cern.ch/work/a/algomez/RPVStops/CMSSW_8_0_20/src/RUNA/RUNStatistics/test/Rootfiles/workspace_RPVStopStopToJets_'+args.decay+'_M-'+str(imass)+'_Resolved_'+args.cut+'_'+('BiasTest_' if 'Bias' in args.process else '')+('QCD_' if args.bkgAsData else '' )+('massWindow_' if args.window else '' )+args.version+'.root' 
+		outputRootFile = '/afs/cern.ch/work/a/algomez/RPVStops/CMSSW_8_0_20/src/RUNA/RUNStatistics/test/Rootfiles/workspace_RPVStopStopToJets_'+args.decay+'_M-'+str(imass)+'_Resolved_'+args.cut+'_'+('BiasTest_' if 'Bias' in args.process else '')+('QCD_' if args.bkgAsData else '' )+('massWindow_' if args.window else '' )+('doubleGaus_' if args.doubleGaus else '' )+args.version+'.root' 
 		if 'Bias' in args.process:
 			cat = RooCategory( "pdf_index", "Index of Pdf which is active" )
 			multipdf = RooMultiPdf( "roomultipdf", "All Pdfs", cat, mypdfs )
@@ -726,7 +726,7 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		print '|----> Workspace created:', outputRootFile
 
 		##### write a datacard
-		datacard = open('/afs/cern.ch/work/a/algomez/RPVStops/CMSSW_8_0_20/src/RUNA/RUNStatistics/test/Datacards/datacard_RPVStopStopToJets_'+args.decay+'_M-'+str(imass)+'_Resolved_'+args.cut+'_'+('BiasTest_' if 'Bias' in args.process else '')+('QCD_' if args.bkgAsData else '' )+('massWindow_' if args.window else '' )+args.version+'.txt','w')
+		datacard = open('/afs/cern.ch/work/a/algomez/RPVStops/CMSSW_8_0_20/src/RUNA/RUNStatistics/test/Datacards/datacard_RPVStopStopToJets_'+args.decay+'_M-'+str(imass)+'_Resolved_'+args.cut+'_'+('BiasTest_' if 'Bias' in args.process else '')+('QCD_' if args.bkgAsData else '' )+('massWindow_' if args.window else '' )+('doubleGaus_' if args.doubleGaus else '' )+args.version+'.txt','w')
 		datacard.write('imax 1\n')
 		datacard.write('jmax 1\n')
 		datacard.write('kmax *\n')
@@ -749,8 +749,8 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		if 'Bias' in args.process: datacard.write('pdf_index\tdiscrete\n')
 		datacard.write("lumi\tlnN\t1.025\t-\n")
 		datacard.write("trigger\tlnN\t1.05\t-\n")
-		#datacard.write("sigMean\tparam\t"+str(round(SignalParameters[0]['gaus'][1],3))+'\t'+str(round((SignalParameters[0]['gaus'][1])*0.02,3))+"\t### jes shape unc.\n")
-		#datacard.write("sigSigma\tparam\t"+str(round(SignalParameters[0]['gaus'][2],3))+'\t'+str(round((SignalParameters[0]['gaus'][2])*0.1,3))+"\t### jer shape unc.\n")
+		datacard.write("sigMean\tparam\t"+str(round(SignalParameters[0]['gaus'][1],3))+'\t'+str(round((SignalParameters[0]['gaus'][1])*0.02,3))+"\t### jes shape unc.\n")
+		datacard.write("sigSigma\tparam\t"+str(round(SignalParameters[0]['gaus'][2],3))+'\t'+str(round((SignalParameters[0]['gaus'][2])*0.1,3))+"\t### jer shape unc.\n")
 		datacard.write("sigMean\tparam\t"+str(round(SignalParameters[0]['gaus'][1],3))+'\t'+str(round(SignalParameters[1]['gaus'][1],3))+"\t### statistical unc.\n")
 		datacard.write("sigSigma\tparam\t"+str(round(SignalParameters[0]['gaus'][2],3))+'\t'+str(round(SignalParameters[1]['gaus'][2],3))+"\t### statistical unc.\n")
 		datacard.write("SigNormJES\tlnN\t"+str(1+uncDict[imass][(1 if 'UDD312' in args.decay else 5)])+"\t-\n")
@@ -1324,7 +1324,8 @@ if __name__ == '__main__':
 	parser.add_argument('-F', '--func', action='store', default='P3', help='Function, example: P3, P4, P5' )
 	parser.add_argument('-P', '--pseudoExperiment', action='store_true', default=False, help='Run pseudoexperiment.' )
 	parser.add_argument('-a', '--acceptance', action='store_true', default=False, help='Create acceptance plots.' )
-	parser.add_argument('-W', '--window', action='store_true', default=False, help='Create acceptance plots.' )
+	parser.add_argument('-W', '--window', action='store_true', default=False, help='Mass window.' )
+	parser.add_argument('-D', '--doubleGaus', action='store_true', default=False, help='Using double gaussian.' )
 
 	try:
 		args = parser.parse_args()
@@ -1402,8 +1403,8 @@ if __name__ == '__main__':
 			'TMath::Landau(@0,@1,@2)' ]
 
 	fitFunctions['P1'] = [ TF1("P1", "[0] / (TMath::Power(x/13000.0,[1]))",0,2000), [ 0] ]
-	fitFunctions['gaus'] = [ TF1("gaus", "gaus", 0, 2000), [ ] ]
-	#fitFunctions['gaus'] = [ TF1("gaus", "gaus(0)+gaus(3)", 0, 2000), [ ] ]
+	if args.doubleGaus: fitFunctions['gaus'] = [ TF1("gaus", "gaus(0)+gaus(3)", 0, 2000), [ ] ]
+	else: fitFunctions['gaus'] = [ TF1("gaus", "gaus", 0, 2000), [ ] ]
 	fitFunctions['P4Gaus'] = [ TF1("P4Gaus", "[0]*pow(1-(x/13000.0),[1])/pow(x/13000.0,[2]+([3]*log(x/13000.)))+gaus(4)",0,2000), [] ]
 
 	######## Uncertainties
@@ -1420,18 +1421,18 @@ if __name__ == '__main__':
 	uncDict[ 450 ] = [ 0.002, 	0.023, 	0.016, 	0.003, 	0.214,		0.025, 	0.011, 	0.005, 	0.218,	[410, 480, 5],	[ 380, 500, 10] ]
 	uncDict[ 500 ] = [ 0.002, 	0.025, 	0.028, 	0.001, 	0.24,		0.037, 	0.031, 	0.016, 	0.238,	[450, 540, 5],	[ 420, 540, 10] ]
 	uncDict[ 550 ] = [ 0.002, 	0.023, 	0.015, 	0.007, 	0.253,		0.037, 	0.005, 	0.008, 	0.249,	[500, 590, 10],	[ 460, 590, 10] ]
-	uncDict[ 600 ] = [ 0.003, 	0.033, 	0.022, 	0.003, 	0.266,		0.049, 	0.026, 	0.012, 	0.27,	[480, 680, 20],	[ 520, 640, 10] ]
+	uncDict[ 600 ] = [ 0.003, 	0.033, 	0.022, 	0.003, 	0.266,		0.049, 	0.026, 	0.012, 	0.27,	[500, 700, 20],	[ 520, 640, 10] ]
 	uncDict[ 650 ] = [ 0.003, 	0.022, 	0.006, 	0.004, 	0.279,		0.032, 	0.04, 	0.007, 	0.29,	[560, 720, 20],	[ 560, 700, 10] ]
 	uncDict[ 700 ] = [ 0.003, 	0.033, 	0.041, 	0.006, 	0.302,		0.051, 	0.032, 	0.013, 	0.291,	[540, 840, 20],	[ 540, 820, 20] ]
 	uncDict[ 750 ] = [ 0.003, 	0.04, 	0.003, 	0.008, 	0.301,		0.092, 	0.025, 	0.013, 	0.313,	[640, 840, 20],	[ 640, 820, 20] ]
 	uncDict[ 800 ] = [ 0.003, 	0.045, 	0.049, 	0.005, 	0.335,		0.085, 	0.001, 	0.003, 	0.336,	[660, 900, 20],	[ 700, 880, 30 ] ]
 	uncDict[ 850 ] = [ 0.004, 	0.033, 	0.006,	0.011, 	0.358,		0.073, 	0.018, 	0.005, 	0.334,	[720, 960, 30],	[ 740, 950, 30] ]
 	uncDict[ 900 ] = [ 0.003, 	0.024, 	0.024, 	0.019, 	0.365,		0.05, 	0.017, 	0.007, 	0.332,	[750, 990, 30],	[ 750, 1020, 30] ]
-	uncDict[ 950 ] = [ 0.003, 	0.032, 	0.001, 	0.006, 	0.387,		0.05, 	0.001, 	0.001, 	0.381,	[800, 1070, 30],	[ 800, 1100, 30] ]
+	uncDict[ 950 ] = [ 0.003, 	0.032, 	0.001, 	0.006, 	0.387,		0.05, 	0.001, 	0.001, 	0.381,	[800, 1100, 30],	[ 800, 1100, 30] ]
 	uncDict[ 1000 ] = [ 0.004, 	0.037, 	0.039, 	0.015, 	0.408,		0.044, 	0.023, 	0.047, 	0.398,	[850, 1150, 30],	[ 850, 1150, 30] ]
-	uncDict[ 1100 ] = [ 0.004, 	0.065, 	0.028, 	0.008, 	0.446,		0.095, 	0.001, 	0.032, 	0.435,	[950, 1250, 30],	[ 960, 1280, 40] ]
-	uncDict[ 1200 ] = [ 0.008, 	0.062, 	0.019, 	0.017, 	0.499,		0.089, 	0.035, 	0.028, 	0.488,	[1050, 1350, 30],	[ 1040, 1360, 40] ]
-	uncDict[ 1300 ] = [ 0.008, 	0.062, 	0.019, 	0.017, 	0.499,		0.089, 	0.035, 	0.028, 	0.488,	[1150, 1450, 30],	[ ] ]
+	uncDict[ 1100 ] = [ 0.004, 	0.065, 	0.028, 	0.008, 	0.446,		0.095, 	0.001, 	0.032, 	0.435,	[980, 1220, 30],	[ 960, 1280, 40] ]
+	uncDict[ 1200 ] = [ 0.008, 	0.062, 	0.019, 	0.017, 	0.499,		0.089, 	0.035, 	0.028, 	0.488,	[1080, 1280, 40],	[ 1040, 1360, 40] ]
+	uncDict[ 1300 ] = [ 0.008, 	0.062, 	0.019, 	0.017, 	0.499,		0.089, 	0.035, 	0.028, 	0.488,	[1100, 1400, 50],	[ ] ]
 	
 	############ run process
 	if 'Data' in args.process:
