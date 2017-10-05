@@ -263,16 +263,16 @@ if 'Resolved' in options.version:
 elif 'Boosted' in options.version:
 	outputNAME = 'BoostedAnalysis_'
 	process.p += process.BoostedAnalysisPlots
-	process.p += process.BoostedAnalysisPlotsPuppi
+	#process.p += process.BoostedAnalysisPlotsPuppi
 	#process.p += process.BoostedAnalysisPlotsSortInMass
 	#process.p += process.BoostedAnalysisPlotsSortInTau21
 	if options.systematics:
 		process.p += process.BoostedAnalysisPlotsBtagUp
 		process.p += process.BoostedAnalysisPlotsBtagDown
-		process.p += process.BoostedAnalysisPlotsJESUp
-		process.p += process.BoostedAnalysisPlotsJESDown
-		process.p += process.BoostedAnalysisPlotsJERUp
-		process.p += process.BoostedAnalysisPlotsJERDown
+		#process.p += process.BoostedAnalysisPlotsJESUp
+		#process.p += process.BoostedAnalysisPlotsJESDown
+		#process.p += process.BoostedAnalysisPlotsJERUp
+		#process.p += process.BoostedAnalysisPlotsJERDown
 		#process.p += process.BoostedAnalysisPlotsPuppiJESUp
 		#process.p += process.BoostedAnalysisPlotsPuppiJESDown
 else: 
@@ -284,7 +284,7 @@ else:
 	process.p += process.BoostedAnalysisPlots
 	#process.p += process.BoostedAnalysisPlotsSortInMass
 	#process.p += process.BoostedAnalysisPlotsSortInTau21
-	process.p += process.BoostedAnalysisPlotsPuppi
+	#process.p += process.BoostedAnalysisPlotsPuppi
 
 	if options.systematics:
 		process.p += process.BoostedAnalysisPlotsBtagUp

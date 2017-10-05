@@ -89,7 +89,7 @@ def plotLimits( listMasses  ):
 			xs_theory.append( XS )
 
 			if 'final' in args.boosted: combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(mass)+'_final_'+args.version+'.'+args.method+".mH120.root"
-			else: combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(mass)+args.grooming+'_'+args.sys+'_'+args.version+'.'+args.method+".mH120.root"
+			else: combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(mass)+'_'+args.boosted+'_'+args.sys+'_'+args.version+'.'+args.method+".mH120.root"
 			tmpFile, tmpTree, tmpEntries = getTree( combineFile, "limit" )
 			for i in xrange(tmpEntries):
 				tmpTree.GetEntry(i)
@@ -303,7 +303,7 @@ def plotLimits( listMasses  ):
 	c.SetLogy()
 	if 'final' in args.boosted: c.SetLogx()
 	#fileName = 'xs_limit_%s_%s.%s'%(args.method,args.final_state + ( ('_' + args.postfix) if args.postfix != '' else '' ), args.fileFormat.lower())
-	fileName = 'xs_limit_RPVStop_'+args.decay+''+args.grooming+'_'+args.boosted+'_'+args.sys+'_'+args.method+'_'+args.version+'.'+args.ext
+	fileName = 'xs_limit_RPVStop_'+args.decay+''+args.boosted+'_'+args.sys+'_'+args.method+'_'+args.version+'.'+args.ext
 	if args.theta: fileName = fileName.replace('limit', 'limit_theta')
 	if 'gaus' in args.process: fileName = fileName.replace('limit', 'limit_gaus')
 	if args.addComparison: fileName = fileName.replace('limit', 'limit_comparison')
@@ -328,12 +328,12 @@ def compareLimits( listMasses, diffVersions ):
 		for ver in diffVersions:
 			if 'Resolved' in args.boosted: 
 				if not ( "doubleGaus" in ver ):
-					combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(mass)+args.grooming+'_'+ver+'_'+args.version+'.'+args.method+".mH120.root"
+					combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(mass)+args.boosted+'_'+ver+'_'+args.version+'.'+args.method+".mH120.root"
 				else:
 					if mass in [600, 700, 800]:
-						combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(mass)+args.grooming+'_'+ver+'_'+args.version+'.'+args.method+".mH120.root"
+						combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(mass)+args.boosted+'_'+ver+'_'+args.version+'.'+args.method+".mH120.root"
 					else: break
-			else: combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(mass)+args.grooming+'_'+args.sys+'_'+args.version+ver+'.'+args.method+".mH120.root"
+			else: combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(mass)+args.boosted+'_'+args.sys+'_'+args.version+ver+'.'+args.method+".mH120.root"
 			tmpFile, tmpTree, tmpEntries = getTree( combineFile, "limit" )
 			for i in xrange(tmpEntries):
 				tmpTree.GetEntry(i)
@@ -392,7 +392,91 @@ def compareLimits( listMasses, diffVersions ):
 	CMS_lumi.CMS_lumi(c, 4, 0)
 
 	c.SetLogy()
-	fileName = 'xs_limit_RPVStop_'+args.decay+''+args.grooming+'_'+args.boosted+'_'+args.sys+'_'+args.method+'_diff_'+(''.join(diffVersions))+'_'+args.version+'.'+args.ext
+	fileName = 'xs_limit_RPVStop_'+args.decay+'_'+args.boosted+'_'+args.sys+'_'+args.method+'_diff_'+(''.join(diffVersions))+'_'+args.version+'.'+args.ext
+	print 'Processing.......', fileName
+	c.SaveAs( 'Plots/'+fileName )
+
+def compareFinalLimits( listMasses, categories ):
+	"""docstring for compareFinalLimits"""
+	
+	masses = array('d', listMasses )
+	xs_theory = array('d')
+
+	for mass in listMasses:
+		XS = search( dictXS, 'RPVStopStopToJets_'+args.decay+'_M-'+str(mass) )
+		xs_theory.append( XS )
+
+	legend = TLegend(.45,.60,.90,.88)
+	legend.SetTextSize(0.03)
+	legend.SetBorderSize(0)
+	legend.SetFillColor(0)
+	legend.SetFillStyle(0)
+	legend.SetTextFont(42)
+
+	diffLimitsGraphDict = OrderedDict()
+	dummy=1
+	for cat in [ 'Boosted', 'Resolved', 'Combined' ]: 
+		signalStrengh = []
+		if 'Boosted' in cat:
+			name=categories[0]
+			if '312' in args.decay:  listMass = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 300, 350 ]
+			else: listMass = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 280, 300 ]
+		elif 'Resolved' in cat:
+			name=categories[1]
+			if '312' in args.decay: listMass = [ 200, 220, 240 ] + range( 300, 1050, 50 ) + range( 1100, 1400, 100 ) 
+			else: listMass = [ 200, 220, 240, 260, 280 ] + range( 300, 1050, 50 ) #+ range( 1100, 1400, 100 ) 
+		else:
+			name=categories[1]
+			if '312' in args.decay: listMass = range( 80, 260, 20 ) + range( 300, 1050, 50 ) + range( 1100, 1400, 100 ) 
+			else: listMass = range( 80, 300, 20 ) + range( 300, 1050, 50 ) #+ range( 1100, 1400, 100 ) 
+		
+		for imass in listMass:
+			combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(imass)+'_'+name+'.'+args.method+".mH120.root"
+			XS = search( dictXS, 'RPVStopStopToJets_'+args.decay+'_M-'+str(imass) )
+
+			tmpFile, tmpTree, tmpEntries = getTree( combineFile, "limit" )
+			for i in xrange(tmpEntries):
+				tmpTree.GetEntry(i)
+				tmp = round( tmpTree.quantileExpected, 2)
+				#if tmp == 0.03: signalStrengh_2sigma.append( tmpTree.limit * XS )
+				#if tmp == 0.16: signalStrengh_1sigma.append( tmpTree.limit * XS )
+				if tmp == 0.5: signalStrengh.append( tmpTree.limit * XS )
+				#if tmp == 0.84: signalStrengh_1sigma_up.append( tmpTree.limit * XS )
+				#if tmp == 0.98: signalStrengh_2sigma_up.append( tmpTree.limit * XS ) 
+				#if tmp == -1: xs_obs_limits.append( tmpTree.limit * XS )
+
+		diffLimitsGraphDict[ cat ] = TGraph( len(listMass), array( 'd', listMass), array( 'd', signalStrengh) ) 
+		diffLimitsGraphDict[ cat ].SetLineWidth(3)
+		diffLimitsGraphDict[ cat ].SetLineStyle(2)
+		diffLimitsGraphDict[ cat ].SetLineColor(dummy)
+		legend.AddEntry(diffLimitsGraphDict[ cat ], cat,"lp")
+		dummy+=1
+
+	graph_xs_th = TGraph(len(masses),masses,xs_theory)
+	shadow_graph_xs_th = graph_xs_th.Clone()
+	graph_xs_th.SetLineWidth(3)
+	graph_xs_th.SetLineStyle(2)
+	graph_xs_th.SetLineColor(kMagenta)
+	shadow_graph_xs_th.SetLineWidth(10)
+	shadow_graph_xs_th.SetLineColorAlpha(kMagenta, 0.15);
+        legend.AddEntry(graph_xs_th,"Top squark pair production #lambda_{"+("312" if '312' in args.decay else '323')+"}^{''} (#tilde{t} #rightarrow "+("qq)" if '312' in args.decay else 'bq)' ),"l")
+
+	c = TCanvas("c", "",800,600)
+	c.cd()
+
+	graph_xs_th.GetXaxis().SetTitle("Resonance mass [GeV]")
+	graph_xs_th.GetYaxis().SetTitle("(pp #rightarrow #tilde{t} #tilde{t}, #tilde{t} #rightarrow "+("qq" if 'UDD312' in args.decay else "bq" )+") #sigma #times #it{B} [pb] ")
+	graph_xs_th.GetYaxis().SetTitleOffset(1.1)
+	graph_xs_th.GetYaxis().SetRangeUser(0.01,10000)
+	graph_xs_th.Draw("AL")
+	for l in diffLimitsGraphDict: diffLimitsGraphDict[l].Draw("L")
+    	legend.Draw()
+
+	CMS_lumi.relPosX = 0.13
+	CMS_lumi.CMS_lumi(c, 4, 0)
+
+	c.SetLogy()
+	fileName = 'xs_limit_RPVStop_'+args.decay+'_'+args.boosted+'_'+args.method+'_diff_'+(''.join(categories))+'.'+args.ext
 	print 'Processing.......', fileName
 	c.SaveAs( 'Plots/'+fileName )
 
@@ -402,7 +486,6 @@ if __name__ == '__main__':
 	parser.add_argument('-p', '--proc', dest='process', action='store', default='1D', help='Process to draw, example: 1D, 2D, MC.' )
 	parser.add_argument('-d', '--decay', dest='decay', action='store', default='UDD312', help='Decay, example: UDD312, UDD323.' )
 	parser.add_argument('-b', '--boosted', dest='boosted', action='store', default='Boosted', help='Boosted or non version, example: Boosted' )
-	parser.add_argument('-g', '--grooming', dest='grooming', action='store', default='_pruned', help='Grooming: pruned or puppi' )
 	parser.add_argument('-v', '--version', dest='version', action='store', default='v05', help='Version of the root files' )
 	parser.add_argument('-t', '--theta', dest='theta', action='store', type=float, default=False, help='Input from theta or not.' )
 	parser.add_argument('-l', '--lumi', dest='lumi', action='store', type=float, default=149.9, help='Luminosity, example: 1.' )
@@ -424,7 +507,6 @@ if __name__ == '__main__':
 	lumi = args.lumi/1000
 	#if 'gaus' in args.process: listMass = range( 80, 360, 10 )
 	if 'Resolved' in args.boosted: 
-		args.grooming = '_Resolved'
 		if '312' in args.decay:  
 			listMass = [ 200, 220, 240 ] + range( 300, 1050, 50 ) + range( 1100, 1400, 100 ) 
 		else: listMass = [ 200, 220, 240, 260, 280 ] + range( 300, 1050, 50 ) #+ [1100, 1200 ] 
@@ -432,7 +514,7 @@ if __name__ == '__main__':
 
 	elif "Boosted" in args.boosted:
 		if '312' in args.decay:  listMass = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 300, 350 ]
-		else: listMass = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 280, 300, 350 ]
+		else: listMass = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 280, 300 ]
 
 	else:
 		if '312' in args.decay:  
@@ -441,4 +523,6 @@ if __name__ == '__main__':
 			listMass = range( 80, 300, 20) + range( 300, 1050, 50 ) + [ 1100, 1200 ]
 
 	if 'compare' in args.process: compareLimits( listMass, (['_1sigma', '_2sigma', '_4sigma', '_10sigma' ] if 'Boosted' in args.boosted else [ 'delta', 'delta_massWindow', 'delta_doubleGaus' ] ) ) 
+	elif 'full' in args.process: compareFinalLimits( listMass, [ 'Boosted_jet1Tau32_Bin5_v09p2', 'Resolved_delta_'+( '2CSVv2L_' if 'UDD323' in args.decay else '' )+'massWindow_v09p1', 'Combined' ] ) 
 	else: plotLimits( listMass  )
+

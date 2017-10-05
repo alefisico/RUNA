@@ -28,7 +28,7 @@ config.Data.publication = False
 
 #config.Site.storageSite = 'T3_US_FNALLPC'
 config.Site.storageSite = 'T3_US_Rutgers'
-config.Data.outLFNDirBase = '/store/user/algomez/myArea/EOS/B2GAnaFW_80X_V2p3/'
+config.Data.outLFNDirBase = '/store/user/algomez/myArea/EOS/B2GAnaFW_80X_V2p4/'
 #config.Data.outLFNDirBase = '/store/user/algomez/myArea/EOS/ResolvedCalc/'
 
 def submit(config):
@@ -192,6 +192,7 @@ if __name__ == '__main__':
 		else:
 			procName = dataset.split('/')[1].split('_TuneCUETP8M1')[0]
 			config.JobType.pyCfgParams = ( [ 'PROC='+procName, 'systematics='+('1' if 'RPV' in sam else '0'), 'jecVersion='+jecVersion ] )
+			#config.JobType.pyCfgParams = ( [ 'PROC='+procName, 'version=Boosted', 'systematics='+('1' if 'RPV' in sam else '0'), 'jecVersion='+jecVersion ] )
 			#config.JobType.pyCfgParams = ( [ 'PROC='+procName, 'jecVersion='+jecVersion ] )
 			#config.Data.lumiMask = 'crab_projects/crab_QCD_Pt_1800to2400v06/results/notFinishedLumis.json'
 

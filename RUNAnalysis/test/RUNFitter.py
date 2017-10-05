@@ -48,8 +48,7 @@ xline = array('d', [0,2000])
 yline = array('d', [0,0])
 line = TGraph(2, xline, yline)
 line.SetLineColor(kRed)
-
-
+massBins = range( 0, 600, 20 ) + range( 600, 840, 30 ) + range( 840, 1080, 40 ) + range( 1080, 1280, 50 ) + range( 1280, 2000, 60 )
 
 def createPseudoExperiment( rawFunction, parRawFunction, numEvents, minX, maxX, plot ):
 	"""docstring for createPseudoExperiment"""
@@ -89,29 +88,36 @@ def createPseudoExperiment( rawFunction, parRawFunction, numEvents, minX, maxX, 
 def rootFitter( inFile, hist, scale, fitFunctions, minX, maxX, rebinX, plot, log=True ):
 	"""Simple rootFitter"""
 
+	#### Initial histo
+	if isinstance( inFile, TFile ):
+		unbinnedRawHisto = inFile.Get( hist )
+		unbinnedRawHisto.SetBinErrorOption(TH1.kPoisson)
+	else: unbinnedRawHisto = inFile
+
 	tmpBinContent = []
 	tmpBinError = []
 	#minBinX = int(minX/(rebinX if args.miniTree else rebinX*10 ))+1
 	#maxBinX = int(maxX/(rebinX if args.miniTree else rebinX*10 ))+1
-	minBinX = int(minX/rebinX)+1
-	maxBinX = int(maxX/rebinX)+1
-	#print minX, maxX, minBinX, maxBinX
-
-	#### Initial histo
-	if isinstance( inFile, TFile ):
-		rawHisto = inFile.Get( hist )
-		rawHisto.SetBinErrorOption(TH1.kPoisson)
-	else: rawHisto = inFile
-	rawHisto.Scale( scale )
-	print '|----> Raw number of events: ', rawHisto.Integral(), ', bin size:', rawHisto.GetBinWidth(1)
-	rawHisto.Rebin( rebinX )
+	if isinstance( rebinX, int ):
+		minBinX = int(minX/rebinX)+1
+		maxBinX = int(maxX/rebinX)+1
+		rawHisto = unbinnedRawHisto.Rebin( rebinX )
+		rawHisto.Scale( scale )
+	else: 
+		minBinX = rebinX[2].index(minX)+1
+		maxBinX = rebinX[2].index(maxX)+1
+		rawHisto = unbinnedRawHisto.Rebin( rebinX[0], rebinX[1], array( 'd', rebinX[2] ) )
+		rawHisto.Scale( scale, 'width' ) ##### dividing each bin by the width
+	print '|----> Raw number of events: ', rawHisto.Integral()#, ', bin size:', rawHisto.GetBinWidth(1)
 
 	#### extracting bin contents and dividing by bin size
 	print '|----> Creating histograms from bin', minBinX, '(', rawHisto.GetBinLowEdge(minBinX),') to ', maxBinX, '(', rawHisto.GetBinLowEdge(maxBinX),'), initial integral: ', rawHisto.Integral()
 	for ibin in range( minBinX, maxBinX ):
-		tmpBinContent.append( rawHisto.GetBinContent(ibin) ) #/ rebinX )
-		if 'Data' in args.process: tmpBinError.append( ( rawHisto.GetBinError(ibin) if ( rawHisto.GetBinContent(ibin) > 0 ) else 1.8 ) ) #/ rebinX ) ## not needed because of kPoisson errors defined below
-		else: tmpBinError.append( rawHisto.GetBinError(ibin) ) # / rebinX )
+		#print rawHisto.GetBinContent(ibin), rawHisto.GetXaxis().GetBinWidth(ibin), rawHisto.GetBinContent(ibin) / rawHisto.GetXaxis().GetBinWidth(ibin)
+		tmpBinContent.append( rawHisto.GetBinContent(ibin) ) 
+		#if 'Data' in args.process: tmpBinError.append( ( rawHisto.GetBinError(ibin) if ( rawHisto.GetBinContent(ibin) > 0 ) else 1.8 ) ) #/ rebinX ) ## not needed because of kPoisson errors defined below
+		#else: 
+		tmpBinError.append( rawHisto.GetBinError(ibin) ) 
 		#print rawHisto.GetBinLowEdge( ibin ), rawHisto.GetBinContent(ibin) , rebinX, rawHisto.GetBinError(ibin)
 
 	binContents = np.array(tmpBinContent)
@@ -121,9 +127,13 @@ def rootFitter( inFile, hist, scale, fitFunctions, minX, maxX, rebinX, plot, log
 	
 	#### creating histo for fitting
 	numBins = maxBinX - minBinX
-	finalHisto = TH1D("finalHisto", "finalHisto", numBins, minX, maxX)
+	print '|----> Histogram min: ', minX, '(', minBinX, '), max: ', maxX, '(', maxBinX, '), numBins: ', numBins
+	print rebinX[2][minBinX:maxBinX]
+	if isinstance( rebinX, int ): finalHisto = TH1F("finalHisto", "finalHisto", numBins, minX, maxX)
+	else: finalHisto = TH1F("finalHisto", "finalHisto", numBins-1, array('d',  rebinX[2][minBinX-1:maxBinX] ) )  
 	finalHisto.Sumw2(False)
 	for ibin in range( 0, numBins ):
+		#print ibin, binContents[ibin], finalHisto.GetBinLowEdge(ibin+1)
 		finalHisto.SetBinContent( ibin+1, binContents[ibin] )
 		finalHisto.SetBinError( ibin+1, binError[ibin] )
 	finalHisto.SetBinErrorOption(TH1.kPoisson)
@@ -167,14 +177,14 @@ def rootFitter( inFile, hist, scale, fitFunctions, minX, maxX, rebinX, plot, log
 			c1 = TCanvas('c1', 'c1',  10, 10, 750, 500 )
 			if log: c1.SetLogy()
 			finalHisto.GetXaxis().SetTitle( histYaxis )
-			finalHisto.GetYaxis().SetTitle('Events / '+str(round(finalHisto.GetBinWidth(1)))+' GeV' ) 
+			finalHisto.GetYaxis().SetTitle(( "Events / "+ str(finalHisto.GetBinWidth(1)) +" GeV" if isinstance( rebinX, int ) else "dN/dm_{av} [GeV^{-1}]") ) 
 			finalHisto.GetYaxis().SetTitleOffset(0.9);
 			finalHisto.GetXaxis().SetRangeUser( minX-50, maxX+50 )
 			finalHisto.SetTitle("")
 			finalHisto.Draw()
 			#rawHisto.Draw("histe same")
 			c1.SaveAs(outputDir+hist.replace('ResolvedAnalysisPlots/','')+"_"+args.process+"_"+('doubleGaus' if args.doubleGaus else fitFunc[0].GetName())+"Fit_ResolvedAnalysis_"+args.version+"."+args.extension)
-			print finalHisto.GetBinWidth(1)
+			#print finalHisto.GetBinWidth(1)
 			del c1
 	
 	return [ fitParameters, fitParErrors, binContents, binError, chi2Ndf ]
@@ -182,7 +192,7 @@ def rootFitter( inFile, hist, scale, fitFunctions, minX, maxX, rebinX, plot, log
 
 
 
-def histoFunctionFit( nameHisto, initFitFunction, parameters, parErrors, massBin, massBinErr, minX, maxX, imass=0 ):
+def histoFunctionFit( nameHisto, initFitFunction, parameters, parErrors, massBin, massBinErr, minX, maxX, rebinX, imass=0 ):
 	"""docstring for histoFunctionFit"""
 
 	fitFunction = initFitFunction.Clone()
@@ -191,13 +201,19 @@ def histoFunctionFit( nameHisto, initFitFunction, parameters, parErrors, massBin
 		fitFunction.SetParError( i, parErrors[fitFunction.GetName()][i] )
 	if args.final and ( 'RPV' in nameHisto) : fitFunction.FixParameter( 1, imass )
 
-	histoFit = TH1D( nameHisto, nameHisto, len(massBin) , minX, maxX)
+	if isinstance( rebinX, int ): histoFit = TH1D( nameHisto, nameHisto, len(massBin) , minX, maxX)
+	else: 
+		minBinX = rebinX[2].index(minX)+1
+		maxBinX = rebinX[2].index(maxX)+1
+		numBins = maxBinX - minBinX
+		histoFit = TH1D( nameHisto, nameHisto, numBins-1, array('d',  rebinX[2][minBinX-1:maxBinX] ) )  
 	histoFit.Sumw2(False)
 
 	for ibin in range( 0, len(massBin)):
-		histoFit.SetBinContent( ibin, massBin[ibin] )
+		#print ibin, massBin[ibin], histoFit.GetBinLowEdge(ibin+1)
+		histoFit.SetBinContent( ibin+1, massBin[ibin] )
 		#histoFit.SetBinError( ibin, ( massBinErr[ibin] if ( massBin[ibin] > 0 ) else 1.8 ) )
-		histoFit.SetBinError( ibin, massBinErr[ibin] )
+		histoFit.SetBinError( ibin+1, massBinErr[ibin] )
 
 	histoFit.SetBinErrorOption(TH1.kPoisson)
 			
@@ -230,12 +246,19 @@ def fitToHisto( nameHisto, initFitFunction, minX, maxX ):
 	return newHisto, points, errPoints
 
 
-def residualAndPulls(dataPoints, dataErrPoints, function, histo, minX, maxX, extraName='' ):
+def residualAndPulls(dataPoints, dataErrPoints, function, histo, minX, maxX, rebinX, extraName='' ):
 	"""docstring for residualAndPulls"""
 
-	hPull = TH1D("hpull_"+extraName+function.GetName(), "hpull_"+extraName+function.GetName(), len(dataPoints) , minX, maxX)
+	if isinstance( rebinX, int ): 
+		hPull = TH1D("hpull_"+extraName+function.GetName(), "hpull_"+extraName+function.GetName(), len(dataPoints) , minX, maxX)
+		hResidual = TH1D("hresidual_"+extraName+function.GetName(), "hresidual_"+extraName+function.GetName(), len(dataPoints) , minX, maxX)
+	else: 
+		minBinX = rebinX[2].index(minX)+1
+		maxBinX = rebinX[2].index(maxX)+1
+		numBins = maxBinX - minBinX
+		hPull = TH1D("hpull_"+extraName+function.GetName(), "hpull_"+extraName+function.GetName(), numBins-1, array('d',  rebinX[2][minBinX-1:maxBinX] ) ) 
+		hResidual = TH1D("hresidual_"+extraName+function.GetName(), "hresidual_"+extraName+function.GetName(), numBins-1, array('d',  rebinX[2][minBinX-1:maxBinX] ) ) 
 	hPull.Sumw2()
-	hResidual = TH1D("hresidual_"+extraName+function.GetName(), "hresidual_"+extraName+function.GetName(), len(dataPoints) , minX, maxX)
 	hResidual.Sumw2()
 
 	######## Calculating Pull and Residual
@@ -245,24 +268,27 @@ def residualAndPulls(dataPoints, dataErrPoints, function, histo, minX, maxX, ext
 	
 		binCont = dataPoints[ibin]
 		binErr = dataErrPoints[ibin]
-		valIntegral = function.Eval( histo.GetBinCenter(ibin) ) 
+		histo.GetBinCenter(ibin)
+		valIntegral = function.Eval( histo.GetBinCenter(ibin+1) ) 
 		diff = (binCont - valIntegral)/ valIntegral
 		#errDiff = diff * TMath.Sqrt( TMath.Power( P4Gaus.GetParError(0) / P4Gaus.GetParameter(0),2 ) + TMath.Power( P4Gaus.GetParError(1)/ P4Gaus.GetParameter(1), 2 )  + TMath.Power( P4Gaus.GetParError(2)/ P4Gaus.GetParameter(2), 2 )  + TMath.Power( P4Gaus.GetParError(3)/ P4Gaus.GetParameter(3), 2 ) )
 		#errDiff = diff * TMath.Sqrt( TMath.Power( function.GetParError(0) / function.GetParameter(0),2 ) + TMath.Power( function.GetParError(1)/ function.GetParameter(1), 2 )  + TMath.Power( function.GetParError(2)/ function.GetParameter(2), 2 )  + TMath.Power( function.GetParError(3)/ function.GetParameter(3), 2 ) )
-		#print binCont, binErr, valIntegral 
+		#print binCont, binErr, valIntegral, diff
 
 		if (binCont != 0):
 			pull = (binCont - valIntegral)/ binErr
+			#print binCont, binErr, valIntegral, diff, pull, histo.GetBinCenter(ibin+1), hPull.GetBinLowEdge(ibin+1)
 			chi2 += TMath.Power(pull,2)
 			nof += 1
 			
-			hPull.SetBinContent(ibin, pull)
-			hPull.SetBinError(ibin, 1.0)
+			hPull.SetBinContent(ibin+1, pull)
+			hPull.SetBinError(ibin+1, 1.0)
 	
-			hResidual.SetBinContent(ibin, diff)
-			hResidual.SetBinError(ibin, binErr/valIntegral )
+			hResidual.SetBinContent(ibin+1, diff)
+			hResidual.SetBinError(ibin+1, binErr/valIntegral )
 
 		#print '|---> Significance of high mass bins: ', binCont, valIntegral, binErr, pull
+		#print binCont, valIntegral
 
 	NDoF = nof - function.GetNpar() - 1
 	print '|----> ############### chi2 and nof: ', chi2, nof
@@ -318,7 +344,7 @@ def FitterCombination( inFileData, inFileBkg, inFileSignalName, hist, scale, bkg
 
 		points = DataParameters[2]
 		pointsErr = DataParameters[3]
-		hMain, mainP4 = histoFunctionFit( 'Data', bkgFunction[0][0], DataParameters[0], DataParameters[1], points, pointsErr, minX, maxX )
+		hMain, mainP4 = histoFunctionFit( 'Data', bkgFunction[0][0], DataParameters[0], DataParameters[1], points, pointsErr, minX, maxX, rebinX )
 		legend.AddEntry( hMain, ('PseudoExperiment' if args.pseudoExperiment else 'Data'), 'ep' )
 		legend.AddEntry( mainP4, 'Background Fit', 'l' )
 		#hMCQCD, qcdMCP4 = histoFunctionFit( 'QCD'+args.qcd+'All', bkgFunction[0][0], bkgParameters, bkgParErrors, bkgpoints, bkgpointsErr, minX, maxX )
@@ -347,6 +373,7 @@ def FitterCombination( inFileData, inFileBkg, inFileSignalName, hist, scale, bkg
 									sigpoints, sigpointsErr, 
 									imass-(100 if (imass < 800 ) else 200 ), 
 									imass+(100 if (imass < 800 ) else 200 ),
+									rebinX,
 									imass=imass) 
 				legend.AddEntry( signalFuncs[ imass ], 'M_{#tilde{t}} = '+str(imass)+' GeV', 'l' )
 		
@@ -383,14 +410,14 @@ def FitterCombination( inFileData, inFileBkg, inFileSignalName, hist, scale, bkg
 		'''
 
 	else:
-		hMain, mainP4 = histoFunctionFit( 'QCD'+args.qcd+'All', bkgFunction[0][0], bkgParameters, bkgParErrors, bkgpoints, bkgpointsErr, minX, maxX )
+		hMain, mainP4 = histoFunctionFit( 'QCD'+args.qcd+'All', bkgFunction[0][0], bkgParameters, bkgParErrors, bkgpoints, bkgpointsErr, minX, maxX, rebinX )
 		points = bkgpoints
 		pointsErr = bkgpointsErr
 	
 	print '|----> DATA Plotted:', points
 	print '|----> DATA Err:', pointsErr
 
-	hPull, hResidual, chi2, NDF = residualAndPulls(points, pointsErr, mainP4, hMain, minX, maxX )
+	hPull, hResidual, chi2, NDF = residualAndPulls(points, pointsErr, mainP4, hMain, minX, maxX, rebinX )
 
 	######### Plotting Histograms
 	maxXPlot = maxX+500
@@ -420,9 +447,10 @@ def FitterCombination( inFileData, inFileBkg, inFileSignalName, hist, scale, bkg
 
 	pad1.cd()
 	pad1.SetLogy()
+	#pad1.SetLogx()
 	hMain.SetMarkerStyle(8)
 	#hMain.GetYaxis().SetTitle("dN/dm_{av} / "+ str(hMain.GetBinWidth(1)) +" GeV" ) # dN/dM_{bbjj} [GeV^{-1}]")
-	hMain.GetYaxis().SetTitle("Events / "+ str(hMain.GetBinWidth(1)) +" GeV" ) # dN/dM_{bbjj} [GeV^{-1}]")
+	hMain.GetYaxis().SetTitle( ( "Events / "+ str(hMain.GetBinWidth(1)) +" GeV" if isinstance( rebinX, int ) else "dN/dm_{av} [GeV^{-1}]") )
 	hMain.GetXaxis().SetTitle( histYaxis )
 	hMain.GetXaxis().SetTitleSize(0.055)
 	hMain.GetYaxis().SetTitleOffset(1.15);
@@ -430,11 +458,9 @@ def FitterCombination( inFileData, inFileBkg, inFileSignalName, hist, scale, bkg
 	hMain.SetMarkerStyle(20)
 	#hMain.SetMaximum( 1.5 * hMain.GetMaximum() )
 	#hMain.SetMaximum( 200 )
-	hMain.SetMinimum( 0.01 )
+	#hMain.SetMinimum( 10 )
 	hMain.Draw('E0')
 	hMain.GetXaxis().SetRangeUser( minX, maxXPlot  )
-	mainP4.SetLineColor(kBlack)
-	mainP4.Draw("same")
 	if args.final:
 		color = 4
 		for imass in signalFuncs:
@@ -748,7 +774,7 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		datacard.write('------------------------------\n')
 		if 'Bias' in args.process: datacard.write('pdf_index\tdiscrete\n')
 		datacard.write("lumi\tlnN\t1.025\t-\n")
-		datacard.write("trigger\tlnN\t1.05\t-\n")
+		datacard.write("triggerResolved\tlnN\t1.05\t-\n")
 		datacard.write("sigMean\tparam\t"+str(round(SignalParameters[0]['gaus'][1],3))+'\t'+str(round((SignalParameters[0]['gaus'][1])*0.02,3))+"\t### jes shape unc.\n")
 		datacard.write("sigSigma\tparam\t"+str(round(SignalParameters[0]['gaus'][2],3))+'\t'+str(round((SignalParameters[0]['gaus'][2])*0.1,3))+"\t### jer shape unc.\n")
 		datacard.write("sigMean\tparam\t"+str(round(SignalParameters[0]['gaus'][1],3))+'\t'+str(round(SignalParameters[1]['gaus'][1],3))+"\t### statistical unc.\n")
@@ -823,6 +849,10 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		del canMean
 
 		sigmaXeffGraph = TGraphErrors(len(listMass), array('d',listMass), array('d',listSigma), array('d',[0]*len(listMass)), array('d',listSigmaError) )
+		#sigmaXeffGraph = TGraph(len(listMass), array('d',listMass), array('d',listSigma) ) 
+		#pol1Sigma = TF1( "pol1Sigma", "TMath::Log(x)", 200, 1400 )
+		#print '|----> Fitting sigma'
+		#sigmaXeffGraph.Fit(pol1Sigma)
 		canSigma = TCanvas('canSigma', 'canSigma',  10, 10, 750, 500 )
 		sigmaXeffGraph.SetLineColor(kRed)
 		sigmaXeffGraph.SetLineWidth(2)
@@ -908,13 +938,13 @@ def FisherTest( dataFile, hist, bkgFunctions, minX, maxX, rebinX ):
 									fitParameters[1], 
 									fitParameters[2],
 									fitParameters[3],
-									minX, maxX ) 
+									minX, maxX, rebinX ) 
 		
 		dictPullResChi2NDF[ func[0].GetName() ] = residualAndPulls( fitParameters[2], 
 									fitParameters[3], 
 									dictDataAndFunc[ func[0].GetName() ][1],  
 									dictDataAndFunc[ func[0].GetName() ][0], 
-									minX, maxX )
+									minX, maxX, rebinX )
 
 	dictFtest = OrderedDict()
 	for key1, key2 in combinations(dictPullResChi2NDF.keys(), r = 2):
@@ -1443,7 +1473,9 @@ if __name__ == '__main__':
 				hist, 
 				scale, 
 				[fitFunctions[args.func]], 
-				minFit, maxFit, rebinX))
+				minFit, 1580, #maxFit, 
+				[ len(massBins)-1, "resoBin", massBins ]#rebinX
+				))
 
 	elif 'RPV' in args.process:
 		process = 'RPVSt'+str(args.mass)+'tojj'
