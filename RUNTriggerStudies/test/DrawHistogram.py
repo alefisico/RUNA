@@ -34,6 +34,11 @@ tdrstyle.setTDRStyle()
 
 gStyle.SetOptStat(0)
 
+xline = array('d', [0,2000])
+yline = array('d', [.99,.99])
+line = TGraph(2, xline, yline)
+line.SetLineColor(kRed)
+
 
 def plotTriggerEfficiency( inFileSample, sample, triggerSel, triggerDenom, name, cut, xmin, xmax, rebin, labX, labY, log, PU ):
 	"""docstring for plot"""
@@ -50,6 +55,8 @@ def plotTriggerEfficiency( inFileSample, sample, triggerSel, triggerDenom, name,
 	print Denom, Passing
 	Efficiency = TGraphAsymmErrors( Passing, Denom, 'cp'  )
 	#Efficiency = TEfficiency( Passing, Denom )
+	for ibin in range( 0, Passing.GetNbinsX() ):
+		print Passing.GetBinCenter(ibin), Efficiency.Eval( Passing.GetBinCenter(ibin) )
 
 	binWidth = DenomOnly.GetBinWidth(1)
 
@@ -136,6 +143,7 @@ def plotTriggerEfficiency( inFileSample, sample, triggerSel, triggerDenom, name,
 	#Efficiency.GetXaxis().SetLimits( 700, 1050 )
 	Efficiency.GetXaxis().SetLimits( xmin, xmax )
 	Efficiency.Draw('AP')
+	line.Draw("same")
 	'''
 	errF.SetLineColor(kRed)
 	errF.SetLineWidth(2)
@@ -502,7 +510,7 @@ if __name__ == '__main__':
 		[ '1D', 'jet2RhoPruned', -10, 0, 1, triggerlabX, triggerlabY, True],
 #		[ '1D', 'jet2Pt', ptMinX, ptMaxX, 2, triggerlabX, triggerlabY, True],
 		[ '1D', 'jet1PrunedMass', 0, 500, 1, triggerlabX, triggerlabY, True],
-		[ '1D', 'massAve', 0, 500, 10, triggerlabX, triggerlabY, True],
+		[ '1D', 'massAve', 0, 500, 20, triggerlabX, triggerlabY, True],
 		[ '1D', 'jet1SoftDropMass', 0, massMaxX, 1, triggerlabX, triggerlabY, True],
 		#[ '1D', 'jet3Pt', 0, 200, 1, triggerlabX, triggerlabY, True],
 		[ '1D', 'jet4Pt', 0, 200, 1, triggerlabX, triggerlabY, True],

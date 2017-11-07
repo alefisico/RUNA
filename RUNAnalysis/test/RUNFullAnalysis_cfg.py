@@ -113,8 +113,8 @@ else: isSignal = False
 ResolvedTriggers = [  'HLT_PFHT800', 'HLT_PFHT900', 'HLT_PFHT750_4Jet', 'HLT_PFHT800_4Jet50', 'HLT_PFJet450' ]
 
 process.ResolvedAnalysisPlots = cms.EDAnalyzer('RUNResolvedAnalysis',
-		cutAK4jetPt 		= cms.double( 80.0 ),	# default 80.0
-		cutAK4HT 		= cms.double( 900.0 ),	# default 800.0
+		cutAK4jetPt 		= cms.double( 50.0 ),	# default 80.0
+		cutAK4HT 		= cms.double( 500.0 ),	# default 800.0
 		cutAK4MassAsym		= cms.double( 0.1 ),	# default 0.2
 		cutDelta 		= cms.double( 200 ),	# default 180.0
 		cutDeltaEtaDijetSyst	= cms.double( 1.0 ),	# default .75

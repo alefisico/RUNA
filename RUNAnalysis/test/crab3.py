@@ -75,33 +75,35 @@ if __name__ == '__main__':
 	Samples[ 'QCDHT1500' ] = [ '/QCD_HT1500to2000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-6b29e1707fe76ab19c1ba543e7f6f24b/USER', 30, 'Summer16_23Sep2016V4' ]
 	Samples[ 'QCDHT2000' ] = [ '/QCD_HT2000toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 30, 'Summer16_23Sep2016V4' ]
 	
-#	Samples[ 'QCDPtExt170' ] = [ '/QCD_Pt_170to300_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1_B2GAnaFW_80X_V2p04-6b29e1707fe76ab19c1ba543e7f6f24b/USER', 10, 'Summer16_23Sep2016V4' ]
-#	Samples[ 'QCDPtExt300' ] = [ '/QCD_Pt_300to470_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 20, 'Summer16_23Sep2016V4' ]
-#	Samples[ 'QCDPtExt470' ] = [ '/QCD_Pt_470to600_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_backup_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p04-6b29e1707fe76ab19c1ba543e7f6f24b/USER', 20, 'Summer16_23Sep2016V4' ]
-#	Samples[ 'QCDPtExt600' ] = [ '/QCD_Pt_600to800_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_backup_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 20, 'Summer16_23Sep2016V4' ]
-#	Samples[ 'QCDPtExt800' ] = [ '/QCD_Pt_800to1000_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 20, 'Summer16_23Sep2016V4' ]
-#	Samples[ 'QCDPtExt1000' ] = [ '/QCD_Pt_1000to1400_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 10, 'Summer16_23Sep2016V4' ]
-#	Samples[ 'QCDPtExt1400' ] = [ '/QCD_Pt_1400to1800_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 10, 'Summer16_23Sep2016V4' ]
-#	Samples[ 'QCDPtExt1800' ] = [ '/QCD_Pt_1800to2400_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 10, 'Summer16_23Sep2016V4' ]
-#	Samples[ 'QCDPtExt2400' ] = [ '/QCD_Pt_2400to3200_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 10, 'Summer16_23Sep2016V4' ]
-#	Samples[ 'QCDPtExt3200' ] = [ '/QCD_Pt_3200toInf_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v3_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 10, 'Summer16_23Sep2016V4' ]
+	Samples[ 'QCDPtExt170' ] = [ '/QCD_Pt_170to300_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1_B2GAnaFW_80X_V2p04-6b29e1707fe76ab19c1ba543e7f6f24b/USER', 10, 'Summer16_23Sep2016V4' ]
+	Samples[ 'QCDPtExt300' ] = [ '/QCD_Pt_300to470_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 20, 'Summer16_23Sep2016V4' ]
+	Samples[ 'QCDPtExt470' ] = [ '/QCD_Pt_470to600_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_backup_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p04-6b29e1707fe76ab19c1ba543e7f6f24b/USER', 20, 'Summer16_23Sep2016V4' ]
+	Samples[ 'QCDPtExt600' ] = [ '/QCD_Pt_600to800_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_backup_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 20, 'Summer16_23Sep2016V4' ]
+	Samples[ 'QCDPtExt800' ] = [ '/QCD_Pt_800to1000_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 20, 'Summer16_23Sep2016V4' ]
+	Samples[ 'QCDPtExt1000' ] = [ '/QCD_Pt_1000to1400_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 10, 'Summer16_23Sep2016V4' ]
+	Samples[ 'QCDPtExt1400' ] = [ '/QCD_Pt_1400to1800_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 10, 'Summer16_23Sep2016V4' ]
+	Samples[ 'QCDPtExt1800' ] = [ '/QCD_Pt_1800to2400_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 10, 'Summer16_23Sep2016V4' ]
+	Samples[ 'QCDPtExt2400' ] = [ '/QCD_Pt_2400to3200_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 10, 'Summer16_23Sep2016V4' ]
+	Samples[ 'QCDPtExt3200' ] = [ '/QCD_Pt_3200toInf_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v3_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 10, 'Summer16_23Sep2016V4' ]
 
-	Samples[ 'QCDPt300' ] = [ '/QCD_Pt_300to470_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-7366f40558257932b9432f5b8e0b9ff1/USER', 10, 'Summer16_23Sep2016V4' ]
-	Samples[ 'QCDPt470' ] = [ '/QCD_Pt_470to600_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_backup_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-7366f40558257932b9432f5b8e0b9ff1/USER', 10, 'Summer16_23Sep2016V4' ]
-	Samples[ 'QCDPt600' ] = [ '/QCD_Pt_600to800_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1_B2GAnaFW_80X_V2p4-7366f40558257932b9432f5b8e0b9ff1/USER', 10, 'Summer16_23Sep2016V4' ]
-	Samples[ 'QCDPt800' ] = [ '/QCD_Pt_800to1000_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-7366f40558257932b9432f5b8e0b9ff1/USER', 10, 'Summer16_23Sep2016V4' ]
-	Samples[ 'QCDPt1000' ] = [ '/QCD_Pt_1000to1400_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-7366f40558257932b9432f5b8e0b9ff1/USER', 10, 'Summer16_23Sep2016V4' ]
-	Samples[ 'QCDPt1400' ] = [ '/QCD_Pt_1400to1800_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-7366f40558257932b9432f5b8e0b9ff1/USER', 10, 'Summer16_23Sep2016V4' ]
-	Samples[ 'QCDPt1800' ] = [ '/QCD_Pt_1800to2400_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-7366f40558257932b9432f5b8e0b9ff1/USER', 10, 'Summer16_23Sep2016V4' ]
-	Samples[ 'QCDPt2400' ] = [ '/QCD_Pt_2400to3200_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-7366f40558257932b9432f5b8e0b9ff1/USER', 10, 'Summer16_23Sep2016V4' ]
+#	Samples[ 'QCDPt300' ] = [ '/QCD_Pt_300to470_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-7366f40558257932b9432f5b8e0b9ff1/USER', 10, 'Summer16_23Sep2016V4' ]
+#	Samples[ 'QCDPt470' ] = [ '/QCD_Pt_470to600_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_backup_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-7366f40558257932b9432f5b8e0b9ff1/USER', 10, 'Summer16_23Sep2016V4' ]
+#	Samples[ 'QCDPt600' ] = [ '/QCD_Pt_600to800_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1_B2GAnaFW_80X_V2p4-7366f40558257932b9432f5b8e0b9ff1/USER', 10, 'Summer16_23Sep2016V4' ]
+#	Samples[ 'QCDPt800' ] = [ '/QCD_Pt_800to1000_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-7366f40558257932b9432f5b8e0b9ff1/USER', 10, 'Summer16_23Sep2016V4' ]
+#	Samples[ 'QCDPt1000' ] = [ '/QCD_Pt_1000to1400_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-7366f40558257932b9432f5b8e0b9ff1/USER', 10, 'Summer16_23Sep2016V4' ]
+#	Samples[ 'QCDPt1400' ] = [ '/QCD_Pt_1400to1800_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-7366f40558257932b9432f5b8e0b9ff1/USER', 10, 'Summer16_23Sep2016V4' ]
+#	Samples[ 'QCDPt1800' ] = [ '/QCD_Pt_1800to2400_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-7366f40558257932b9432f5b8e0b9ff1/USER', 10, 'Summer16_23Sep2016V4' ]
+#	Samples[ 'QCDPt2400' ] = [ '/QCD_Pt_2400to3200_TuneCUETP8M1_13TeV_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-7366f40558257932b9432f5b8e0b9ff1/USER', 10, 'Summer16_23Sep2016V4' ]
 
 	############### Moriond17 samples
 	Samples[ 'QCDHerwig' ] = [ '/QCD_Pt-15to7000_TuneCUETHS1_FlatP6_13TeV_herwigpp/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 10, 'Summer16_23Sep2016V4' ]
 
 	############### Moriond17 samples
-	Samples[ 'TTJets' ] = [ '/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 100, 'Summer16_23Sep2016V4' ]
+	#Samples[ 'TTJets' ] = [ '/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 100, 'Summer16_23Sep2016V4' ]
+	Samples[ 'TTJetsExt' ] = [ '/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/vorobiev-B2GAnaFW_RunIISpring16MiniAODv2_25ns_v80x_backup_v2p4-bfea8033ab2d179bbb8e0faf6e2dc0cf/USER', 100, 'Summer16_23Sep2016V4' ]
 	Samples[ 'WJetsToQQ' ] = [ '/WJetsToQQ_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 10, 'Summer16_23Sep2016V4' ]
 	Samples[ 'ZJetsToQQ' ] = [ '/ZJetsToQQ_HT600toInf_13TeV-madgraph/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-7366f40558257932b9432f5b8e0b9ff1/USER', 10, 'Summer16_23Sep2016V4' ]
+	Samples[ 'DYJetsToQQ' ] = [ '/DYJetsToQQ_HT180_13TeV-madgraphMLM-pythia8/eschmitz-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-4931506678738a54073e10def5f9394f/USER', 10, 'Summer16_23Sep2016V4' ]
 	Samples[ 'WZ' ] = [ '/WZ_TuneCUETP8M1_13TeV-pythia8/vorobiev-B2GAnaFW_Spring16MiniAODv2_Moriond17_v80x_ext1_v2p4-bfea8033ab2d179bbb8e0faf6e2dc0cf/USER', 10, 'Summer16_23Sep2016V4' ]
 	Samples[ 'WWTo4Q' ] = [ '/WWTo4Q_13TeV-powheg/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-9705383e86c3aabba8a30865b5958dd7/USER', 50, 'Summer16_23Sep2016V4' ]
 	Samples[ 'ZZTo4Q' ] = [ '/ZZTo4Q_13TeV_amcatnloFXFX_madspin_pythia8/algomez-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1_B2GAnaFW_80X_V2p4-6b29e1707fe76ab19c1ba543e7f6f24b/USER', 100, 'Summer16_23Sep2016V4' ]
@@ -197,7 +199,7 @@ if __name__ == '__main__':
 			#config.Data.lumiMask = 'crab_projects/crab_QCD_Pt_1800to2400v06/results/notFinishedLumis.json'
 
 		config.JobType.inputFiles =  supportFiles
-		config.General.requestName = ( sam if 'QCD' in sam else procName)+args.version
+		config.General.requestName = ( sam if 'QCD' in sam else procName)+args.version+"Ext"
 		print config
 		print '|--- Submmiting sample: ', procName
 		p = Process(target=submit, args=(config,))
