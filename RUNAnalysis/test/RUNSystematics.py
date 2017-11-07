@@ -15,7 +15,6 @@ from collections import OrderedDict
 try:
 	from RUNA.RUNAnalysis.histoLabels import labels, labelAxis, finalLabels, setSelection
 	from RUNA.RUNAnalysis.scaleFactors import * #scaleFactor as SF
-	from RUNA.RUNAnalysis.cuts import selection 
 	import RUNA.RUNAnalysis.CMS_lumi as CMS_lumi 
 	import RUNA.RUNAnalysis.tdrstyle as tdrstyle
 	from RUNA.RUNAnalysis.commonFunctions import *
@@ -23,7 +22,6 @@ except ImportError:
 	sys.path.append('../python')
 	from histoLabels import labels, labelAxis, finalLabels
 	from scaleFactors import * #scaleFactor as SF
-	from cuts import selection 
 	import CMS_lumi as CMS_lumi 
 	import tdrstyle as tdrstyle
 	from commonFunctions import *
@@ -51,13 +49,13 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 
 	### enlisting masses available
 	if 'Boosted' in args.boosted:
-		massList = range(80, 260, 20) + [ 300, 350 ] 
+		if '312' in args.decay: massList = range(80, 260, 20) + [ 300, 350 ] 
+		else:  massList = range(80, 300, 20) + [ 300, 350 ]
 		massWindow = 30 
 	else:
 		if '312' in args.decay: 
 			massList = [ 200, 220, 240 ] + range( 300, 1050, 50 ) + range( 1100, 1300, 100 ) 
-			massList.remove( 850 )
-		else: massList = [ 200, 220, 240, 280, 300, 350 ] + range( 450, 900, 50 ) + [950, 1000, 1100, 1200, 1300] #+  range( 1100, 1600, 100 )
+		else: massList = range( 200, 300, 20 ) + range( 300, 1050, 50 ) + range( 1100, 1300, 100 ) 
 
 	nomArray = []
 	nomArrayErr = []
@@ -76,16 +74,26 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 	## looping over the masses
 	for xmass in massList:
 
+		histos = {}
 		gStyle.SetOptFit(1)
-		rootFile = TFile.Open( folder+'RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(xmass)+'_80X_V2p4_'+args.version+'.root' )  ## opening root file
 		outputFileName = name+'_'+args.decay+'RPVSt'+str(xmass)+'_'+args.unc+args.boosted+'_'+args.version+'.'+args.ext 
 		print 'Processing.......', outputFileName
 
-		### opening different histograms
-		histos = {}
-		histos[ 'Nominal' ] = rootFile.Get( args.boosted+'AnalysisPlots/'+name ) 
-		histos[ 'Up' ] = rootFile.Get( args.boosted+'AnalysisPlots'+args.unc+'Up/'+name )
-		histos[ 'Down' ] = rootFile.Get( args.boosted+'AnalysisPlots'+args.unc+'Down/'+name )
+		if args.miniTree:
+			rootFileNominal = TFile.Open( folder+'RUNMini'+args.boosted+'Analysis_'+args.grooming+'RPVStopStopToJets_'+args.decay+'_M-'+str(xmass)+'_Moriond17_80X_V2p4_'+args.version+'.root' )  ## opening root file
+			histos[ 'Nominal' ] = rootFileNominal.Get( name+'_RPVStopStopToJets_'+args.decay+'_M-'+str(xmass)  ) 
+
+			rootFileUp = TFile.Open( folder+'RUNMini'+args.boosted+'Analysis_'+args.grooming+'RPVStopStopToJets_'+args.decay+'_M-'+str(xmass)+args.unc+'Up_Moriond17_80X_V2p4_'+args.version+'.root' )  
+			histos[ 'Up' ] = rootFileUp.Get( name+'_RPVStopStopToJets_'+args.decay+'_M-'+str(xmass)  ) 
+			rootFileDown = TFile.Open( folder+'RUNMini'+args.boosted+'Analysis_'+args.grooming+'RPVStopStopToJets_'+args.decay+'_M-'+str(xmass)+args.unc+'Down_Moriond17_80X_V2p4_'+args.version+'.root' )  
+			histos[ 'Down' ] = rootFileDown.Get( name+'_RPVStopStopToJets_'+args.decay+'_M-'+str(xmass)  ) 
+
+		else:
+			rootFile = TFile.Open( folder+'RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(xmass)+'_80X_V2p4_'+args.version+'.root' )  ## opening root file
+			### opening different histograms
+			histos[ 'Nominal' ] = rootFile.Get( args.boosted+'AnalysisPlots/'+name ) 
+			histos[ 'Up' ] = rootFile.Get( args.boosted+'AnalysisPlots'+args.unc+'Up/'+name )
+			histos[ 'Down' ] = rootFile.Get( args.boosted+'AnalysisPlots'+args.unc+'Down/'+name )
 
 		#scale = 1 / (scaleFactor( 'RPVStopStopToJets_UDD312_M-'+str(xmass) ) )  ## removing scaling of histogram
 		for k in histos: 
@@ -123,7 +131,7 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 
 		binWidth = histos['Nominal'].GetBinWidth(1)
 		#totalNumber = scaleFactor( 'RPVStopStopToJets_UDD312_M-'+str(xmass) ) * args.lumi
-		totalNumber = search( dictEvents, 'RPVStopStopToJets_UDD312_M-'+str(xmass) )[0]
+		totalNumber = search( dictEvents, 'RPVStopStopToJets_'+args.decay+'_M-'+str(xmass) )[0]
 		errTotalNumber = TMath.Sqrt( totalNumber )
 		'''
 		nomArray.append( gausNom.Integral( 0, 400 ) / binWidth / totalNumber )
@@ -335,17 +343,19 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 		print massList[m], round(upOverNomArray[m],3), round(downOverNomArray[m],3), round( max( abs( upOverNomArray[m] ), abs( downOverNomArray[m] ) ), 3 )
 		uncAcceptanceError.append( round( max( abs( upOverNomArray[m] ), abs( downOverNomArray[m] ) ), 3 ) )
 	print '-'*10, args.unc+' list:', uncAcceptanceError
-	upOverNomGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', upOverNomArray), array( 'd', [0]*len(massList) ), array( 'd', errUpOverNomArray) )		
+	#upOverNomGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', upOverNomArray), array( 'd', [0]*len(massList) ), array( 'd', errUpOverNomArray) )		
+	upOverNomGraph = TGraph( len( massList ), array( 'd', massList), array( 'd', upOverNomArray) )		
 	upOverNomGraph.SetMarkerStyle( 20 )
 	upOverNomGraph.SetMarkerColor( kBlue )
 	multiGraphRatio.Add( upOverNomGraph )
-	downOverNomGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', downOverNomArray), array( 'd', [0]*len(massList) ), array( 'd', errDownOverNomArray) )		
+	#downOverNomGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', downOverNomArray), array( 'd', [0]*len(massList) ), array( 'd', errDownOverNomArray) )		
+	downOverNomGraph = TGraph( len( massList ), array( 'd', massList), array( 'd', downOverNomArray) )		
 	downOverNomGraph.SetMarkerStyle( 24 )
 	downOverNomGraph.SetMarkerColor( kRed)
 	multiGraphRatio.Add( downOverNomGraph )
 
 	multiGraphRatio.Draw("AP")
-	if 'PDF' in args.unc: multiGraphRatio.GetYaxis().SetRangeUser(-0.2, .2)
+	if 'PDF' in args.unc: multiGraphRatio.GetYaxis().SetRangeUser(-0.6, .6)
 	else: multiGraphRatio.GetYaxis().SetRangeUser(-0.1,0.1)
 	multiGraphRatio.GetYaxis().SetNdivisions(505)
 	multiGraphRatio.GetXaxis().SetTitle('Average pruned mass [GeV]')
@@ -369,12 +379,13 @@ if __name__ == '__main__':
 	parser.add_argument('-d', '--decay', action='store', default='UDD312', dest='decay', help='Decay, example: UDD312, UDD323.' )
 	parser.add_argument('-b', '--boosted', action='store', default='Boosted', dest='boosted', help='Boosted or Resolved boosted, example: Boosted' )
 	parser.add_argument('-v', '--version', action='store', default='v05', dest='version', help='Version of files: v05.' )
-	parser.add_argument('-g', '--grom', action='store', default='pruned', dest='grooming', help='Grooming Algorithm, example: Pruned, Filtered.' )
+	parser.add_argument('-g', '--grom', action='store', default='pruned_', dest='grooming', help='Grooming Algorithm, example: Pruned, Filtered.' )
 	parser.add_argument('-C', '--cut', action='store', default='_deltaEtaDijet', dest='cut', help='cut, example: cutDEta' )
 	parser.add_argument('-e', '--extension', action='store', default='png', dest='ext', help='Extension of plots.' )
 	parser.add_argument('-u', '--unc', action='store', default='JES', dest='unc',  help='Type of uncertainty' )
 	parser.add_argument('-R', '--reBin', action='store', default=5, type=float, dest='reBin', help='Rebin number.' )
 	parser.add_argument('-B', '--batchSys', action='store_true',  dest='batchSys', default=False, help='Process: all or single.' )
+	parser.add_argument('-t', '--miniTree', action='store_true', default=False, help='miniTree: if plots coming from miniTree or RUNAnalysis.' )
 
 	try: args = parser.parse_args()
 	except:
@@ -384,6 +395,6 @@ if __name__ == '__main__':
 
 	CMS_lumi.lumi_13TeV = ''#str( round( ( args.lumi / 1000 ), 2 ) )+" fb^{-1}"
 	
-
+	if 'Resolved' in args.boosted: args.grooming = ''
 	plotSystematics( 'massAve_'+args.cut, 0, 400, 0.85, 0.45, False )
 			
