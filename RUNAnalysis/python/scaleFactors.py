@@ -25,12 +25,15 @@ dictXS = {
 		'15to7000' : 1667000000,
 		#### TTJets
 		'TT_TuneCUETP8M2T4_13TeV-powheg-pythia8' : 831.76,  # 502.2
+		'TT' : 831.76,  # 502.2
 		#### W
 		'WJetsToQQ_HT-600ToInf' : 95.14,
 		'WWTo4Q_13TeV-powheg' : 51.723,
 		#### Z
 		'ZJetsToQQ_HT600toInf_13TeV-madgraph' : 5.67,
 		'ZZTo4Q_13TeV_amcatnloFXFX_madspin_pythia8' : 6.842,
+		'DYJetsToQQ_HT180_13TeV-madgraphMLM-pythia8' :  1187,
+		'DYJetsToQQ' :  1187,
 		'WZ' : 22.82,
 		#### RPV
 		'RPVStopStopToJets_UDD312_M-80' : 3746.,
@@ -164,7 +167,10 @@ dictEvents = {
 		#### QCD powheg
 		'15to7000' :  	[ 8754164., 	9765576],
 
-		'TT_TuneCUETP8M2T4_13TeV-powheg-pythia8' 	: [  77229341., 	187626200. ],
+		'TT_TuneCUETP8M2T4_13TeV-powheg-pythia8' 	: [  155235652., 77229341., 	187626200. ],
+		'TT' 	: [  155235652., ],
+		'DYJetsToQQ_HT180_13TeV-madgraphMLM-pythia8' :  [ 11824407 ],
+		'DYJetsToQQ' :  [ 11824407. ],
 #		'TTJets_HT-600to800' :	[  	5119009. 	 ],
 #		'TTJets_HT-800to1200' :	[  	3510897. 	 ],
 #		'TTJets_HT-1200to2500' :	[  	1014678. 	 ],

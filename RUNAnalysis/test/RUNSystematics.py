@@ -49,7 +49,8 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 
 	### enlisting masses available
 	if 'Boosted' in args.boosted:
-		massList = range(80, 260, 20) + [ 300, 350 ] 
+		if '312' in args.decay: massList = range(80, 260, 20) + [ 300, 350 ] 
+		else:  massList = range(80, 300, 20) + [ 300, 350 ]
 		massWindow = 30 
 	else:
 		if '312' in args.decay: 
@@ -79,12 +80,12 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 		print 'Processing.......', outputFileName
 
 		if args.miniTree:
-			rootFileNominal = TFile.Open( folder+'RUNMini'+args.boosted+'Analysis_RPVStopStopToJets_'+args.decay+'_M-'+str(xmass)+'_Moriond17_80X_V2p4_'+args.version+'.root' )  ## opening root file
+			rootFileNominal = TFile.Open( folder+'RUNMini'+args.boosted+'Analysis_'+args.grooming+'RPVStopStopToJets_'+args.decay+'_M-'+str(xmass)+'_Moriond17_80X_V2p4_'+args.version+'.root' )  ## opening root file
 			histos[ 'Nominal' ] = rootFileNominal.Get( name+'_RPVStopStopToJets_'+args.decay+'_M-'+str(xmass)  ) 
 
-			rootFileUp = TFile.Open( folder+'RUNMini'+args.boosted+'Analysis_RPVStopStopToJets_'+args.decay+'_M-'+str(xmass)+args.unc+'Up_Moriond17_80X_V2p4_'+args.version+'.root' )  
+			rootFileUp = TFile.Open( folder+'RUNMini'+args.boosted+'Analysis_'+args.grooming+'RPVStopStopToJets_'+args.decay+'_M-'+str(xmass)+args.unc+'Up_Moriond17_80X_V2p4_'+args.version+'.root' )  
 			histos[ 'Up' ] = rootFileUp.Get( name+'_RPVStopStopToJets_'+args.decay+'_M-'+str(xmass)  ) 
-			rootFileDown = TFile.Open( folder+'RUNMini'+args.boosted+'Analysis_RPVStopStopToJets_'+args.decay+'_M-'+str(xmass)+args.unc+'Down_Moriond17_80X_V2p4_'+args.version+'.root' )  
+			rootFileDown = TFile.Open( folder+'RUNMini'+args.boosted+'Analysis_'+args.grooming+'RPVStopStopToJets_'+args.decay+'_M-'+str(xmass)+args.unc+'Down_Moriond17_80X_V2p4_'+args.version+'.root' )  
 			histos[ 'Down' ] = rootFileDown.Get( name+'_RPVStopStopToJets_'+args.decay+'_M-'+str(xmass)  ) 
 
 		else:
@@ -378,7 +379,7 @@ if __name__ == '__main__':
 	parser.add_argument('-d', '--decay', action='store', default='UDD312', dest='decay', help='Decay, example: UDD312, UDD323.' )
 	parser.add_argument('-b', '--boosted', action='store', default='Boosted', dest='boosted', help='Boosted or Resolved boosted, example: Boosted' )
 	parser.add_argument('-v', '--version', action='store', default='v05', dest='version', help='Version of files: v05.' )
-	parser.add_argument('-g', '--grom', action='store', default='pruned', dest='grooming', help='Grooming Algorithm, example: Pruned, Filtered.' )
+	parser.add_argument('-g', '--grom', action='store', default='pruned_', dest='grooming', help='Grooming Algorithm, example: Pruned, Filtered.' )
 	parser.add_argument('-C', '--cut', action='store', default='_deltaEtaDijet', dest='cut', help='cut, example: cutDEta' )
 	parser.add_argument('-e', '--extension', action='store', default='png', dest='ext', help='Extension of plots.' )
 	parser.add_argument('-u', '--unc', action='store', default='JES', dest='unc',  help='Type of uncertainty' )
@@ -394,6 +395,6 @@ if __name__ == '__main__':
 
 	CMS_lumi.lumi_13TeV = ''#str( round( ( args.lumi / 1000 ), 2 ) )+" fb^{-1}"
 	
-
+	if 'Resolved' in args.boosted: args.grooming = ''
 	plotSystematics( 'massAve_'+args.cut, 0, 400, 0.85, 0.45, False )
 			

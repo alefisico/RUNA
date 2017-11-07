@@ -15,26 +15,24 @@ from array import array
 from random import randint
 try: 
 	from RUNA.RUNAnalysis.commonFunctions import *
-	from RUNA.RUNAnalysis.cuts import selection
 	from RUNA.RUNAnalysis.scaleFactors import scaleFactor
 except ImportError: 
 	sys.path.append('../python') 
 	from commonFunctions import *
-	from cuts import selection
 	from scaleFactors import scaleFactor
 
 gROOT.SetBatch()
 ######################################
 def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 
-	outputFileName = 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p2.root' 
+	outputFileName = 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p11.root' 
 	outputFile = TFile( outputFileName, 'RECREATE' )
 
 
 	################################################################################################## Histos
-	massBins = 500
+	massBins = 1000
 	massXmin = 0.
-	massXmax = 500.
+	massXmax = 1000.
 	listOfOptions = [ [ j,k] for j in range(len(listCuts)-1) for k in range(1, len(listCuts) ) if k > j ]
 
 	print '--- Sample ', sample
@@ -120,8 +118,9 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 
 	################################################################################################## Running the Analysis
 	print '-'*40
-	#lumiWeight = ( 1 if 'JetHT' in sample else sf  )
-	SF = TCut( '1' if 'JetHT' in sample else 'lumiWeight * puWeight') 
+	SF = TCut( '1' if 'JetHT' in sample else str(sf)+' * puWeight') 
+	print SF
+	#SF = TCut( '1' if 'JetHT' in sample else ' puWeight') 
 	preselection = TCut('HT>900') + TCut("numJets==2") 
 	stringSel = '' 
 	for var in listCuts: stringSel = stringSel+'('+var[0]+('>' if '32' in var[0] else '<')+str(var[1])+')'
@@ -246,14 +245,14 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 			SF,
 			sel, 
 			allHistos[ 'jet1Pt_deltaEtaDijet_'+sample ], 
-			( 0.10 if 'JetHT' in sample else 1 ) ) 
+			1 ) #( 0.10 if 'JetHT' in sample else 1 ) ) 
 
 	getHistoFromTree( fileSample, treeName,
 			'jet2Pt', 
 			SF,
 			sel, 
 			allHistos[ 'jet2Pt_deltaEtaDijet_'+sample ], 
-			( 0.10 if 'JetHT' in sample else 1 ) ) 
+			1 ) #( 0.10 if 'JetHT' in sample else 1 ) ) 
 
 	### Partial selection
 	getHistoFromTree( fileSample, treeName,
@@ -261,21 +260,21 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 			SF,
 			preselection + TCut('(jet1Tau21<0.45) && (jet2Tau21<0.45)'), 
 			allHistos[ 'massAve_jet2Tau21_'+sample ], 
-			( 0.10 if 'JetHT' in sample else 1 ) ) 
+			1 ) #( 0.10 if 'JetHT' in sample else 1 ) ) 
 
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAve', 
 			SF,
 			preselection * TCut('(jet1Tau21<0.45) && (jet2Tau21<0.45) && (jet1Tau32>0.57) && (jet2Tau32>0.57)'), 
 			allHistos[ 'massAve_jet1Tau21_'+sample ], #### just the label
-			( 0.10 if 'JetHT' in sample else 1 ) ) 
+			1 ) #( 0.10 if 'JetHT' in sample else 1 ) ) 
 
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAve', 
 			SF,
 			preselection + TCut('(jet1Tau21<0.45) && (jet2Tau21<0.45) && (jet1Tau32>0.57) && (jet2Tau32>0.57) && (prunedMassAsym<0.1)'), 
 			allHistos[ 'massAve_prunedMassAsym_'+sample ], 
-			( 0.10 if 'JetHT' in sample else 1 ) ) 
+			1 ) #( 0.10 if 'JetHT' in sample else 1 ) ) 
 
 
 	### ttbar selection inclusive
@@ -349,7 +348,7 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 				SF,
 				selABCD, 
 				allHistos[ 'massAve_prunedMassAsymVsdeltaEtaDijet_'+sample+region ], 
-				( 0.10 if 'JetHT' in sample else 1 ) ) 
+				1 ) #( 0.10 if 'JetHT' in sample else 1 ) ) 
 	
 		get2DHistoFromTree( fileSample, treeName,
 				'prunedMassAsym', 'deltaEtaDijet',
@@ -364,7 +363,7 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 			SF,
 			btag1Sel, 
 			allHistos[ 'massAve_1btag_'+sample ], 
-			( 0.10 if 'JetHT' in sample else 1 ) ) 
+			1 ) #( 0.10 if 'JetHT' in sample else 1 ) ) 
 
 	for region, selABCD in ABCDRegions1Btag.items():
 		getHistoFromTree( fileSample, treeName,
@@ -372,7 +371,7 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 				selABCD, 
 				SF,
 				allHistos[ 'massAve_prunedMassAsymVsdeltaEtaDijet_'+sample+'_1btag'+region ], 
-				( 0.10 if 'JetHT' in sample else 1 ) ) 
+				1 ) #( 0.10 if 'JetHT' in sample else 1 ) ) 
 	
 		get2DHistoFromTree( fileSample, treeName,
 				'prunedMassAsym', 'deltaEtaDijet',
@@ -386,7 +385,7 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 			SF,
 			btag2Sel, 
 			allHistos[ 'massAve_2btag_'+sample ], 
-			( 0.10 if 'JetHT' in sample else 1 ) ) 
+			1 ) #( 0.10 if 'JetHT' in sample else 1 ) ) 
 
 	for region, selABCD in ABCDRegions2Btag.items():
 		getHistoFromTree( fileSample, treeName,
@@ -394,7 +393,7 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 				SF,
 				selABCD, 
 				allHistos[ 'massAve_prunedMassAsymVsdeltaEtaDijet_'+sample+'_2btag'+region ], 
-				( 0.10 if 'JetHT' in sample else 1 ) ) 
+				1 ) #( 0.10 if 'JetHT' in sample else 1 ) ) 
 	
 		get2DHistoFromTree( fileSample, treeName,
 				'prunedMassAsym', 'deltaEtaDijet',
@@ -464,8 +463,8 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 ######################################
 def myAnalyzer( fileSample, listCuts, sample, UNC ):
 
-	outputFileName = 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p3.root' 
-	outputFile = TFile( outputFileName, 'RECREATE' )
+	outputFileName = 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p3TEST.root' 
+	#outputFile = TFile( outputFileName, 'RECREATE' )
 
 
 	################################################################################################## Histos
@@ -621,10 +620,12 @@ def myAnalyzer( fileSample, listCuts, sample, UNC ):
 		
 		#if HTCut and dijetCut and jetPtCut:
 		if HTCut and dijetCut :
-			if ( events.jet1Tau32 > 0.57 ) and  ( events.jet2Tau32 > 0.57 ) and ( events.jet1Tau21 < 0.45 ) and  ( events.jet2Tau21 < 0.45 ) and ( events.prunedMassAsym < 0.10 ) and  ( events.deltaEtaDijet < 1.5 ):
-					allHistos[ 'massAve_deltaEtaDijet_'+sample ].Fill( massAve, scale )
-					if ( jet1BtagCSV and jet2BtagCSV ): 
-						print str(Run)+':'+str(Lumi)+':'+str(NumEvent)
+			if ( events.jet1Tau32 > 0.57 ) and  ( events.jet2Tau32 > 0.57 ) and ( events.jet1Tau21 < 0.45 ) and  ( events.jet2Tau21 < 0.45 ) and ( events.prunedMassAsym < 0.10 ) and  ( events.deltaEtaDijet < 1.5 ) and (massAve > 500 ):
+					print str(Run)+':'+str(Lumi)+':'+str(NumEvent)
+					#allHistos[ 'massAve_deltaEtaDijet_'+sample ].Fill( massAve, scale )
+					#if ( jet1BtagCSV and jet2BtagCSV ): 
+						#print str(Run)+':'+str(Lumi)+':'+str(NumEvent)
+					#	allHistos[ 'massAve_btag_'+sample ].Fill( massAve, scale )  ### adding two prong scale factor
 
 #				cutFlowList[ 'Preselection' ] += 1
 #				cutFlowScaledList[ 'Preselection' ] += scale
@@ -780,10 +781,10 @@ def myAnalyzer( fileSample, listCuts, sample, UNC ):
 #		'''
 
 
-	outputFile.Write()
-	##### Closing
-	print 'Writing output file: '+ outputFileName
-	outputFile.Close()
+#	outputFile.Write()
+#	##### Closing
+#	print 'Writing output file: '+ outputFileName
+#	outputFile.Close()
 
 
 def plotABCD( listSel, var, fromTree, massAve, scale, sample ):
@@ -863,6 +864,7 @@ if __name__ == '__main__':
 	allSamples[ 'RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass) ] = folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+args.mass+'_80X_V2p4_'+args.version+'.root'
 	allSamples[ 'TT' ] = folder+'/RUNAnalysis_TT_80X_V2p4_'+args.version+'.root'
     	allSamples[ 'ZJetsToQQ' ] = folder+'/RUNAnalysis_ZJetsToQQ_80X_V2p4_'+args.version+'.root'
+    	allSamples[ 'DYJetsToQQ' ] = folder+'/RUNAnalysis_DYJetsToQQ_80X_V2p4_'+args.version+'.root'
     	allSamples[ 'WJetsToQQ' ] = folder+'/RUNAnalysis_WJetsToQQ_80X_V2p4_'+args.version+'.root'
 	allSamples[ 'Dibosons' ] = folder+'/RUNAnalysis_Dibosons_80X_V2p4_'+args.version+'.root'
 	#allSamples[ 'WWTo4Q' ] = folder+'/RUNAnalysis_WWTo4Q_80X_V2p4_'+args.version+'.root'
@@ -892,12 +894,14 @@ if __name__ == '__main__':
 
 	for sample in dictSamples:
 		if 'Plots' in args.process: 
+			p = Process( target=myPlotAnalyzer, args=( dictSamples[sample], cuts, sample, '' ) )
+		else:
 			if ('RPV' in args.samples) and args.unc:
 				for uncType in [ args.unc+'Up', args.unc+'Down' ]: 
-					p = Process( target=myPlotAnalyzer, args=( dictSamples[sample], cuts, sample, uncType ) )
+					myAnalyzer( dictSamples[sample], cuts, sample, uncType )
+				p = Process( target=myAnalyzer, args=( dictSamples[sample], cuts, sample, '' ) )
+
 			else: 
-				p = Process( target=myPlotAnalyzer, args=( dictSamples[sample], cuts, sample, '' ) )
-		else:
-			p = Process( target=myAnalyzer, args=( dictSamples[sample], cuts, sample, '' ) )
+				p = Process( target=myAnalyzer, args=( dictSamples[sample], cuts, sample, '' ) )
 	p.start()
 	p.join()
