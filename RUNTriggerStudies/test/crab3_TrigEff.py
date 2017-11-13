@@ -115,7 +115,7 @@ if __name__ == '__main__':
 
 		listpyCfgParams = [ 'PROC='+procName, 
 				( 'miniAOD=True' if 'miniAOD' in args.sample else 'jecVersion='+processingSamples[sam][2]), 
-				'version=Dijet' ]
+				'version=Resolved' ]
 		if 'miniAOD' in args.sample: listpyCfgParams.append( 'globalTag='+processingSamples[sam][2] )
 		config.JobType.pyCfgParams = listpyCfgParams
 		p = Process(target=submit, args=(config,))

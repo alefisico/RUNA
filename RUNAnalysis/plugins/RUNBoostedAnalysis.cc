@@ -927,7 +927,7 @@ void RUNBoostedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup) 
 			}
 
 			//// btag event weight from https://github.com/ferencek/cms-MyAnalyzerDijetCode/blob/master/MyAnalyzer_MainAnalysis_DijetBBTag_2011.cc#L1295-L1356
-			btagWeight = btagEventWeightBoosted( ( jet1btagCSVv2 > 0.8484 ), ( jet2btagCSVv2 > 0.8484 ), jet1btagCSVv2SF, jet2btagCSVv2SF );
+			btagWeight = btagEventWeightBoosted( ( jet1btagCSVv2 > 0.5426 ), ( jet2btagCSVv2 > 0.5426 ), jet1btagCSVv2SF, jet2btagCSVv2SF );
 			//LogWarning("btag") << jet1btagCSVv2 << " " << jet2btagCSVv2 << " " btagWeight;
 			///////////////////////////////////////////
 
@@ -1052,36 +1052,40 @@ void RUNBoostedAnalysis::analyze(const Event& iEvent, const EventSetup& iSetup) 
 				histos1D_[ "jet1btagCSVv2_cutEffTrigger" ]->Fill( jet1btagCSVv2, totalWeight*btagWeight );
 				histos1D_[ "jet2btagCSVv2_cutEffTrigger" ]->Fill( jet2btagCSVv2, totalWeight*btagWeight );
 
-				/*if ( ( jet1Tau21 < cutTau21 ) && ( jet2Tau21 < cutTau21 ) ) {
+				if ( ( jet1Tau21 < cutTau21 ) && ( jet2Tau21 < cutTau21 ) ) {
 
-					cutmap["Tau21"] += 1;
+					/*cutmap["Tau21"] += 1;
 					histos1D_[ "jet1Tau21_cutTau21" ]->Fill( jet1Tau21, totalWeight );
 					histos1D_[ "jet2Tau21_cutTau21" ]->Fill( jet2Tau21, totalWeight );
 					histos1D_[ "deltaEtaDijet_cutTau21" ]->Fill( deltaEtaDijet, totalWeight );
 					histos1D_[ "prunedMassAsym_cutTau21" ]->Fill( prunedMassAsym, totalWeight );
 					histos1D_[ "massAve_cutTau21" ]->Fill( prunedMassAve, totalWeight );
+					*/
 
-					if ( prunedMassAsym < cutAK8MassAsym ) {
+					if ( ( jet1Tau32 > 0.57 ) && ( jet2Tau32 > 0.57 ) ) {
+						if ( prunedMassAsym < cutAK8MassAsym ) {
 
-						cutmap["MassAsym"] += 1;
-						histos1D_[ "deltaEtaDijet_cutMassAsym" ]->Fill( deltaEtaDijet, totalWeight );
-						histos1D_[ "prunedMassAsym_cutMassAsym" ]->Fill( prunedMassAsym, totalWeight );
-						histos1D_[ "massAve_cutMassAsym" ]->Fill( prunedMassAve, totalWeight );
+							/*cutmap["MassAsym"] += 1;
+							histos1D_[ "deltaEtaDijet_cutMassAsym" ]->Fill( deltaEtaDijet, totalWeight );
+							histos1D_[ "prunedMassAsym_cutMassAsym" ]->Fill( prunedMassAsym, totalWeight );
+							histos1D_[ "massAve_cutMassAsym" ]->Fill( prunedMassAve, totalWeight );*/
 
-						if ( deltaEtaDijet < cutDeltaEtaDijet ) {
+							if ( deltaEtaDijet < cutDeltaEtaDijet ) {
 
-							cutmap["DeltaEtaDijet"] += 1;
-							histos1D_[ "deltaEtaDijet_cutDeltaEtaDijet" ]->Fill( deltaEtaDijet, totalWeight );
-							histos1D_[ "massAve_cutDeltaEtaDijet" ]->Fill( prunedMassAve, totalWeight );
+								/*cutmap["DeltaEtaDijet"] += 1;
+								histos1D_[ "deltaEtaDijet_cutDeltaEtaDijet" ]->Fill( deltaEtaDijet, totalWeight );
+								histos1D_[ "massAve_cutDeltaEtaDijet" ]->Fill( prunedMassAve, totalWeight );*/
 
-							if ( ( jet1btagCSVv2 > 0.8 ) && ( jet2btagCSVv2 > 0.8 ) ) {
-								cutmap["Btag"] += 1;
-								histos1D_[ "massAve_cutBtag" ]->Fill( prunedMassAve, totalWeight );
+								if ( ( jet1btagCSVv2 > 0.5426 ) && ( jet2btagCSVv2 > 0.5426 ) ) {
+									cutmap["Btag"] += 1;
+									histos1D_[ "massAve_cutBtag" ]->Fill( prunedMassAve, totalWeight*btagWeight );
+								}
+							
 							}
-						
 						}
 					}
-					
+				}
+					/*
 					///// Regular ABCD
 					if ( ( prunedMassAsym < cutAK8MassAsym ) && ( deltaEtaDijet < cutDeltaEtaDijet ) ) {
 						histos1D_[ "massAve_prunedMassAsymVsdeltaEtaDijet_A" ]->Fill( prunedMassAve, totalWeight );

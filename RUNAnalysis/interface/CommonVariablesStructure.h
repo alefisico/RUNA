@@ -231,13 +231,28 @@ inline double getJER( double jetEta, int JERType ){
 	double scaleNom = 1.0;
 	double scaleUnc = 1.0;
 	double eta = fabs(jetEta);
-	if(eta>=0.0 && eta<0.8) { scaleNom = 1.061; scaleUnc = 0.023; }
+	//// Values from https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetResolution#JER_Scaling_factors_and_Uncertai
+	if(eta>=0.0 && eta<0.5) { scaleNom = 1.109; scaleUnc = 0.008; }
+	if(eta>=0.5 && eta<0.8) { scaleNom = 1.138; scaleUnc = 0.013; }
+	if(eta>=0.8 && eta<1.1) { scaleNom = 1.114; scaleUnc = 0.013; }
+	if(eta>=1.1 && eta<1.3) { scaleNom = 1.123; scaleUnc = 0.024; }
+	if(eta>=1.3 && eta<1.7) { scaleNom = 1.084; scaleUnc = 0.082; }
+	if(eta>=1.7 && eta<1.9) { scaleNom = 1.082; scaleUnc = 0.035; }
+	if(eta>=1.9 && eta<2.1) { scaleNom = 1.140; scaleUnc = 0.047; }
+	if(eta>=2.1 && eta<2.3) { scaleNom = 1.067; scaleUnc = 0.053; }
+	if(eta>=2.3 && eta<2.5) { scaleNom = 1.117; scaleUnc = 0.041; }
+	if(eta>=2.5 && eta<2.8) { scaleNom = 1.364; scaleUnc = 0.039; }
+	if(eta>=2.8 && eta<3.0) { scaleNom = 1.857; scaleUnc = 0.071; }
+	if(eta>=3.0 && eta<3.2) { scaleNom = 1.328; scaleUnc = 0.022; }
+	if(eta>=3.2 && eta<5.0) { scaleNom = 1.160; scaleUnc = 0.029; }
+
+	/*if(eta>=0.0 && eta<0.8) { scaleNom = 1.061; scaleUnc = 0.023; }
 	if(eta>=0.8 && eta<1.3) { scaleNom = 1.088; scaleUnc = 0.029; }
 	if(eta>=1.3 && eta<1.9) { scaleNom = 1.106; scaleUnc = 0.030; }
 	if(eta>=1.9 && eta<2.5) { scaleNom = 1.126; scaleUnc = 0.094; }
 	if(eta>=2.5 && eta<3.0) { scaleNom = 1.343; scaleUnc = 0.123; }
 	if(eta>=3.0 && eta<3.2) { scaleNom = 1.303; scaleUnc = 0.111; }
-	if(eta>=3.2 && eta<5.0) { scaleNom = 1.320; scaleUnc = 0.286; }
+	if(eta>=3.2 && eta<5.0) { scaleNom = 1.320; scaleUnc = 0.286; }*/
 
 	if ( JERType == 0 ) return scaleNom;
 	else if ( JERType == 1 ) return (scaleNom + scaleUnc);

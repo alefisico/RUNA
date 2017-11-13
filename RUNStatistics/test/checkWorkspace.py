@@ -13,7 +13,7 @@ gROOT.SetBatch()
 def main():
 
      #inputFileWorkspace = TFile("Rootfiles/workspace_RPVStopStopToJets_UDD312_M-300_Resolved_delta_BiasTest_v08p0.root") 
-     inputFileWorkspace = TFile("Rootfiles/workspace_RPVStopStopToJets_UDD312_M-400_Resolved_delta_v09p1.root") 
+     inputFileWorkspace = TFile("Rootfiles/workspace_RPVStopStopToJets_UDD312_M-700_Resolved_delta_v09p1.root") 
      #inputFileWorkspace = TFile("test.root") 
 
      workspace = inputFileWorkspace.Get("myWS")

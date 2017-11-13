@@ -295,7 +295,7 @@ void RUNResolvedTriggerEfficiency::analyze(const Event& iEvent, const EventSetup
 				}
 			}
 
-			if ( HT > cutAK4HT ) {
+			//if ( HT > cutAK4HT ) {
 				histos1D_[ "jet1PtDenom_cutHT" ]->Fill( JETS[0].Pt() );
 				histos1D_[ "jet2PtDenom_cutHT" ]->Fill( JETS[1].Pt() );
 				histos1D_[ "jet3PtDenom_cutHT" ]->Fill( JETS[2].Pt() );
@@ -304,6 +304,7 @@ void RUNResolvedTriggerEfficiency::analyze(const Event& iEvent, const EventSetup
 				histos2D_[ "jet4PtHTDenom_cutHT" ]->Fill( JETS[3].Pt(), HT );
 				histos1D_[ "massAveDenom_cutHT" ]->Fill( massAve );
 
+			if ( HT > cutAK4HT ) {
 				if ( ORTriggers ){
 					histos1D_[ "jet1PtPassing_cutHT" ]->Fill( JETS[0].Pt() );
 					histos1D_[ "jet2PtPassing_cutHT" ]->Fill( JETS[1].Pt() );

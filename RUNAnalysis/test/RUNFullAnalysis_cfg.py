@@ -113,8 +113,8 @@ else: isSignal = False
 ResolvedTriggers = [  'HLT_PFHT800', 'HLT_PFHT900', 'HLT_PFHT750_4Jet', 'HLT_PFHT800_4Jet50', 'HLT_PFJet450' ]
 
 process.ResolvedAnalysisPlots = cms.EDAnalyzer('RUNResolvedAnalysis',
-		cutAK4jetPt 		= cms.double( 80.0 ),	# default 80.0
-		cutAK4HT 		= cms.double( 900.0 ),	# default 800.0
+		cutAK4jetPt 		= cms.double( 50.0 ),	# default 80.0
+		cutAK4HT 		= cms.double( 500.0 ),	# default 800.0
 		cutAK4MassAsym		= cms.double( 0.1 ),	# default 0.2
 		cutDelta 		= cms.double( 200 ),	# default 180.0
 		cutDeltaEtaDijetSyst	= cms.double( 1.0 ),	# default .75
@@ -263,16 +263,16 @@ if 'Resolved' in options.version:
 elif 'Boosted' in options.version:
 	outputNAME = 'BoostedAnalysis_'
 	process.p += process.BoostedAnalysisPlots
-	process.p += process.BoostedAnalysisPlotsPuppi
+	#process.p += process.BoostedAnalysisPlotsPuppi
 	#process.p += process.BoostedAnalysisPlotsSortInMass
 	#process.p += process.BoostedAnalysisPlotsSortInTau21
 	if options.systematics:
 		process.p += process.BoostedAnalysisPlotsBtagUp
 		process.p += process.BoostedAnalysisPlotsBtagDown
-		process.p += process.BoostedAnalysisPlotsJESUp
-		process.p += process.BoostedAnalysisPlotsJESDown
-		process.p += process.BoostedAnalysisPlotsJERUp
-		process.p += process.BoostedAnalysisPlotsJERDown
+		#process.p += process.BoostedAnalysisPlotsJESUp
+		#process.p += process.BoostedAnalysisPlotsJESDown
+		#process.p += process.BoostedAnalysisPlotsJERUp
+		#process.p += process.BoostedAnalysisPlotsJERDown
 		#process.p += process.BoostedAnalysisPlotsPuppiJESUp
 		#process.p += process.BoostedAnalysisPlotsPuppiJESDown
 else: 
@@ -284,7 +284,7 @@ else:
 	process.p += process.BoostedAnalysisPlots
 	#process.p += process.BoostedAnalysisPlotsSortInMass
 	#process.p += process.BoostedAnalysisPlotsSortInTau21
-	process.p += process.BoostedAnalysisPlotsPuppi
+	#process.p += process.BoostedAnalysisPlotsPuppi
 
 	if options.systematics:
 		process.p += process.BoostedAnalysisPlotsBtagUp

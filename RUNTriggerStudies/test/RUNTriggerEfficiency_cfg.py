@@ -1,5 +1,5 @@
 import FWCore.ParameterSet.Config as cms
-
+import sys
 from FWCore.ParameterSet.VarParsing import VarParsing
 
 ###############################
@@ -89,7 +89,7 @@ process.load('JetMETCorrections.Configuration.JetCorrectors_cff')
 process.ResolvedTriggerEfficiency = cms.EDAnalyzer(('RUNResolvedMiniAODTriggerEfficiency' if options.miniAOD else 'RUNResolvedTriggerEfficiency'),
 		cutAK4jetPt	= cms.double( 80.0 ), 	# default 50.
 		#cutAK4jet4Pt	= cms.double( 80.0 ), 	# default 80.
-		cutAK4HT	= cms.double( 900.0 ), 	# default 800.
+		cutAK4HT	= cms.double( 1000.0 ), 	# default 800.
 		baseTrigger		= cms.string(basedline),
 		triggerPass		= cms.vstring( [  'HLT_PFHT800', 'HLT_PFHT900', 'HLT_PFHT750_4Jet', 'HLT_PFHT800_4Jet50' ] ),
 )
@@ -277,24 +277,24 @@ process.DijetTriggerEfficiencySeveralwithoutHT = process.DijetTriggerEfficiency.
 
 ####################
 #### Dijet with CA15
-if options.miniAOD:
-	process.DijetCA15TriggerEfficiency = cms.EDAnalyzer( 'RUNDijetCA15MiniAODTriggerEfficiency',
-			#cutAK8jetPt	= cms.double( 150.0 ),		# default 150.
-			cutAK8jet1Pt	= cms.double( 450.0 ),		# default 500.
-			#cutAK8jet1Mass	= cms.double( 60.0 ),		# default 60.
-			recoJets	= cms.InputTag( "selectedPatJetsCA15PFPuppi" ),
-			baseTrigger	= cms.string(basedline),
-			triggerPass	= cms.vstring( [ 'HLT_PFHT800', 'HLT_PFHT900', 'HLT_AK8PFHT700_TrimR0p1PT0p03Mass50', 'HLT_AK8PFHT750_TrimMass50', 'HLT_AK8PFJet360_TrimMass30' ] ),
-	)
-
-	process.DijetCA15TriggerEfficiencySeveralTriggers = process.DijetCA15TriggerEfficiency.clone( 
-			triggerPass = cms.vstring( [ 'HLT_PFHT800', 'HLT_PFHT900', 
-				'HLT_AK8PFHT700_TrimR0p1PT0p03Mass50', 'HLT_AK8PFHT750_TrimMass50',
-				'HLT_AK8PFJet360_TrimMass30', 'HLT_PFJet450',
-				'HLT_AK8DiPFJet280_200_TrimMass30_BTagCSV_p20',
-				'HLT_AK8DiPFJet280_200_TrimMass30_BTagCSV_p087',
-				'HLT_AK8DiPFJet300_200_TrimMass30_BTagCSV_p20' ] ) )
-else: sys.exit(0)
+#if options.miniAOD:
+#	process.DijetCA15TriggerEfficiency = cms.EDAnalyzer( 'RUNDijetCA15MiniAODTriggerEfficiency',
+#			#cutAK8jetPt	= cms.double( 150.0 ),		# default 150.
+#			cutAK8jet1Pt	= cms.double( 450.0 ),		# default 500.
+#			#cutAK8jet1Mass	= cms.double( 60.0 ),		# default 60.
+#			recoJets	= cms.InputTag( "selectedPatJetsCA15PFPuppi" ),
+#			baseTrigger	= cms.string(basedline),
+#			triggerPass	= cms.vstring( [ 'HLT_PFHT800', 'HLT_PFHT900', 'HLT_AK8PFHT700_TrimR0p1PT0p03Mass50', 'HLT_AK8PFHT750_TrimMass50', 'HLT_AK8PFJet360_TrimMass30' ] ),
+#	)
+#
+#	process.DijetCA15TriggerEfficiencySeveralTriggers = process.DijetCA15TriggerEfficiency.clone( 
+#			triggerPass = cms.vstring( [ 'HLT_PFHT800', 'HLT_PFHT900', 
+#				'HLT_AK8PFHT700_TrimR0p1PT0p03Mass50', 'HLT_AK8PFHT750_TrimMass50',
+#				'HLT_AK8PFJet360_TrimMass30', 'HLT_PFJet450',
+#				'HLT_AK8DiPFJet280_200_TrimMass30_BTagCSV_p20',
+#				'HLT_AK8DiPFJet280_200_TrimMass30_BTagCSV_p087',
+#				'HLT_AK8DiPFJet300_200_TrimMass30_BTagCSV_p20' ] ) )
+#else: sys.exit(0)
 ############################################################
 
 
@@ -303,10 +303,10 @@ process.p = cms.Path()
 if 'Resolved' in options.version:
 	outputNAME = 'Resolved'
 	process.p += process.ResolvedTriggerEfficiency
-	process.p += process.ResolvedTriggerEfficiencyPFHT7504Jet
-	process.p += process.ResolvedTriggerEfficiencyPFHT800
-	process.p += process.ResolvedTriggerEfficiencyPFHT650WideJetMJJ900 
-	process.p += process.ResolvedTriggerEfficiencyPFJet450
+	#process.p += process.ResolvedTriggerEfficiencyPFHT7504Jet
+	#process.p += process.ResolvedTriggerEfficiencyPFHT800
+	#process.p += process.ResolvedTriggerEfficiencyPFHT650WideJetMJJ900 
+	#process.p += process.ResolvedTriggerEfficiencyPFJet450
 	process.p += process.ResolvedTriggerEfficiencySeveralTriggers
 
 elif 'Boosted' in options.version:

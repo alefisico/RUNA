@@ -84,26 +84,27 @@ do
 			rm ${nameDatacard} 
 		fi
 		combineCards.py Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_pruned_${3}_${version}_bin*.txt > ${nameDatacard}
-		combine -M AsymptoticLimits ${nameDatacard} -n ${sufix} 
+		combine -M AsymptoticLimits ${nameDatacard} -n ${sufix}
 	
 	elif [ $2 == "final" ] 
 	then
-		if [ "${mass}" -le 360 -a "${mass}" -ge 190 ]
-		then
-			echo "combining boosted and resolved cards"
-			combineCards.py -S Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_pruned_jet1Tau32_Bin5_v09p2_bins.txt Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_${version}.txt > Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_final_${version}.txt
-			sed 's/Datacards\/\//\//g' -i  Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_final_${version}.txt
+#		if [ "${mass}" -le 360 -a "${mass}" -ge 190 ]
+#		then
+#			echo "combining boosted and resolved cards"
+#			combineCards.py -S Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_Boosted_jet1Tau32_Bin5_v09p2_bins.txt Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_v09p1.txt > Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_final_v09.txt
+#			sed 's/Datacards\/\//\//g' -i  Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_final_v09.txt
 
-		elif [ "${mass}" -le 190 ]
+		if [ "${mass}" -le 190 ]
 		then
-			cp  Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_pruned_jet1Tau32_Bin5_v09p2_bins.txt Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_final_${version}.txt
+			cp  Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_Boosted_jet1Tau32_Bin5_v09p2_bins.txt Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_final_v09.txt
 
-		elif [ "${mass}" -ge 360 ]
-		then
-			cp Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_${version}.txt Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_final_${version}.txt
+		else #elif [ "${mass}" -ge 360 ]
+		#then
+			cp Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_v09p1.txt Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_final_v09.txt
 		fi
 
 		combine -M AsymptoticLimits Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_final_${version}.txt -n _RPVStopStopToJets_${decay}_M-${mass}_final_${version}
 
 	fi
 done
+
