@@ -22,11 +22,12 @@ then
 			masses="80 100 120 140 160 180 200 220 240 260 280 300 350 400 450 500 550 600 650 700 750 800 850 900 950 1000 1100 1200"
 		fi
 	else 
+		#masses="80 100 120 140 160 180 200 2"
 		if [ $4 == "UDD312" ]
 		then
-			masses="80 100 120 140 160 180 200 220 240 300 350"
+			masses="80 100 120 140 160 180 200 220 240 300 350 400 450 500 550"
 		else
-			masses="120 180 200 220 240 280 300 "
+			masses="80 100 120 140 160 180 200 220 240 260 280 300 350"
 		fi
 	fi
 
@@ -76,7 +77,14 @@ do
 		done
 	elif [ $2 == "Boosted" ]
 	then
-		combine -M Asymptotic Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_${2}_${3}_${version}_bins.txt -n ${decay}RPVSt_M-${mass}_${2}_Boosted_${3}_${version}
+		sufix="_RPVStopStopToJets_${decay}_M-${mass}_${2}_${3}_${version}"
+		nameDatacard="Datacards/datacard${sufix}_bins.txt"
+		if [ -f "${nameDatacard}" ]
+		then
+			rm ${nameDatacard} 
+		fi
+		combineCards.py Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_pruned_${3}_${version}_bin*.txt > ${nameDatacard}
+		combine -M AsymptoticLimits ${nameDatacard} -n ${sufix} 
 	
 	elif [ $2 == "final" ] 
 	then
@@ -95,7 +103,7 @@ do
 			cp Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_${version}.txt Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_final_${version}.txt
 		fi
 
-		combine -M Asymptotic Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_final_${version}.txt -n _RPVStopStopToJets_${decay}_M-${mass}_final_${version}
+		combine -M AsymptoticLimits Datacards/datacard_RPVStopStopToJets_${decay}_M-${mass}_final_${version}.txt -n _RPVStopStopToJets_${decay}_M-${mass}_final_${version}
 
 	fi
 done
