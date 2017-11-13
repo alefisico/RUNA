@@ -118,9 +118,9 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 
 	################################################################################################## Running the Analysis
 	print '-'*40
-	SF = TCut( '1' if 'JetHT' in sample else str(sf)+' * puWeight') 
-	print SF
-	#SF = TCut( '1' if 'JetHT' in sample else ' puWeight') 
+	#SF = TCut( '1' if 'JetHT' in sample else str(sf)+' * puWeight') 
+	#print SF
+	SF = TCut( '1' if 'JetHT' in sample else 'lumiWeight * puWeight') 
 	preselection = TCut('HT>900') + TCut("numJets==2") 
 	stringSel = '' 
 	for var in listCuts: stringSel = stringSel+'('+var[0]+('>' if '32' in var[0] else '<')+str(var[1])+')'
@@ -865,7 +865,8 @@ if __name__ == '__main__':
 	allSamples[ 'TT' ] = folder+'/RUNAnalysis_TT_80X_V2p4_'+args.version+'.root'
     	allSamples[ 'ZJetsToQQ' ] = folder+'/RUNAnalysis_ZJetsToQQ_80X_V2p4_'+args.version+'.root'
     	allSamples[ 'DYJetsToQQ' ] = folder+'/RUNAnalysis_DYJetsToQQ_80X_V2p4_'+args.version+'.root'
-    	allSamples[ 'WJetsToQQ' ] = folder+'/RUNAnalysis_WJetsToQQ_80X_V2p4_'+args.version+'.root'
+    	#allSamples[ 'WJetsToQQ' ] = folder+'/RUNAnalysis_WJetsToQQ_80X_V2p4_'+args.version+'.root'
+    	allSamples[ 'WJetsToQQ' ] = folder+'/RUNAnalysis_WJetsToQQ_HT180_80X_V2p4_'+args.version+'.root'
 	allSamples[ 'Dibosons' ] = folder+'/RUNAnalysis_Dibosons_80X_V2p4_'+args.version+'.root'
 	#allSamples[ 'WWTo4Q' ] = folder+'/RUNAnalysis_WWTo4Q_80X_V2p4_'+args.version+'.root'
 	#allSamples[ 'ZZTo4Q' ] = folder+'/RUNAnalysis_ZZTo4Q_80X_V2p4_'+args.version+'.root'
