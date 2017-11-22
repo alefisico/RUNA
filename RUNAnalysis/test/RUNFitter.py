@@ -177,7 +177,7 @@ def rootFitter( inFile, hist, scale, fitFunctions, minX, maxX, rebinX, plot, log
 		keepFitting = True
 		while keepFitting:
 			#finalHisto.Fit(fitFunc[0],"MIRS","",minX,maxX)
-			fitResults = TFitResultPtr( finalHisto.Fit( fitFunc[0],"ESR"+("" if 'QCDPtAll' in hist else "LL"),"",minX,maxX) )
+			fitResults = TFitResultPtr( finalHisto.Fit( fitFunc[0],"MESR"+("" if 'QCDPtAll' in hist else "LL"),"",minX,maxX) )
 			#### this is just a trick to keep fitting...
 			tmpFitFunc = finalHisto.GetFunction( fitFunc[0].GetName() )
 			chi2Ndf = tmpFitFunc.GetChisquare() / tmpFitFunc.GetNDF()
@@ -242,7 +242,6 @@ def rootFitter( inFile, hist, scale, fitFunctions, minX, maxX, rebinX, plot, log
 			del c1
 	
 	return [ fitParameters, fitParErrors, binContents, binfinalError, chi2Ndf, finalHisto, finalFitFunc, finalFitUp, finalFitDown, listFitErrors ]
-
 
 
 
@@ -325,6 +324,7 @@ def residualAndPulls(dataPoints, dataErrPoints, function, histo, minX, maxX, reb
 
 	######## Calculating Pull and Residual
 	chi2 = 0 
+	RSS = 0
 	nof = 0
 	for ibin in range(0, len(dataPoints) ):
 	
@@ -341,6 +341,7 @@ def residualAndPulls(dataPoints, dataErrPoints, function, histo, minX, maxX, reb
 			pull = (binCont - valIntegral)/ binErr
 			#print binCont, binErr, valIntegral, diff, pull, histo.GetBinCenter(ibin+1), hPull.GetBinLowEdge(ibin+1)
 			chi2 += TMath.Power(pull,2)
+			RSS += TMath.Power((binCont - valIntegral),2)
 			nof += 1
 			
 			hPull.SetBinContent(ibin+1, pull)
@@ -349,10 +350,10 @@ def residualAndPulls(dataPoints, dataErrPoints, function, histo, minX, maxX, reb
 			hResidual.SetBinContent(ibin+1, diff)
 			hResidual.SetBinError(ibin+1, binErr/valIntegral )
 
-			if altPull: 
-				altpull = (binCont - valIntegral)/abs(altPull[ibin])
-				hAltPull.SetBinContent(ibin+1, altpull)
-				hAltPull.SetBinError(ibin+1, 1.0)
+			#if altPull: 
+			#altpull = (binCont - valIntegral)/abs(altPull[ibin])
+			#hPull.SetBinContent(ibin+1, altpull)
+			#hPull.SetBinError(ibin+1, 1.0)
 
 		#print '|---> Significance of high mass bins: ', binCont, valIntegral, binErr, pull
 		#print binCont, valIntegral
@@ -360,7 +361,7 @@ def residualAndPulls(dataPoints, dataErrPoints, function, histo, minX, maxX, reb
 	NDoF = nof - function.GetNpar() - 1
 	print '|----> ############### chi2 and nof: ', chi2, nof
 
-	return hPull, hResidual, chi2, NDoF
+	return hPull, hResidual, RSS, NDoF
 
 
 
@@ -421,16 +422,20 @@ def FitterCombination( inFileData, inFileBkg, inFileSignalName, hist, scale, bkg
 		mainP4Up = DataParameters[7]
 		mainP4Down = DataParameters[8]
 		functionErr = DataParameters[9]
-#		hMain, mainP4 = histoFunctionFit( 'Data', 
-#							bkgFunction[0][0], 
-#							DataParameters[0], DataParameters[1], 
-#							points, pointsErr, 
-#							minX, maxX, rebinX )
 
 		legend.AddEntry( hMain, ('PseudoExperiment' if args.pseudoExperiment else 'Data'), 'ep' )
 		legend.AddEntry( mainP4, ( args.func if args.comparison else 'Background Fit'), 'l' )
-		legend.AddEntry( mainP4Up, ( args.func if args.comparison else 'Fit Error'), 'l' )
+		legend.AddEntry( mainP4Up, ( args.func+" Fit Error" if args.comparison else 'Fit Error'), 'l' )
 
+		funcDict = {}
+		if args.comparison:
+			for iF in range( 1, len(bkgFunction) ):
+				tmpDummy, funcDict[ bkgFunction[iF][0].GetName() ] = histoFunctionFit( 'Data'+bkgFunction[iF][0].GetName(), 
+													bkgFunction[iF][0], 
+													bkgParameters, bkgParErrors, 
+													bkgpoints, bkgpointsErr, 
+													minX, maxX, rebinX )
+				legend.AddEntry( funcDict[ bkgFunction[iF][0].GetName() ], bkgFunction[iF][0].GetName(), 'l' )
 		
 		#hMCQCD, qcdMCP4 = histoFunctionFit( 'QCD'+args.qcd+'All', 
 		#					bkgFunction[0][0], bkgParameters, 
@@ -510,7 +515,6 @@ def FitterCombination( inFileData, inFileBkg, inFileSignalName, hist, scale, bkg
 	######### Plotting Histograms
 	maxXPlot = maxX+500
 	tdrStyle.SetPadRightMargin(0.05)
-  	tdrStyle.SetPadLeftMargin(0.15)
 	if args.final or args.comparison: 
 		gStyle.SetOptFit(0)
 		#sigBkgPoints = bkgpoints+sigpoints
@@ -524,6 +528,7 @@ def FitterCombination( inFileData, inFileBkg, inFileSignalName, hist, scale, bkg
 
 	c3 = TCanvas('c1', 'c1',  10, 10, (800 if args.comparison else 1250), 500 )
 	if not args.comparison:
+  		tdrStyle.SetPadLeftMargin(0.15)
 		pad1 = TPad("pad1", "Fit",0,0.03,0.50,1.00,-1)
 		pad2 = TPad("pad2", "Pull",0.50,0.45,1.00,0.95,-1);
 		pad3 = TPad("pad3", "Residual",0.50,0,1.00,0.507,-1);
@@ -540,7 +545,7 @@ def FitterCombination( inFileData, inFileBkg, inFileSignalName, hist, scale, bkg
 	hMain.GetYaxis().SetTitle( ( "Events / "+ str(hMain.GetBinWidth(1))  +"GeV" if isinstance( rebinX, int ) else "< Events / GeV >" ) ) 
 	hMain.GetXaxis().SetTitle( histYaxis )
 	hMain.GetXaxis().SetTitleSize(0.055)
-	hMain.GetYaxis().SetTitleOffset(1.15);
+	if not args.comparison: hMain.GetYaxis().SetTitleOffset(1.15);
 	hMain.SetTitle("")
 	hMain.SetMarkerStyle(20)
 	#hMain.SetMaximum( 1.5 * hMain.GetMaximum() )
@@ -595,8 +600,8 @@ def FitterCombination( inFileData, inFileBkg, inFileSignalName, hist, scale, bkg
 		hPull.GetYaxis().SetTitleOffset(0.80)
 		hPull.GetYaxis().CenterTitle()
 		hPull.SetMarkerStyle(7)
-		hPull.SetMaximum(10)
-		hPull.SetMinimum(-10)
+		hPull.SetMaximum(4)
+		hPull.SetMinimum(-3)
 		hPull.GetXaxis().SetRangeUser( minX, maxXPlot )
 		hPull.Draw("e")
 		if args.final:
@@ -642,8 +647,8 @@ def FitterCombination( inFileData, inFileBkg, inFileSignalName, hist, scale, bkg
 				color+=1
 		line.Draw("same")
 
-	#c3.SaveAs("Plots/"+hist.replace('ResolvedAnalysisPlots/','')+"_"+('PseudoExperiment' if args.pseudoExperiment else ('MC' if args.bkgAsData else args.process))+"Fit"+( 'diff' if args.comparison else bkgFunction[0][0].GetName())+"_"+( 'final_' if args.final else '' )+"_"+( 'resoBasedBin_' if not isinstance( rebinX, int ) else '' )+"ResolvedAnalysis_"+args.version+"."+args.extension)
-	c3.SaveAs("Plots/"+hist.replace('ResolvedAnalysisPlots/','')+"_"+('PseudoExperiment' if args.pseudoExperiment else ('MC' if args.bkgAsData else args.process))+"Fit"+( 'diff' if args.comparison else bkgFunction[0][0].GetName())+"_"+( 'final_' if args.final else '' )+"_"+( 'resoBasedBin_' if not isinstance( rebinX, int ) else '' )+"ResolvedAnalysis_"+args.version+"_"+str(args.mass)+"."+args.extension)
+	c3.SaveAs("Plots/"+hist.replace('ResolvedAnalysisPlots/','')+"_"+('PseudoExperiment' if args.pseudoExperiment else ('MC' if args.bkgAsData else args.process))+"Fit"+( 'diff' if args.comparison else bkgFunction[0][0].GetName())+"_"+( 'final_' if args.final else '' )+"_"+( 'resoBasedBin_' if not isinstance( rebinX, int ) else '' )+"ResolvedAnalysis_"+args.version+"."+args.extension)
+	#c3.SaveAs("Plots/"+hist.replace('ResolvedAnalysisPlots/','')+"_"+('PseudoExperiment' if args.pseudoExperiment else ('MC' if args.bkgAsData else args.process))+"Fit"+( 'diff' if args.comparison else bkgFunction[0][0].GetName())+"_"+( 'final_' if args.final else '' )+"_"+( 'resoBasedBin_' if not isinstance( rebinX, int ) else '' )+"ResolvedAnalysis_"+args.version+"_"+str(args.mass)+"."+args.extension)
 	del c3
 
 
@@ -705,7 +710,7 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 	for imass in listMass:
 
 		######## Fitting signal and extracting parameters
-		TMPResolution = 9.73 + ( 0.029 * imass)
+		TMPResolution = ( 10.48 + ( 0.04426 * imass) )
 		print '|----> Signal'
 		if (TMPResolution/rebinX) < 1 : tmpResolution = rebinX
 		else: tmpResolution = rebinX* round(TMPResolution/rebinX)
@@ -722,6 +727,7 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 
 		jmass = int(SignalParameters[0]['gaus'][1])
 		massWindow = int(SignalParameters[0]['gaus'][2])*2		### size of search
+		#print TMPResolution, jmass, massWindow
 		lowerLimitSearch = ( jmass-massWindow if args.window else minX )
 		upperLimitSearch = ( jmass+massWindow if args.window else maxX )
 
@@ -1005,10 +1011,10 @@ def createCards( dataFile, bkgFile, inFileSignal, listMass, hist, scale, bkgFunc
 		del canchi2
 
 
-def doftest( RSS1, RSS2, NDF1, NDF2, nPar1, nPar2, nBinsFit):
+def doftest( RSS1, RSS2, nPar1, nPar2, nBinsFit):
 	"""docstring for doftest"""
 
-	Fvalue = ( ( RSS1 - RSS2 ) / ( nPar2 - nPar1 ) ) / ( RSS2 / ( nBinsFit - nPar2 ) )
+	Fvalue = abs(( ( RSS1 - RSS2 ) / ( nPar2 - nPar1 ) ) / ( RSS2 / float( nBinsFit - nPar2 - 1 ) ))
 
 	Fdist = TF1("Fdistr","TMath::Sqrt( (TMath::Power([0]*x,[0]) * TMath::Power([1],[1])) / (TMath::Power([0]*x + [1],[0]+[1])) / (x*TMath::Beta([0]/2,[1]/2)) )",0,100)
 	Fdist.SetParameter( 0, (nPar2-nPar1) )
@@ -1016,7 +1022,7 @@ def doftest( RSS1, RSS2, NDF1, NDF2, nPar1, nPar2, nBinsFit):
 	CL = 1 - Fdistr.Integral( 0.00000001, Fvalue )
 	altCL =  1. - TMath.FDistI( Fvalue, nPar2-nPar1, nBinsFit-nPar2 )
 
-	return [ RSS1, RSS2, Fvalue, CL, altCL, Fdist ]
+	return [ RSS1, RSS2, Fvalue, CL, altCL ]
 
 	
 
@@ -1034,9 +1040,11 @@ def FisherTest( dataFile, hist, bkgFunctions, minX, maxX, rebinX ):
 				False )
 	else:
 		if args.pseudoExperiment:
-			rawHistoForPSE = dataFile.Get( hist+('JetHT_Run2016' if args.miniTree else '') )
-			numBkgEvents = rawHistoForPSE.Integral()
-			dataFile = createPseudoExperiment( rawHistoForPSE, '', numBkgEvents, 0, 3000, True )
+			#rawHistoForPSE = dataFile.Get( hist+('JetHT_Run2016' if args.miniTree else '') )
+			#numBkgEvents = rawHistoForPSE.Integral()
+			#dataFile = createPseudoExperiment( rawHistoForPSE, '', numBkgEvents, 0, 3000, True )
+			newFile = TFile( "pseudoExperiment"+args.decay+".root", 'open' )
+			dataFile = newFile.Get( "hbkgPSE" )
 		fitParameters = rootFitter( dataFile, 
 				hist+( 'JetHT_Run2016' if args.miniTree else ''), 
 				1, 
@@ -1049,25 +1057,24 @@ def FisherTest( dataFile, hist, bkgFunctions, minX, maxX, rebinX ):
 	dictDataAndFunc = OrderedDict()
 	dictPullResChi2NDF = OrderedDict()
 	for func in bkgFunctions:
-		dictDataAndFunc[ func[0].GetName() ] = histoFunctionFit( 'Data_'+func[0].GetName(),
-									func[0], 
-									fitParameters[0], 
-									fitParameters[1], 
-									fitParameters[2],
-									fitParameters[3],
-									minX, maxX, rebinX ) 
-		
+		dictDataAndFunc[ func[0].GetName() ] = func[0]
 		dictPullResChi2NDF[ func[0].GetName() ] = residualAndPulls( fitParameters[2], 
-									fitParameters[3], 
-									dictDataAndFunc[ func[0].GetName() ][1],  
-									dictDataAndFunc[ func[0].GetName() ][0], 
-									minX, maxX, rebinX )
+										fitParameters[3], 
+										func[0], 
+										fitParameters[5],
+										minX, maxX, rebinX )
 
 	dictFtest = OrderedDict()
 	for key1, key2 in combinations(dictPullResChi2NDF.keys(), r = 2):
-		dictFtest[ key1+'_'+key2 ] = doftest( dictPullResChi2NDF[ key1 ][2], dictPullResChi2NDF[ key2 ][2], dictPullResChi2NDF[ key1 ][3], dictPullResChi2NDF[ key2 ][3], dictDataAndFunc[ key1 ][1].GetNpar(),  dictDataAndFunc[ key2 ][1].GetNpar(), len(fitParameters[2]) )
-		print '|----> Ftest for ', key1, 'and', key2, ':', dictFtest[ key1+'_'+key2 ], 'Residual1, Residual2, Fvalue, CL, altCL, Fdist'
+		dictFtest[ key1+'_'+key2 ] = doftest( dictPullResChi2NDF[ key1 ][2], 
+							dictPullResChi2NDF[ key2 ][2], 
+							dictDataAndFunc[ key1 ].GetNpar(),  
+							dictDataAndFunc[ key2 ].GetNpar(), 
+							len(fitParameters[2]) )
+
+		print '|----> Ftest for ', key1, 'and', key2, ':', dictFtest[ key1+'_'+key2 ], 'Residual1, Residual2, Fvalue, CL, altCL'
 		
+##########################################################
 
 def drawBiasTest( listMasses, folderRootfiles ):
 	"""docstring for plotLimits"""
@@ -1198,6 +1205,58 @@ def drawBiasTest( listMasses, folderRootfiles ):
 	c1.SaveAs( 'Plots/BiasTest_'+args.decay+'_signal'+str(args.signalInj)+'_MeanValues_ResolvedAnalysis'+args.version+'.'+args.extension)
 
 ##########################################################
+def tmpPlot( ):
+	"""docstring for tmpPlot"""
+
+	masses = array( 'd', [ 170, 190, 210, 230, 250, 270, 290, 310, 330, 350, 370, 390, 410, 430, 450, 470, 490, 510])
+	PSEvalues = array( 'd', [ 2.24678561, 1.966548158, 2.048505244, 2.084535605, 1.874874205, 1.381561921, 1.368623312, 1.242284854, 1.019427999, 0.7358551882, 0.798614449, 0.622256033, 0.4626225542, 0.4708705545, 0.4515574049, 0.2168075023, 0.2667836463, 0.1738658039] ) 
+	Datavalues = array( 'd', [ 2.261087917, 1.966712071, 2.046098917, 2.077534816, 1.801417583, 1.34448088, 1.350154925, 1.209888639, 1.024352611, 0.731742915, 0.7915318358, 0.6102611321, 0.4600476406, 0.4581055092, 0.4559566661, 0.2083981714, 0.2500557876, 0.1666223384] )
+
+	xline = array('d', [ 100, 2000 ] )
+	yline = array('d', [.5, .5 ] )
+	box = TGraph( 2, xline, yline )
+	box.SetFillColorAlpha(18, 0.5)
+	box.SetLineColor(3)
+	box.SetLineWidth(2)
+	box.SetFillStyle(3350)
+
+	PSEgraph = TGraph( len( masses), masses, PSEvalues )
+	Datagraph = TGraph( len( masses), masses, Datavalues )
+
+	c1 = TCanvas("c1", "c1", 800, 600)
+	c1.cd()
+
+	legend = TLegend(.60,.70,.95,.88)
+	legend.SetTextSize(0.025)
+	legend.SetBorderSize(0)
+	legend.SetFillColor(0)
+	legend.SetFillStyle(0)
+	legend.SetTextFont(42)
+	#legend.SetHeader('95% CL upper limits')
+
+	PSEgraph.GetXaxis().SetTitle("Resonance mass [GeV]")
+	PSEgraph.GetYaxis().SetTitle("R(m)")
+	PSEgraph.GetYaxis().SetTitleOffset(0.9)
+	#PSEgraph.GetYaxis().SetRangeUser(-2,2)
+	PSEgraph.SetMarkerStyle(22)
+	PSEgraph.SetMarkerColor(1)
+	legend.AddEntry(PSEgraph,"Pseudoexperiment","p")
+	Datagraph.SetMarkerStyle(23)
+	Datagraph.SetMarkerColor(2)
+	legend.AddEntry(Datagraph,"Data","p")
+	PSEgraph.Draw("AP")
+	Datagraph.Draw("P")
+	box.Draw("L")
+	gPad.RedrawAxis()
+
+    	legend.Draw()
+
+	CMS_lumi.extraText = "Preliminary"
+	CMS_lumi.relPosX = 0.13
+	CMS_lumi.CMS_lumi(c1, 4, 0)
+
+	c1.SaveAs( 'Plots/StartingPointFitTest_'+args.decay+'_ResolvedAnalysis'+args.version+'.'+args.extension)
+
 ##########################################################
 ####  Code below is just for example, DONT USE IT
 def rooFitter( dataFile, bkgFile, inFileSignal, hist, scale, P4, minX, maxX, rebinX ):
@@ -1384,6 +1443,7 @@ def rooFitter( dataFile, bkgFile, inFileSignal, hist, scale, P4, minX, maxX, reb
 	outputfile.write("# BkgNorm    lnN     -       2.0000\n")
 	outputfile.close()
 
+##########################################################
 def rooFitterTree( inFileBkg, inFileSignal, inFileData, hist):
 	"""function to run Roofit and save workspace for RooStats"""
 
@@ -1479,9 +1539,10 @@ if __name__ == '__main__':
 	if ( args.mass > 0 ): 
 		listMass = [ args.mass ]
 	else: 
-		if '312' in args.decay: 
-			listMass = [ 200, 220, 240 ] + range( 300, 1050, 50 ) + range( 1100, 1400, 100 ) 
-		else: listMass = range( 200, 320, 20 ) + range( 350, 1050, 50 ) #+ ( [1100, 1200 ] if 'CSVv2L' in args.cut else [] )
+		listMass = range( 400, 1050, 50 ) + range( 1100, 1400, 100 ) 
+		#if '312' in args.decay: 
+		#	listMass = [ 200, 220, 240 ] + range( 300, 1050, 50 ) + range( 1100, 1400, 100 ) 
+		#else: listMass = range( 200, 320, 20 ) + range( 350, 1050, 50 ) #+ ( [1100, 1200 ] if 'CSVv2L' in args.cut else [] )
 
 
 	QCDSF = 0.255
@@ -1506,24 +1567,21 @@ if __name__ == '__main__':
 
 	######## Fit Functions
 	fitFunctions = {}
-	fitFunctions['P5'] = [ TF1("P5", "[0]*TMath::Power(1-(x/13000.0),[1])/(TMath::Power(x/13000.0,[2]+([3]*TMath::Log(x/13000.))+([4]*TMath::Power(TMath::Log(x/13000.),2))))",0,2000), 
-			[ 1, 100, 2, 0.1, 0.01], 
-			#[ 1, 80, 0, .001, 0.0001], 
+	fitFunctions['P5'] = [ TF1("P5", "[0]*TMath::Power(1-(x/13000.0),[1])/(TMath::Power(x/13000.0,([2]+([3]*TMath::Log(x/13000.))+([4]*TMath::Power(TMath::Log(x/13000.),2)))))",0,2000), 
+			( [1e-10, 47, 14, 1.94, 0.03 ] if 'UDD312' in args.decay else [1e-10, 39, 14, 1.91, 0.03]  ), 
 			'pow(1-@0/13000,@1)/pow(@0/13000,@2+@3*log(@0/13000)+@4*pow(log(@0/13000),2))' ]
 
-	fitFunctions['P4'] = [ TF1("P4", "[0]*TMath::Power(1-(x/13000.0),[1])/(TMath::Power(x/13000.0,[2]+([3]*TMath::Log(x/13000.))))",0,2000), 
-			[ 100, 100, 2, 0.01 ], 
-			#[ 3, 80, 1, 0.01],   ### btag
+	fitFunctions['P4'] = [ TF1("P4", "[0]*TMath::Power(1-(x/13000.0),[1])/(TMath::Power(x/13000.0,([2]+([3]*TMath::Log(x/13000.0)))))",0,2000), 
+			( [ 1e-22, -21, 26, 3 ] if 'UDD312' in args.decay else [3e-22, -24, 25, 3] ), 
 			'pow(1-@0/13000,@1)/pow(@0/13000,@2+@3*log(@0/13000))' ]
 
-	fitFunctions['P3'] = [ TF1("P3", "[0]* TMath::Power(1-(x/13000.0),[1]) / (TMath::Power(x/13000.0,[2]))",0,2000), 
-			#[ 100, 100, 2], 
-			[],
+	fitFunctions['P3'] = [ TF1("P3", "[0]*TMath::Power(1-(x/13000.0),[1])/(TMath::Power(x/13000.0,[2]))",0,2000), 
+			( [ 3619, 114, 0.15] if 'UDD312' in args.decay else [753, 106, -0.02] ), 
 			'pow(1-@0/13000,@1)/pow(@0/13000,@2)' ]
 
-	fitFunctions['P2'] = [ TF1("P2", "[0] / TMath::Power(x/13000.0,[1])",0,2000), 
-			[ 1, 1 ], 
-			'pow(@0/13000,-@1)' ]
+	#fitFunctions['P2'] = [ TF1("P2", "[0] / TMath::Power(x/13000.0,[1])",0,2000), 
+	#		[ 1, 1 ], 
+	#		'pow(@0/13000,-@1)' ]
 
 
 	fitFunctions['altDijet'] = [ TF1("altDijet", "[0]+ TMath::Power( x/13000.0, [1]+([2]*TMath::Log(x/13000.0)))", 0, 3000 ),
@@ -1596,11 +1654,11 @@ if __name__ == '__main__':
 	uncDict[ 280 ] = [ 0.001, 	0.0, 	0.0, 	0.0, 	0.,		0.022,  0.017, 	0.009, 	0.179,	[250, 310, 5],	[ 240, 305, 5] ]
 	uncDict[ 300 ] = [ 0.001, 	0.016, 	0.005, 	0.002, 	0.18,		0.019, 	0.005, 	0.005, 	0.182,	[275, 325, 5],	[ 260, 320, 5] ]
 	uncDict[ 350 ] = [ 0.002, 	0.021, 	0.001, 	0.002, 	0.195,		0.024, 	0.014, 	0.005, 	0.194,	[310, 380, 5],	[ 300, 380, 10] ]
-	uncDict[ 400 ] = [ 0.002, 	0.018, 	0.014, 	0.001, 	0.208,		0.017, 	0.023, 	0.003, 	0.206,	[360, 430, 5],	[ 340, 430, 10] ]
+	uncDict[ 400 ] = [ 0.002, 	0.018, 	0.014, 	0.001, 	0.208,		0.017, 	0.023, 	0.003, 	0.206,	[340, 460, 20],	[ 320, 460, 20] ]
 	uncDict[ 450 ] = [ 0.002, 	0.023, 	0.016, 	0.003, 	0.214,		0.025, 	0.011, 	0.005, 	0.218,	[410, 480, 5],	[ 380, 500, 10] ]
 	uncDict[ 500 ] = [ 0.002, 	0.025, 	0.028, 	0.001, 	0.24,		0.037, 	0.031, 	0.016, 	0.238,	[450, 540, 5],	[ 420, 540, 10] ]
 	uncDict[ 550 ] = [ 0.002, 	0.023, 	0.015, 	0.007, 	0.253,		0.037, 	0.005, 	0.008, 	0.249,	[500, 590, 10],	[ 460, 590, 10] ]
-	uncDict[ 600 ] = [ 0.003, 	0.033, 	0.022, 	0.003, 	0.266,		0.049, 	0.026, 	0.012, 	0.27,	[500, 700, 20],	[ 520, 640, 10] ]
+	uncDict[ 600 ] = [ 0.003, 	0.033, 	0.022, 	0.003, 	0.266,		0.049, 	0.026, 	0.012, 	0.27,	[500, 700, 20],	[ 500, 700, 20] ]
 	uncDict[ 650 ] = [ 0.003, 	0.022, 	0.006, 	0.004, 	0.279,		0.032, 	0.04, 	0.007, 	0.29,	[560, 720, 20],	[ 560, 700, 10] ]
 	uncDict[ 700 ] = [ 0.003, 	0.033, 	0.041, 	0.006, 	0.302,		0.051, 	0.032, 	0.013, 	0.291,	[540, 840, 20],	[ 540, 820, 20] ]
 	uncDict[ 750 ] = [ 0.003, 	0.04, 	0.003, 	0.008, 	0.301,		0.092, 	0.025, 	0.013, 	0.313,	[640, 840, 20],	[ 640, 820, 20] ]
@@ -1611,9 +1669,9 @@ if __name__ == '__main__':
 	uncDict[ 1000 ] = [ 0.004, 	0.037, 	0.039, 	0.015, 	0.408,		0.044, 	0.023, 	0.047, 	0.398,	[850, 1150, 30],	[ 850, 1150, 30] ]
 	uncDict[ 1100 ] = [ 0.004, 	0.065, 	0.028, 	0.008, 	0.446,		0.095, 	0.001, 	0.032, 	0.435,	[980, 1220, 30],	[ 960, 1280, 40] ]
 	uncDict[ 1200 ] = [ 0.008, 	0.062, 	0.019, 	0.017, 	0.499,		0.089, 	0.035, 	0.028, 	0.488,	[1080, 1280, 40],	[ 1040, 1360, 40] ]
-	uncDict[ 1300 ] = [ 0.008, 	0.062, 	0.019, 	0.017, 	0.499,		0.089, 	0.035, 	0.028, 	0.488,	[1100, 1400, 50],	[ 1040, 1360, 40] ]
-	uncDict[ 1400 ] = [ 0.008, 	0.062, 	0.019, 	0.017, 	0.499,		0.089, 	0.035, 	0.028, 	0.488,	[1100, 1400, 50],	[ 1040, 1360, 40] ]
-	uncDict[ 1500 ] = [ 0.008, 	0.062, 	0.019, 	0.017, 	0.499,		0.089, 	0.035, 	0.028, 	0.488,	[1100, 1400, 50],	[ 1040, 1360, 40] ]
+	uncDict[ 1300 ] = [ 0.008, 	0.062, 	0.019, 	0.017, 	0.499,		0.089, 	0.035, 	0.028, 	0.488,	[1100, 1400, 50],	[ 1100, 1460, 40] ]
+	uncDict[ 1400 ] = [ 0.008, 	0.062, 	0.019, 	0.017, 	0.499,		0.089, 	0.035, 	0.028, 	0.488,	[1200, 1500, 50],	[ 1040, 1560, 40] ]
+	uncDict[ 1500 ] = [ 0.008, 	0.062, 	0.019, 	0.017, 	0.499,		0.089, 	0.035, 	0.028, 	0.488,	[1300, 1600, 50],	[ 1040, 1660, 40] ]
 	
 	############ run process
 	if 'Data' in args.process:
@@ -1623,12 +1681,11 @@ if __name__ == '__main__':
 				( signalFilename if args.final else ''), 
 				hist, 
 				scale, 
-				( [ fitFunctions[args.func], fitFunctions['atlas'], fitFunctions['expoPoli'] ] if args.comparison else [fitFunctions[args.func]] ), 
-				#args.mass, 1700, 
-				160, 1700, 
-				20 
-				#350, 1755,  ##165, 294, 350
-				#[ len(massBins)-1, "resoBin", massBins ]
+				( [ fitFunctions[args.func], fitFunctions['P4'], fitFunctions['P5'] ] if args.comparison else [fitFunctions[args.func]] ), 
+				#160, 1700, 
+				#20 
+				350, ( 1477 if 'UDD323' in args.decay else 1639),   ##259
+				[ len(massBins)-1, "resoBin", massBins ]
 				))
 
 	elif 'RPV' in args.process:
@@ -1639,8 +1696,8 @@ if __name__ == '__main__':
 		p = Process( target=createCards, args=( ( bkgFile if args.bkgAsData else dataFile ),
 				bkgFile, 
 				signalFilename,
-				#listMass,
-				(listMass if len(listMass)==1 else range(400, 1600, 100)), 
+				listMass,
+				#(listMass if len(listMass)==1 else range(400, 1600, 100)), 
 				hist, 
 				scale, 
 				[fitFunctions[args.func]], 
@@ -1659,13 +1716,16 @@ if __name__ == '__main__':
 	elif 'Fisher' in args.process:
 		p = Process( target=FisherTest, args=( ( bkgFile if args.bkgAsData else dataFile ), 
 			hist, 
-			[ fitFunctions['P2'], fitFunctions['P3'], fitFunctions['P4'], fitFunctions['P5'] ], 
-			#[ fitFunctions['P4'], fitFunctions['P5'] ], 
-			minFit, maxFit, rebinX ) )
+			[ fitFunctions['P3'], fitFunctions['P4'], fitFunctions['P5'] ], 
+			350, ( 1477 if 'UDD323' in args.decay else 1639),   ##259
+			[ len(massBins)-1, "resoBin", massBins ]
+			) )
 
 	elif 'biasDraw' in args.process: 
 		p = Process( target=drawBiasTest, args=( (listMass if len(listMass)==1 else  range(400, 1500, 100)),
 			'/afs/cern.ch/work/a/algomez/RPVStops/CMSSW_8_0_20/src/RUNA/RUNStatistics/test/' ) )
+
+	elif 'tmp' in args.process: tmpPlot() 
 
 	p.start()
 	p.join()
