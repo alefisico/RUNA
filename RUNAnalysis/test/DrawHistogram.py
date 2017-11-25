@@ -79,7 +79,7 @@ def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax
 	if 'DATA' in args.process:
 		dataHistos = {}
 		dataHistos[ 'DATA' ] = dataFile.Get( nameInRoot+'_JetHT_Run2016'+tmpRegion if args.miniTree else args.boosted+'AnalysisPlots'+('' if 'pruned' in args.grooming else args.grooming)+'/'+nameInRoot  )
-		if 'mass' in nameInRoot: 
+		if 'massAve' in nameInRoot: 
 			dataHistos[ 'DATA' ] = dataHistos[ 'DATA' ].Rebin( len( boostedMassAveBins )-1, dataHistos[ 'DATA' ].GetName(), boostedMassAveBins )
 			dataHistos[ 'DATA' ].Scale ( 1, 'width' )
 		elif rebinX > 1: dataHistos[ 'DATA' ] = dataHistos[ 'DATA' ].Rebin( rebinX )
@@ -94,20 +94,20 @@ def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax
 		for sigSamples in signalFiles:
 			signalHistos[ sigSamples ] = signalFiles[ sigSamples ][0].Get( nameInRoot+'_RPVStopStopToJets_'+args.decay+'_M-'+str(sigSamples)+tmpRegion if args.miniTree else args.boosted+'AnalysisPlots'+('' if 'pruned' in args.grooming else args.grooming )+'/'+nameInRoot )
 			if signalFiles[ sigSamples ][1] != 1: signalHistos[ sigSamples ].Scale( signalFiles[ sigSamples ][1] ) 
-			if 'massAve' in nameInRoot: signalHistos[ sigSamples ].Scale( twoProngSF * antiTau32SF ) 
-			if 'mass' in nameInRoot: 
+			if 'massAve' in nameInRoot: 
+				signalHistos[ sigSamples ].Scale( twoProngSF * antiTau32SF ) 
 				signalHistos[ sigSamples ] = signalHistos[ sigSamples ].Rebin( len( boostedMassAveBins )-1, signalHistos[ sigSamples ].GetName(), boostedMassAveBins )
 				signalHistos[ sigSamples ].Scale ( 1, 'width' )
+				totalIntegralSig = signalHistos[ sigSamples ].Integral()
+				nEntriesTotalSig = signalHistos[ sigSamples ].GetEntries()
+				totalSF = totalIntegralSig/nEntriesTotalSig
+				windowIntegralSigErr = Double(0)
+				windowIntegralSig = signalHistos[ sigSamples ].IntegralAndError((args.mass-10)/rebinX, (args.mass+10)/rebinX, windowIntegralSigErr ) 
+				print sigSamples, round(totalIntegralSig,2), nEntriesTotalSig, totalSF
+				print sigSamples, 'in mass window', round(windowIntegralSig,2), ', nEntries', windowIntegralSig/totalSF, windowIntegralSigErr
 			elif rebinX > 1: signalHistos[ sigSamples ] = signalHistos[ sigSamples ].Rebin( rebinX )
 			if not 'Tau32' in args.cut: legend.AddEntry( signalHistos[ sigSamples ], signalFiles[ sigSamples ][2], 'l' if Norm else 'f' )
 			#if not 'DATA' in args.process: legend.AddEntry( signalHistos[ sigSamples ], signalFiles[ sigSamples ][2], 'l' if Norm else 'f' )
-			totalIntegralSig = signalHistos[ sigSamples ].Integral()
-			nEntriesTotalSig = signalHistos[ sigSamples ].GetEntries()
-			totalSF = totalIntegralSig/nEntriesTotalSig
-			windowIntegralSigErr = Double(0)
-			windowIntegralSig = signalHistos[ sigSamples ].IntegralAndError((args.mass-10)/rebinX, (args.mass+10)/rebinX, windowIntegralSigErr ) 
-			print sigSamples, round(totalIntegralSig,2), nEntriesTotalSig, totalSF
-			print sigSamples, 'in mass window', round(windowIntegralSig,2), ', nEntries', windowIntegralSig/totalSF, windowIntegralSigErr
 			if Norm:
 				signalHistos[ sigSamples ].SetLineColor( signalFiles[ sigSamples ][3] )
 				signalHistos[ sigSamples ].SetLineWidth( 3 )
@@ -134,18 +134,18 @@ def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax
 		for bkgSamples in bkgFiles:
 			bkgHistos[ bkgSamples ] = bkgFiles[ bkgSamples ][0].Get( nameInRoot+'_'+bkgSamples+tmpRegion if args.miniTree else args.boosted+'AnalysisPlots'+('' if 'pruned' in args.grooming else args.grooming )+'/'+nameInRoot )
 			if bkgFiles[ bkgSamples ][1] != 1: bkgHistos[ bkgSamples ].Scale( bkgFiles[ bkgSamples ][1] ) 
-			if 'massAve' in nameInRoot: bkgHistos[ bkgSamples ].Scale( twoProngSF * antiTau32SF ) 
-			if 'mass' in nameInRoot: 
+			if 'massAve' in nameInRoot: 
+				bkgHistos[ bkgSamples ].Scale( twoProngSF * antiTau32SF ) 
 				bkgHistos[ bkgSamples ] = bkgHistos[ bkgSamples ].Rebin( len( boostedMassAveBins )-1, bkgHistos[ bkgSamples ].GetName(), boostedMassAveBins )
 				bkgHistos[ bkgSamples ].Scale( 1, 'width' )
+				print bkgSamples, round( bkgHistos[ bkgSamples ].Integral(), 2 )
+				tmpBkgInWindowErr = Double(0)
+				tmpBkgInWindow = round( bkgHistos[ bkgSamples ].IntegralAndError((args.mass-10)/rebinX, (args.mass+10)/rebinX, tmpBkgInWindowErr ), 2 )
+				bkgInMassWindow += tmpBkgInWindow
+				bkgInMassWindowErr += TMath.Power( tmpBkgInWindowErr, 2 )
+				print bkgSamples, 'in mass window', tmpBkgInWindow, bkgInMassWindow
 			elif rebinX > 1: bkgHistos[ bkgSamples ] = bkgHistos[ bkgSamples ].Rebin( rebinX )
 			legend.AddEntry( bkgHistos[ bkgSamples ], bkgFiles[ bkgSamples ][2], 'l' if Norm else 'f' )
-			print bkgSamples, round( bkgHistos[ bkgSamples ].Integral(), 2 )
-			tmpBkgInWindowErr = Double(0)
-			tmpBkgInWindow = round( bkgHistos[ bkgSamples ].IntegralAndError((args.mass-10)/rebinX, (args.mass+10)/rebinX, tmpBkgInWindowErr ), 2 )
-			bkgInMassWindow += tmpBkgInWindow
-			bkgInMassWindowErr += TMath.Power( tmpBkgInWindowErr, 2 )
-			print bkgSamples, 'in mass window', tmpBkgInWindow, bkgInMassWindow
 
 			if Norm:
 				bkgHistos[ bkgSamples ].SetLineColor( bkgFiles[ bkgSamples ][3] )
@@ -159,10 +159,10 @@ def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax
 			#for i in range( 1, bkgHistos[ bkgSamples ].GetNbinsX()+1 ):
 			#	print i, bkgHistos[ bkgSamples ].GetBinContent(i)
 			
-	if args.runZbi: myObj = runZbi( windowIntegralSig, bkgInMassWindow, 0.5 ) #bkgInMassWindowErr/bkgInMassWindow )
-
-	print 'S-B/sqrt( ( Serr^2 + Berr^2 )/2 )', ( windowIntegralSig - bkgInMassWindow )/TMath.Sqrt( ( (windowIntegralSigErr*windowIntegralSigErr) + bkgInMassWindowErr )/6 ), windowIntegralSig,  windowIntegralSigErr, bkgInMassWindow, bkgInMassWindowErr, TMath.Sqrt(bkgInMassWindowErr)
-	#print 'S-B/sqrt( ( Serr^2 + Berr^2 )/2 )', ( windowIntegralSig )/TMath.Sqrt( ( (windowIntegralSigErr*windowIntegralSigErr) + bkgInMassWindowErr )/6 ), windowIntegralSig,  windowIntegralSigErr, bkgInMassWindow, bkgInMassWindowErr, TMath.Sqrt(bkgInMassWindowErr)
+	if 'massAve' in nameInRoot: 
+		if args.runZbi: myObj = runZbi( windowIntegralSig, bkgInMassWindow, 0.5 ) #bkgInMassWindowErr/bkgInMassWindow )
+		print 'S-B/sqrt( ( Serr^2 + Berr^2 )/2 )', ( windowIntegralSig - bkgInMassWindow )/TMath.Sqrt( ( (windowIntegralSigErr*windowIntegralSigErr) + bkgInMassWindowErr )/6 ), windowIntegralSig,  windowIntegralSigErr, bkgInMassWindow, bkgInMassWindowErr, TMath.Sqrt(bkgInMassWindowErr)
+		#print 'S-B/sqrt( ( Serr^2 + Berr^2 )/2 )', ( windowIntegralSig )/TMath.Sqrt( ( (windowIntegralSigErr*windowIntegralSigErr) + bkgInMassWindowErr )/6 ), windowIntegralSig,  windowIntegralSigErr, bkgInMassWindow, bkgInMassWindowErr, TMath.Sqrt(bkgInMassWindowErr)
 
 	CMS_lumi.extraText = "Simulation Preliminary"
 	hBkg = signalHistos[ args.mass ].Clone()
@@ -456,8 +456,8 @@ def plot2D( inFiles, sample, scale, Groom, nameInRoot, name, titleXAxis, titleXA
 	tdrStyle.SetPadRightMargin(0.12)
 	can = TCanvas('c1', 'c1',  750, 500 )
 	can.SetLogz()
-	if 'Boosted' in args.boosted: h1.SetMaximum(5000)
-	elif 'Resolved' in args.boosted: h1.SetMaximum(30000)
+	#if 'Boosted' in args.boosted: h1.SetMaximum(5000)
+	#elif 'Resolved' in args.boosted: h1.SetMaximum(30000)
 	#	h1.SetMinimum(0.0001)
 	#h1.SetMaximum(100)
 	#h1.SetMinimum(0.1)
@@ -686,11 +686,13 @@ def plotSignalShape( nameInRoot, rebinX, massList, massWidthList, log ):
 	maxList = []
 	meanList = []
 	meanErrList = []
+	sigmaList = []
+	sigmaErrList = []
 	multiGraph = TMultiGraph()
 	for m in range( len(massList) ): 
 		histos[ massList[m] ] = files[ massList[m] ].Get( nameInRoot+'_RPVStopStopToJets_'+args.decay+'_M-'+str( massList[m] ) )
-		histos[ massList[m] ].Scale( 1/(histos[ massList[m] ].Integral()))
-		#histos[ massList[m] ].Scale( args.lumi )
+		#histos[ massList[m] ].Scale( 1/(histos[ massList[m] ].Integral()))
+		histos[ massList[m] ].Scale( args.lumi )
 		if rebinX > 1: histos[ massList[m] ] = histos[ massList[m] ].Rebin( rebinX )
 		if 'Boosted' in args.boosted:
 			if 'massAve' in args.single: histos[ massList[m] ].GetXaxis().SetRangeUser( massList[m]-(int(massWidthList[m])*3), massList[m]+(int(massWidthList[m])*3) )
@@ -701,10 +703,13 @@ def plotSignalShape( nameInRoot, rebinX, massList, massWidthList, log ):
 			legend.AddEntry( histos[ massList[m] ], 'M_{#tilde{t}} = '+str( massList[m] )+' GeV' , 'l' )
 		else:
 			tmpResolution = 9.73 + ( 0.029 * massList[m])
+			#tmpResolution = 7.67 + ( 0.06547 * massList[m])
 			histos[ massList[m] ].Fit( "gaus", 'ELLSR', '', massList[m]-(5*tmpResolution), massList[m]+(5*tmpResolution) )
 			massWindow = histos[ massList[m] ].GetFunction("gaus").GetParameter( 2 )* 3
 			meanList.append( histos[ massList[m] ].GetFunction("gaus").GetParameter( 1 ))
 			meanErrList.append( histos[ massList[m] ].GetFunction("gaus").GetParError( 1 ))
+			sigmaList.append( histos[ massList[m] ].GetFunction("gaus").GetParameter( 2 ))
+			sigmaErrList.append( histos[ massList[m] ].GetFunction("gaus").GetParError( 2 ))
 			functs[ massList[m] ] = TF1( "RPVStop"+str(massList[m]), "gaus", massList[m]-massWindow, massList[m]+massWindow )
 			functs[ massList[m] ].SetParameter( 0, histos[ massList[m] ].GetFunction("gaus").GetParameter( 0 ) )
 			functs[ massList[m] ].SetParameter( 1, massList[m] )
@@ -737,7 +742,7 @@ def plotSignalShape( nameInRoot, rebinX, massList, massWidthList, log ):
 		can.SetLogy()
 		multiGraph.Draw("al")
 		multiGraph.GetYaxis().SetTitle( 'Events' )
-		multiGraph.GetXaxis().SetTitle( "Stop mass [GeV]" )
+		multiGraph.GetXaxis().SetTitle( "Resonance mass [GeV]" )
 		multiGraph.GetYaxis().SetTitleOffset( 0.8 )
 
 
@@ -758,7 +763,7 @@ def plotSignalShape( nameInRoot, rebinX, massList, massWidthList, log ):
 	gStyle.SetOptFit(1)
 	canMean.SetGrid()
 	meanGraph.SetMarkerStyle( 21 )
-	meanGraph.GetXaxis().SetTitle('Stop mass [GeV]')
+	meanGraph.GetXaxis().SetTitle('Resonance mass [GeV]')
 	meanGraph.GetYaxis().SetTitle('Mean value from fit [GeV]')
 	meanGraph.GetYaxis().SetTitleOffset(0.95)
 	meanGraph.Draw('APS')
@@ -776,6 +781,33 @@ def plotSignalShape( nameInRoot, rebinX, massList, massWidthList, log ):
 	canMean.SaveAs( 'Plots/signalMean_'+args.decay+'_'+args.boosted+'_'+args.version+'.'+args.ext )
 	del canMean
 
+	#### Sigma graph
+	zeroList = [0]*len(massList)
+	sigmaGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', sigmaList), array('d', zeroList ), array( 'd', sigmaErrList) )
+	sigmaFit = TF1("sigmaFit", "pol1", 200, 2000 )
+	sigmaGraph.Fit( sigmaFit, 'MIR' )
+	canSigma = TCanvas('canSigma', 'canSigma',  10, 10, 750, 500 )
+	gStyle.SetOptFit(1)
+	canSigma.SetGrid()
+	sigmaGraph.SetMarkerStyle( 21 )
+	sigmaGraph.GetXaxis().SetTitle('Stop mass [GeV]')
+	sigmaGraph.GetYaxis().SetTitle('Sigma value from fit [GeV]')
+	sigmaGraph.GetYaxis().SetTitleOffset(0.95)
+	sigmaGraph.Draw('APS')
+	CMS_lumi.extraText = "Simulation Preliminary"
+	CMS_lumi.lumi_13TeV = ""
+	CMS_lumi.relPosX = 0.13
+	CMS_lumi.CMS_lumi(canSigma, 4, 0)
+	canSigma.Update()
+	st2 = sigmaGraph.GetListOfFunctions().FindObject("stats")
+	st2.SetX1NDC(.15)
+	st2.SetX2NDC(.35)
+	st2.SetY1NDC(.76)
+	st2.SetY2NDC(.91)
+	canSigma.Modified()
+	canSigma.SaveAs( 'Plots/signalSigma_'+args.decay+'_'+args.boosted+'_'+args.version+'.'+args.ext )
+	del canSigma
+
 
 def plotSignalAcceptance( miniRunaFile, nameInRoot, massList, massWidthList, log ):
 	"""docstring for plot acceptance"""
@@ -783,7 +815,7 @@ def plotSignalAcceptance( miniRunaFile, nameInRoot, massList, massWidthList, log
 	outputFileName = 'signalAcceptance_'+nameInRoot+'_'+args.grooming+'_'+args.decay+'RPVSt_AnalysisPlots_diffVersions.'+args.ext 
 	print 'Processing.......', outputFileName
 
-	legend=TLegend(0.60,(0.5 if 'Tau21' in nameInRoot else 0.67),0.90,0.87)
+	legend=TLegend(0.60,(0.5 if 'Tau21' in nameInRoot else 0.72),0.90,0.87)
 	legend.SetFillStyle(0)
 	legend.SetTextSize(0.03)
 	histos = {}
@@ -796,58 +828,68 @@ def plotSignalAcceptance( miniRunaFile, nameInRoot, massList, massWidthList, log
 #	else:
 	accXeffGraph= {}
 	massesList = []
-	accXeffList = []
-	accXeffErrList = []
+	accXeffList = {}
+	accXeffList[ 'UDD312' ] = []
+	accXeffList[ 'UDD323' ] = []
+	accXeffErrList = {}
+	accXeffErrList[ 'UDD312' ] = []
+	accXeffErrList[ 'UDD323' ] = []
 
 	for M in massList:
-		fileName = miniRunaFile.replace( str(args.mass), str(M) )
-		files[ M ] = TFile( fileName )
+		for d in [ 'UDD312', 'UDD323' ]:
+			fileName = miniRunaFile.replace( str(args.mass), str(M) ).replace( args.decay, d )
+			files[ str(M)+d ] = TFile( fileName )
 	
 	for m in range( len(massList) ): 
-		NAME = 'RPVStopStopToJets_'+args.decay+'_M-'+str( massList[m] )
-		events = search( dictEvents, NAME )[0]
-
-		histos[ massList[m] ] = files[ massList[m] ].Get( nameInRoot+'_'+NAME )
-		#histos[ massList[m] ].Scale( 1.10 ) ### due to two prong tagger
-		histos[ massList[m] ].Scale( 1/scaleFactor( NAME ) )  
-		eventsInWindow = histos[ massList[m] ].Integral( massList[m]-(int(2*massWidthList[m])), massList[m]+(int(2*massWidthList[m])) )
-		print 'CHECK INTEGRAL'
-		sys.exit(0)
-		failedEvents = events - eventsInWindow
-		#acceptance = eventsInHisto/events
-		#efficiency = eventsInWindow/eventsInHisto
-		#accXeff = acceptance * efficiency
-		accXeff = eventsInWindow / events 
-		accXeffErr = sqrt( (1/failedEvents) + (1/eventsInWindow) ) * failedEvents * eventsInWindow / pow( ( events ), 2 )
-		print m, eventsInWindow, events, accXeff, accXeffErr
 		massesList.append( massList[m] )
-		accXeffList.append( accXeff )
-		accXeffErrList.append( accXeffErr )
-		#legend.AddEntry( accXeffGraph[ args.boosted ], '#tau_{21} < 0.45', 'l' )
+		for d in [ 'UDD312', 'UDD323' ]:
+			if ('UDD323' in d) and (massList[m]>1300): continue
+			NAME = 'RPVStopStopToJets_'+d+'_M-'+str( massList[m] )
+			events = search( dictEvents, NAME )[0]
 
-	accXeffGraph[ args.boosted ] = TGraphErrors(len(massesList), array( 'd', massesList), array( 'd', accXeffList), array('d', [0]*len(massesList)), array('d', accXeffErrList) ) 
+			histos[ str(massList[m])+d ] = files[ str(massList[m])+d ].Get( nameInRoot+('_2CSVv2L_' if 'UDD323' in d else '_')+NAME )
+			recoverSF = (histos[ str(massList[m])+d ].Integral()/histos[ str(massList[m])+d ].GetEntries()) ##### to return to pure number of events instead of weighted
+			histos[ str(massList[m])+d ].Scale( 1/recoverSF )  
+			tmpResolution = int(2*( 10.48 + ( 0.04426 * massList[m]) ) )
+			eventsInWindow = histos[ str(massList[m])+d ].Integral( (massList[m]-tmpResolution), (massList[m]+tmpResolution) )
+			failedEvents = events - eventsInWindow
+			#acceptance = eventsInHisto/events
+			#efficiency = eventsInWindow/eventsInHisto
+			#accXeff = acceptance * efficiency
+			accXeff = eventsInWindow / events 
+			accXeffErr = sqrt( (1/failedEvents) + (1/eventsInWindow) ) * failedEvents * eventsInWindow / pow( ( events ), 2 )
+			print d, massList[m], eventsInWindow, events, accXeff, accXeffErr
+			accXeffList[d].append( accXeff )
+			accXeffErrList[d].append( accXeffErr )
+
 
 	multiGraph = TMultiGraph()
-	can = TCanvas('c1', 'c1',  10, 10, 750, 500 )
-	#if log: can.SetLogy()
-	can.SetLogy()
+	dummy=1
+	for d in [ 'UDD312', 'UDD323' ]:
+		accXeffGraph[ args.boosted+d ] = TGraphErrors(len(massesList), array( 'd', massesList), array( 'd', accXeffList[d]), array('d', [0]*len(massesList)), array('d', accXeffErrList[d]) ) 
 
-	accXeffGraph[ args.boosted ].SetLineColor(kRed)
-	accXeffGraph[ args.boosted ].SetLineWidth(2)
-	accXeffGraph[ args.boosted ].SetMarkerStyle(8)
-	multiGraph.Add( accXeffGraph[ args.boosted ] )
+		accXeffGraph[ args.boosted+d ].Fit( 'pol3', 'R', '', 400, ( 1300 if 'UDD323' in d else 1500 ) )
+		accXeffGraph[ args.boosted+d ].GetFunction('pol3').SetLineColor(dummy)
+		accXeffGraph[ args.boosted+d ].GetFunction('pol3').SetLineWidth(2)
+		accXeffGraph[ args.boosted+d ].SetLineColor(dummy)
+		#accXeffGraph[ args.boosted+d ].SetLineWidth(2)
+		accXeffGraph[ args.boosted+d ].SetMarkerStyle(8)
+		legend.AddEntry( accXeffGraph[ args.boosted+d ], ('Inclusive selection' if 'UDD312' in d else 'Btagged selection') , 'pl' )
+		multiGraph.Add( accXeffGraph[ args.boosted+d ] )
+		dummy+=1
+
+	can = TCanvas('c1', 'c1',  10, 10, 750, 500 )
+	can.SetLogy()
 
 	multiGraph.Draw("ap")
 	multiGraph.GetYaxis().SetTitle( 'Acceptance #times efficiency' )
-	multiGraph.GetXaxis().SetTitle( "Stop mass [GeV]" )
+	multiGraph.GetXaxis().SetTitle( "Resonance mass [GeV]" )
 	multiGraph.GetYaxis().SetTitleOffset( 0.8 )
-	#histos[ massList[0] ].GetXaxis().SetRangeUser( (50 if 'low' in args.RANGE else 100 ) , ( 250 if 'low' in args.RANGE else 400 ) )
+	multiGraph.SetMaximum( 0.05 )
+	multiGraph.SetMinimum( 0.001 )
 
-	#histos[ massList[0] ].SetMinimum( (0.1 if 'high' in args.RANGE else 0.00001 ) )
-	#histos[ massList[0] ].SetMaximum( 1.2*max(maxList) )
-	#histos[ massList[0] ].Draw('hist')
 
-	#legend.Draw()
+	legend.Draw()
 	CMS_lumi.extraText = "Simulation Preliminary"
 	CMS_lumi.lumi_13TeV = ''
 	CMS_lumi.relPosX = 0.12
@@ -1483,7 +1525,7 @@ if __name__ == '__main__':
 				'M_{#tilde{t}} = '+str(args.mass)+' GeV', 
 				kRed]
 		if ( 'Norm' in args.process ) or ( 'DATA' in args.process ) or ( 'CF' in args.process ): 
-			otherMass = ( '180' if args.boosted == 'Boosted' else '700' )
+			otherMass = ( '180' if args.boosted == 'Boosted' else '600' )
 			signalFiles[ otherMass ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+otherMass+'_Moriond17_80X_V2p4_'+args.version+'.root'), 
 					args.lumi, 
 					'M_{#tilde{t}} = '+otherMass+' GeV', 
@@ -1495,7 +1537,7 @@ if __name__ == '__main__':
 			bkgFiles[ 'Dibosons' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_Dibosons_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'Dibosons', kMagenta+2 ]
 			#bkgFiles[ 'ZJetsToQQ' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_ZJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'Z + Jets', kOrange ]
 			bkgFiles[ 'DYJetsToQQ' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_DYJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi*1.45, 'DY + Jets', kOrange ]
-		bkgFiles[ 'QCD'+args.qcd+'All' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_QCD'+args.qcd+'All_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi*QCDSF, 'QCD'+args.qcd+'', kBlue-4 ]
+		bkgFiles[ 'QCD'+args.qcd+'All' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_QCD'+args.qcd+'All_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi*QCDSF, 'QCD multijets MC', kBlue-4 ]
 	else:
 		dataFile = TFile.Open(folder+'/RUNAnalysis_JetHT_Run2016_80X_V2p4_'+args.version+'.root')
 		signalFiles[ args.mass ] = [ TFile.Open(folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = '+str(args.mass)+' GeV', kRed]
@@ -1557,7 +1599,7 @@ if __name__ == '__main__':
 		[ '2D', 'Boosted', 'deltaEtaDijetVsjet2Tau31', '| #eta_{j1} - #eta_{j2} |', '2nd Leading jet #tau_{31} |', 0, 5, 1, 0, 1, 1, jetMassHTlabX, jetMassHTlabY],
 		[ '2D', 'Boosted', 'jet1Tau21VsRhoDDT', 'Leading jet #tau_{21}', 'Leading jet #rho\'', 0, 1, 1, -6, 10, 1, jetMassHTlabX, jetMassHTlabY],
 		[ '2D', 'Boosted', 'jet2Tau21VsRhoDDT', '2nd Leading jet #tau_{21}', '2nd Leading jet #rho\'', 0, 1, 1, -6, 10, 1, jetMassHTlabX, jetMassHTlabY],
-		[ '2D', 'Resolved', 'deltavsMassAve', 'Average dijet mass [GeV]', 'Delta', 100, 700, 20, -200, 1000, 20, jetMassHTlabX, jetMassHTlabY],
+		[ '2D', 'Resolved', 'deltavsMassAve', 'Average dijet mass [GeV]', 'Delta', 100, 1000, 20, -200, 1000, 20, jetMassHTlabX, jetMassHTlabY],
 		[ '2D', 'Resolved', 'massAveVsMinChi2', 'Average dijet mass [GeV]', 'Min( #chi^{2} )', 0, 1000, 10, 0, 5, 2, jetMassHTlabX, jetMassHTlabY],
 		[ '2D', 'Resolved', 'massAveVsMinDeltaR', 'Average dijet mass [GeV]', 'Min( #Delta R )', 0, 1000, 10, 0, 5, 2, jetMassHTlabX, jetMassHTlabY],
 		[ '2D', 'Resolved', 'massAveVsMinMassAsym', 'Average dijet mass [GeV]', 'Min( Mass Asym )', 0, 1000, 10, 0, 1, 1, jetMassHTlabX, jetMassHTlabY],
@@ -1677,7 +1719,7 @@ if __name__ == '__main__':
 		[ 'Norm', 'Boosted', 'subjetPtRatio', '', '', 1, '', '', True, False],
 		[ 'Norm', 'Boosted', 'jet1CosThetaStar', '', '', 1, '', '', False, False],
 		[ 'NormDATA', 'Resolved', 'massAsym', '', '', 1, '', '', False, False],
-		[ 'NormDATA', 'Resolved', 'deltaEta', '', '', 1, '', '', False, False],
+		[ 'NormDATA', 'Resolved', 'deltaEta', '', '', 2, '', '', False, False],
 		[ 'Norm', 'Resolved', 'minDeltaR', '', '', 1, '', '', False, False],
 		[ 'Norm', 'Resolved', 'minChi2', 0, 1, 1, '', '', False, False],
 		[ 'Norm', 'Resolved', 'minMassAsym', '', '', 1, '', '', False, False],
@@ -1731,7 +1773,7 @@ if __name__ == '__main__':
 	if 'signal' in args.process:
 		plotSignalShape( args.single+'_'+args.cut, 
 				( ( 10 if 'Resolved' in args.boosted else 5 ) if 'massAve' in args.single else 20), 
-				( massList if 'Boosted' in args.boosted else range( 200, ( 1100 if '2CSVv2M' in args.cut else 1300), 100 )),
+				( massList if 'Boosted' in args.boosted else range( 400, ( 1400 if '2CSVv2L' in args.cut else 1500), 100 )),
 				massWidthList,
 				False)
 
@@ -1739,7 +1781,7 @@ if __name__ == '__main__':
 		plotSignalAcceptance( 
 				folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p4_'+args.version+'.root', 
 				'massAve_'+args.cut, 
-				( massList if 'Boosted' in args.boosted else range( 200, 1300, 100 )),
+				( massList if 'Boosted' in args.boosted else range( 400, 1600, 100 )),
 				massWidthList,
 				False)
 
@@ -1753,7 +1795,7 @@ if __name__ == '__main__':
 
 	for i in Plots:
 		if args.process in '2D': 
-			#plot2D( dataFile, 'JetHT_Run2016', 1, args.grooming, i[0]+'_'+args.cut, i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10] )
+			plot2D( dataFile, 'JetHT_Run2016', 1, args.grooming, i[0]+'_'+args.cut, i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10] )
 			for sig in signalFiles: plot2D( signalFiles[ sig ][0], 'RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass), signalFiles[ sig ][1], args.grooming, i[0]+'_'+args.cut, i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10] )
 			for bkg in bkgFiles: plot2D( bkgFiles[ bkg ][0], bkg, bkgFiles[ bkg ][1], args.grooming, i[0]+'_'+args.cut, i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10] )
 			#plot2D( inputFileTTJets, 'TTJets', args.grooming, i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10] )
