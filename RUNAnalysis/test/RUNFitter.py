@@ -168,6 +168,7 @@ def rootFitter( inFile, hist, scale, fitFunctions, minX, maxX, rebinX, plot, log
 	fitParErrors = OrderedDict()
 	for fitFunc in fitFunctions:
 
+		#if ( 'gaus' in fitFunc[0].GetName() ): fitFunc[0].SetName( 'gaus'+hist )
 		#### giving initial values to fit
 		if( len(fitFunc[1])>0 ):
 			for k in range( len(fitFunc[1]) ): fitFunc[0].SetParameter(k, fitFunc[1][k])
@@ -177,7 +178,7 @@ def rootFitter( inFile, hist, scale, fitFunctions, minX, maxX, rebinX, plot, log
 		keepFitting = True
 		while keepFitting:
 			#finalHisto.Fit(fitFunc[0],"MIRS","",minX,maxX)
-			fitResults = TFitResultPtr( finalHisto.Fit( fitFunc[0],"MESR"+("" if 'QCDPtAll' in hist else "LL"),"",minX,maxX) )
+			fitResults = TFitResultPtr( finalHisto.Fit( fitFunc[0],"ESR"+("" if 'QCDPtAll' in hist else "LL"),"",minX,maxX) )
 			#### this is just a trick to keep fitting...
 			tmpFitFunc = finalHisto.GetFunction( fitFunc[0].GetName() )
 			chi2Ndf = tmpFitFunc.GetChisquare() / tmpFitFunc.GetNDF()
@@ -242,7 +243,7 @@ def rootFitter( inFile, hist, scale, fitFunctions, minX, maxX, rebinX, plot, log
 			del c1
 	
 	return [ fitParameters, fitParErrors, binContents, binfinalError, chi2Ndf, finalHisto, finalFitFunc, finalFitUp, finalFitDown, listFitErrors ]
-
+##############################################################
 
 
 def histoFunctionFit( nameHisto, initFitFunction, parameters, parErrors, massBin, massBinErr, minX, maxX, rebinX ):
@@ -292,7 +293,7 @@ def fitToHisto( nameHisto, initFitFunction, minX, maxX, rebinX ):
 
 	points = []
 	errPoints = []
-	for ibin in range( 0, newHisto.GetNbinsX() ):
+	for ibin in range( 1, newHisto.GetNbinsX()+1 ):
 		valIntegral = initFitFunction.Eval( newHisto.GetBinCenter(ibin) ) 
 		newHisto.SetBinContent( ibin, valIntegral )
 		newHisto.SetBinError( ibin, TMath.Sqrt(valIntegral) )
@@ -300,6 +301,10 @@ def fitToHisto( nameHisto, initFitFunction, minX, maxX, rebinX ):
 		errPoints.append( TMath.Sqrt(valIntegral) )
 
 	newHisto.SetBinErrorOption(TH1.kPoisson)
+	#c1 = TCanvas('c1', 'c1',  10, 10, 750, 500 )
+	#newHisto.Draw()
+	#c1.SaveAs(outputDir+hist+"_SignalPlusBkg_ResolvedAnalysis_"+args.version+"."+args.extension)
+	#del c1
 			
 	return newHisto, points, errPoints
 
@@ -387,7 +392,7 @@ def FitterCombination( inFileData, inFileBkg, inFileSignalName, hist, scale, bkg
 	bkgpoints = BkgParameters[2]
 	bkgpointsErr = BkgParameters[3]
 
-	if args.final: legend=TLegend(0.70,0.65,0.95,0.90)
+	if args.final: legend=TLegend(0.60,0.63,0.95,0.88)
 	else: legend=TLegend(0.18,0.15,0.50,0.35)
 	legend.SetFillStyle(0)
 	legend.SetTextSize(0.03)
@@ -423,7 +428,7 @@ def FitterCombination( inFileData, inFileBkg, inFileSignalName, hist, scale, bkg
 		mainP4Down = DataParameters[8]
 		functionErr = DataParameters[9]
 
-		legend.AddEntry( hMain, ('PseudoExperiment' if args.pseudoExperiment else 'Data'), 'ep' )
+		legend.AddEntry( hMain, ('PseudoExperiment' if args.pseudoExperiment else 'Data - '+('btagged' if 'UDD323' in args.decay else 'inclusive')+' selection'), 'ep' )
 		legend.AddEntry( mainP4, ( args.func if args.comparison else 'Background Fit'), 'l' )
 		legend.AddEntry( mainP4Up, ( args.func+" Fit Error" if args.comparison else 'Fit Error'), 'l' )
 
@@ -446,45 +451,46 @@ def FitterCombination( inFileData, inFileBkg, inFileSignalName, hist, scale, bkg
 			signalFuncs = OrderedDict()
 			hSBPulls = OrderedDict()
 			hSBResiduals = OrderedDict()
-			for imass in [ args.mass, 400 ]:
+			for imass in [ args.mass, 600 ]:
+				signalMassWidth = int(2*( 10.48 + ( 0.04426 * imass) ))
+				lowEdgeWindow = massBins[min(range(len(massBins)), key=lambda x:abs(massBins[x]-int(imass-2*signalMassWidth)))]
+				highEdgeWindow = massBins[min(range(len(massBins)), key=lambda x:abs(massBins[x]-int(imass+2*signalMassWidth)))]
 				signalFileName = inFileSignalName.replace(str(args.mass), str(imass) )
+				tmpHistName = hist+('RPVStopStopToJets_'+args.decay+'_M-'+str(imass) if args.miniTree else '')
 				SignalParameters = rootFitter( TFile( signalFileName ), 
-						hist+('RPVStopStopToJets_'+args.decay+'_M-'+str(imass) if args.miniTree else ''), 
+						tmpHistName, 
 						scale, 
-						[ [ fitFunctions['gaus'][0], [ 1, imass, 50 ] ] ], 
-						imass-(100 if (imass < 800 ) else 200 ), 
-						imass+(100 if (imass < 800 ) else 200 ), 
+						[ [ fitFunctions['gaus'][0].Clone(), [ 1, imass, 50 ] ] ], 
+						lowEdgeWindow, 
+						highEdgeWindow,
 						rebinX, 
 						True,
 						False )
-				sigpoints = SignalParameters[2]
-				sigpointsErr = SignalParameters[3]
-				hSig, signalFuncs[ imass ] = histoFunctionFit( 'RPVStopStopToJets_'+args.decay+'_M-'+str(imass), 
-									fitFunctions['gaus'][0], 
-									SignalParameters[0], SignalParameters[1], 
-									sigpoints, sigpointsErr, 
-									imass-(100 if (imass < 800 ) else 200 ), 
-									imass+(100 if (imass < 800 ) else 200 ),
-									rebinX )
+				signalFunction = SignalParameters[6] 
+				signalFunction.SetTitle( str(imass) )
+				signalFuncs[ imass ] = signalFunction
 				legend.AddEntry( signalFuncs[ imass ], 'M_{#tilde{t}} = '+str(imass)+' GeV', 'l' )
 		
 				##### for plotting purposes, signal + bkg
 				signalPlusBkg = TF1( 'signalPlusBkg'+str(imass), 'gaus+'+bkgFunction[0][0].GetName() )
-				signalPlusBkg.SetParameter( 0, SignalParameters[0]['gaus'][0] ) 
-				signalPlusBkg.SetParError( 0, SignalParameters[1]['gaus'][0] ) 
-				signalPlusBkg.SetParameter( 1, SignalParameters[0]['gaus'][1] ) 
-				signalPlusBkg.SetParError( 1, SignalParameters[1]['gaus'][1] ) 
-				signalPlusBkg.SetParameter( 2, SignalParameters[0]['gaus'][2] ) 
-				signalPlusBkg.SetParError( 2, SignalParameters[1]['gaus'][2] ) 
+				signalPlusBkg.SetParameter( 0, signalFuncs[ imass ].GetParameter( 0 ) ) 
+				signalPlusBkg.SetParError( 0, signalFuncs[ imass ].GetParError( 0 ) ) 
+				signalPlusBkg.SetParameter( 1, signalFuncs[ imass ].GetParameter( 1 ) ) 
+				signalPlusBkg.SetParError( 1, signalFuncs[ imass ].GetParError( 1 ) ) 
+				signalPlusBkg.SetParameter( 2, signalFuncs[ imass ].GetParameter( 2 ) ) 
+				signalPlusBkg.SetParError( 2, signalFuncs[ imass ].GetParError( 2 ) ) 
 				for i in range(0, len(DataParameters[0][args.func]) ): 
-					signalPlusBkg.SetParameter( i+3, DataParameters[0][args.func][i] )
-					signalPlusBkg.SetParError( i+3, DataParameters[1][args.func][i] )
-				hSignalPlusBkg, signalPlusBkgPoints, signalPlusBkgPointsErrors = fitToHisto( 'hSignalPlusBkg'+str(imass), signalPlusBkg, minX, maxX, rebinX )
+					signalPlusBkg.SetParameter( i+3, mainP4.GetParameter(i) )# DataParameters[1][args.func][i] )
+					signalPlusBkg.SetParError( i+3, mainP4.GetParError(i) )# DataParameters[1][args.func][i] )
+				hSignalPlusBkg, signalPlusBkgPoints, signalPlusBkgPointsErrors = fitToHisto( 'hSignalPlusBkg'+str(imass), 
+														signalPlusBkg, 
+														minX, maxX, rebinX )
+
 				hSBPulls[imass], hSBResiduals[imass], sbchi2, sbNDF = residualAndPulls(signalPlusBkgPoints, 
 													signalPlusBkgPointsErrors, 
 													mainP4, hMain, 
 													minX, maxX, rebinX, 
-													extraName="SB" )
+													extraName="SB"+str(imass) )
 
 	else:
 		hMain, mainP4 = histoFunctionFit( 'QCD'+args.qcd+'All', 
@@ -574,6 +580,7 @@ def FitterCombination( inFileData, inFileBkg, inFileSignalName, hist, scale, bkg
 			funcDict[iF].SetLineColor(color)
 			funcDict[iF].Draw("same")
 			color+=1
+			if (color==4): color=6
 	'''
 	#if (not args.bkgAsData) or (args.pseudoExperiment) or (args.comparison):
 		#qcdMCP4.SetLineColor( kMagenta )
@@ -1589,11 +1596,11 @@ if __name__ == '__main__':
 			'exp( (@1*log(@0/13000)) + (@2*pow(log(@0/13000),2)) + ( @3*pow(log(@0/13000),3)) + ( @4*pow(log(@0/13000),4)))']
 
 	fitFunctions['altExpo3'] = [ TF1("altExpo3", "[0]*pow( ( 1 - (x/13000) ), [2] )/pow(x,[1])", 0, 2000 ), 
-			[], #[ 1000, -0.1, 50 ],
+			[15906., 0.157, 114.], 
 			'pow( (1 - (@0/13000) ), @2 )/ pow(@0,@1)']
 
 	fitFunctions['altExpo4'] = [ TF1("altExpo4", "[0]*pow( ( 1 - (x/13000) + [3]*x*x/TMath::Power(13000,2) ), [2] )/pow(x,[1])", 0, 2000 ), 
-			[], #[ 1000, -0.1, 50, 0 ],
+			[16., -1.27, 179., 1.98], #[ 1000, -0.1, 50, 0 ],
 			'pow( (1 - (@0/13000) + (@3*pow(@0,2)/pow(13000,2)) ), @2 )/ pow(@0,@1)']
 
 	fitFunctions['altExpo5'] = [ TF1("altExpo5", "[0]*pow( ( 1 - (x/13000) + [3]*x*x/TMath::Power(13000,2) - [4]*x*x*x/TMath::Power(13000,3) ), [2] )/pow(x,[1])", 0, 2000 ), 
@@ -1601,11 +1608,11 @@ if __name__ == '__main__':
 			'pow( (1 - (@0/13000) + (@3*pow(@0,2)/pow(13000,2) - (@4*pow(@0,3)/pow(13000,3)) ), @2 )/ pow(@0,@1)']
 
 	fitFunctions['expoPoli3'] = [ TF1("expoPoli3", "exp([0]+[1]*x+[2]*x*x)", 0, 2000 ), 
-			[ 5, -0.001, -0.000001 ],
+			[8., -0.009, -9e-09],
 			'exp( (@1*@0) + (@2*pow(@0,2)) )']
 
 	fitFunctions['expoPoli4'] = [ TF1("expoPoli4", "exp([0]+[1]*x+[2]*TMath::Power(x,2)+[3]*TMath::Power(x,3))", 0, 2000 ), 
-			[ 1, -0.001, -0.0000001, 0.000000001 ],
+			[-67.84, -0.061, -4.28e-05, 7.25e-08],
 			'exp( (@1*@0) + (@2*pow(@0,2)) + (@3*pow(@0,3)))']
 
 	fitFunctions['expoPoli5'] = [ TF1("expoPoli5", "exp([0]+[1]*x+[2]*TMath::Power(x,2)+[3]*TMath::Power(x,3)+[4]*TMath::Power(x,4))", 0, 2000 ), 
@@ -1620,18 +1627,19 @@ if __name__ == '__main__':
 
 	fitFunctions['atlas4'] = [ 
 			TF1("atlas4", "[0]* TMath::Power((1-TMath::Power(x/13000.0,0.33)),[1]) / TMath::Power(x/13000.0,[2]+[3]*(TMath::Power( TMath::Log(x/13000.), 2)))",0,2000), 
-			[  ], 
+			[9.75e-13, 2.84, 12., -0.26],
 			'pow(1-pow(@0/13000,0.33),@1)/pow(@0/13000, (@2+@3*pow( log(@0/13000.) ,2)))' ]
 
 	#### https://arxiv.org/pdf/1110.5302.pdf
 	fitFunctions['CDF3'] = [ 
 			TF1("CDF3", "[0]* TMath::Power( (1-(x/13000.0) ),[2]) / TMath::Power(x,[1])",0,2000), 
-			[  ], 
+			[3791209., 1.21, 87.54],
 			'pow(1-@0/13000.0,@2)/pow(@0,@1)' ]
 
 	fitFunctions['CDF4'] = [ 
 			TF1("CDF4", "[0]* TMath::Power( (1-(x/13000.0) + [3]*TMath::Power(x/13000.0,2) ),[2]) / TMath::Power(x,[1])",0,2000), 
-			[ 1, -1, 100, 1 ], 
+			#[ 1, -1, 100, 1 ], 
+			[13., -1.31, 181., 2.01],
 			'pow((1-@0/13000.0+@3*pow(@0/13000,2)),@2)/pow(@0,@1)' ]
 
 	fitFunctions['Landau'] = [ 
@@ -1682,6 +1690,7 @@ if __name__ == '__main__':
 				hist, 
 				scale, 
 				( [ fitFunctions[args.func], fitFunctions['P4'], fitFunctions['P5'] ] if args.comparison else [fitFunctions[args.func]] ), 
+				#[ fitFunctions[args.func], fitFunctions['CDF3'], fitFunctions['expoPoli3'], fitFunctions['altExpo3'], fitFunctions['atlas4'] ], 
 				#160, 1700, 
 				#20 
 				350, ( 1477 if 'UDD323' in args.decay else 1639),   ##259

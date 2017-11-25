@@ -12,13 +12,15 @@ gROOT.SetBatch()
 
 def main():
 
-     #inputFileWorkspace = TFile("Rootfiles/workspace_RPVStopStopToJets_UDD312_M-300_Resolved_delta_BiasTest_v08p0.root") 
-     inputFileWorkspace = TFile("Rootfiles/workspace_RPVStopStopToJets_UDD312_M-700_Resolved_delta_v09p1.root") 
+     inputFileWorkspaceBkg = TFile("Rootfiles/workspace_RPVStopStopToJets_UDD312_M-300_Resolved_delta_BiasTest_QCD_massWindow_v09p1.root") 
+     inputFileWorkspace = TFile("Rootfiles/workspace_RPVStopStopToJets_UDD312_M-300_Resolved_delta_QCD_massWindow_v09p1.root") 
+     #inputFileWorkspace = TFile("Rootfiles/workspace_RPVStopStopToJets_UDD312_M-300_Resolved_delta_massWindow_v09p1.root") 
      #inputFileWorkspace = TFile("test.root") 
 
      workspace = inputFileWorkspace.Get("myWS")
-     #workspace = inputFileWorkspace.Get("bkgWS")
      workspace.Print()
+     workspaceBkg = inputFileWorkspaceBkg.Get("bkgWS")
+     workspaceBkg.Print()
 
      mjj = workspace.var("mass")
      #mjj = workspace.var("massAve")
@@ -30,7 +32,7 @@ def main():
      mjj2.Print()
      '''
 
-     background = workspace.data("background")
+     #background = workspace.data("background")
 #     backgroundUp = workspace.data("background__BkgUncUp")
 #     backgroundDown = workspace.data("background__BkgUncDown")
 #     backgroundStatUp = workspace.data("background__BkgStatUncUp")
@@ -42,8 +44,8 @@ def main():
 #     data.Print()
      #signal.Print()
 
-     data_TH1_fineBinning = data.createHistogram("data_TH1_fineBinning",mjj)    
-     data_TH1_fineBinning.SetLineColor(1)
+#     data_TH1_fineBinning = data.createHistogram("data_TH1_fineBinning",mjj)    
+#     data_TH1_fineBinning.SetLineColor(1)
 #     signal_TH1_fineBinning = signal.createHistogram("signal_TH1_fineBinning",mjj)    
 #     signalUp_TH1_fineBinning = signalUp.createHistogram("signalUp_TH1_fineBinning",mjj)    
 #     signalUp_TH1_fineBinning.SetLineColor(kRed)
@@ -62,8 +64,9 @@ def main():
      canvas.SetLogy()
      xframe = workspace.var("mass").frame()
      data.plotOn(xframe)
-     workspace.pdf("background").plotOn(xframe)
-     #workspace.pdf("landau_pdf").plotOn(xframe)
+     workspaceBkg.pdf("P3_pdf").plotOn(xframe,RooFit.LineColor(kRed))
+     #workspaceBkg.pdf("Landau_pdf").plotOn(xframe)
+     workspaceBkg.pdf("atlas_pdf").plotOn(xframe, RooFit.LineColor(kGreen))
      workspace.pdf("signal").plotOn(xframe)
      xframe.Draw()
 
