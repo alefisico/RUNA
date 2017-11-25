@@ -49,13 +49,13 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 
 	### enlisting masses available
 	if 'Boosted' in args.boosted:
-		if '312' in args.decay: massList = range(80, 260, 20) + [ 300, 350 ] 
-		else:  massList = range(80, 300, 20) + [ 300, 350 ]
+		if '312' in args.decay: massList = range(80, 260, 20) + [ 300, 350, 400 ] 
+		else:  massList = range(80, 300, 20) + [ 300, 350, 400 ]
 		massWindow = 30 
 	else:
 		if '312' in args.decay: 
-			massList = [ 200, 220, 240 ] + range( 300, 1050, 50 ) + range( 1100, 1300, 100 ) 
-		else: massList = range( 200, 300, 20 ) + range( 300, 1050, 50 ) + range( 1100, 1300, 100 ) 
+			massList = range( 400, 1050, 50 ) + range( 1100, 1300, 100 ) 
+		else: massList = range( 400, 1050, 50 ) + range( 1100, 1300, 100 ) 
 
 	nomArray = []
 	nomArrayErr = []
@@ -94,7 +94,7 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 			histos[ 'Nominal' ] = rootFile.Get( args.boosted+'AnalysisPlots/'+name ) 
 			histos[ 'Up' ] = rootFile.Get( args.boosted+'AnalysisPlots'+args.unc+'Up/'+name )
 			histos[ 'Down' ] = rootFile.Get( args.boosted+'AnalysisPlots'+args.unc+'Down/'+name )
-
+		print histos[ 'Nominal' ]
 		#scale = 1 / (scaleFactor( 'RPVStopStopToJets_UDD312_M-'+str(xmass) ) )  ## removing scaling of histogram
 		for k in histos: 
 			#histos[ k ].Scale( scale )
@@ -146,6 +146,7 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 		errorIntNom = Double(0)
 		eventsInWindow = histos['Nominal'].IntegralAndError( lowEdgeWindow, highEdgeWindow, errorIntNom )
 		failedEvents = totalNumber - eventsInWindow
+		print failedEvents, eventsInWindow, errorIntNom
 		accXeffErr = sqrt( (1/failedEvents) + (1/eventsInWindow) ) * failedEvents * eventsInWindow / pow( ( totalNumber ), 2 )
 		nomArray.append( eventsInWindow / totalNumber ) 
 		nomArrayErr.append( accXeffErr )

@@ -386,7 +386,7 @@ def createGausShapes( massList, name, xmin, xmax, rebinX, labX, labY, log, plot=
 		htmpSignal = hSignal.Clone()
 		htmpSignal.Reset()
 
-		sigGaus = TF1( 'sigGaus', 'gaus', 0, 500 )
+		sigGaus = TF1( 'sigGaus', 'gaus', 0, 1000 )
 		for i in range(2): 
 			sigGaus.SetParameter( 1, xmass )
 			hSignal.Fit( sigGaus, 'MIR', '', xmass-30, xmass+30)
@@ -424,9 +424,10 @@ def createGausShapes( massList, name, xmin, xmax, rebinX, labX, labY, log, plot=
 
 	constGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', constList), array('d', zeroList ), array( 'd', constErrList) )
 	canConstant = TCanvas('Constant', 'Constant',  10, 10, 750, 500 )
+	canConstant.SetLogy()
 	gStyle.SetOptFit(1)
-	constFit = TF1("constFit", "pol4", 60, 400 )
-	for i in range(3): constGraph.Fit( constFit, 'MIR', '', 60, 300 )
+	constFit = TF1("constFit", "pol5", 60, 500 )
+	for i in range(3): constGraph.Fit( constFit, 'MIR', '', 80, 450 )
 	constGraph.SetMarkerStyle( 21 )
 	constGraph.GetXaxis().SetTitle('Average pruned mass [GeV]')
 	constGraph.GetYaxis().SetTitle('Constant parameter')
@@ -462,7 +463,7 @@ def createGausShapes( massList, name, xmin, xmax, rebinX, labX, labY, log, plot=
 	can1.SaveAs( 'Plots/signalMean_'+args.decay+'_'+args.cutTop+'_'+args.version+'.'+args.extension )
 
 	sigmaGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', sigmaList), array('d', zeroList ), array( 'd', sigmaErrList) )
-	sigmaFit = TF1("sigmaFit", "pol2", 0, 400 )
+	sigmaFit = TF1("sigmaFit", "pol3", 80, 400 )
 	for i in range(3): sigmaGraph.Fit( sigmaFit, 'MIR' )
 	canSigma = TCanvas('SigmaGaus', 'SigmaGaus',  10, 10, 750, 500 )
 	gStyle.SetOptStat(1)
@@ -496,10 +497,10 @@ def createGausShapes( massList, name, xmin, xmax, rebinX, labX, labY, log, plot=
 
 	dummy2 = 1
 	canNewGaus = TCanvas('canNewGaus', 'canNewGaus',  10, 10, 750, 500 )
-	canNewGaus.SetLogy()
+	#canNewGaus.SetLogy()
 	newGausFunct[ 80 ].Draw()
 	newGausFunct[ 80 ].GetXaxis().SetRangeUser( 50, 450  )
-	newGausFunct[ 80 ].SetMinimum(0.001)
+	#newGausFunct[ 80 ].SetMinimum(0.001)
 	for x in newGausFunct:
 		if x != 80: 
 			newGausFunct[ x ].SetLineColor(dummy2)
@@ -559,7 +560,8 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 		#hDataD = dataFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016_D')
 		hDataD = rebin( hDataD, ( args.reBin if (args.reBin>0) else 'reso' ) )
 	else:
-		newBkgHistoFile = datahistosFile.replace( 'V2p4', 'V2p4_combined'+(args.numBtags if 'UDD323' in args.decay else '')+'_'+args.cutTop+'_ABCDEst' )
+		newBkgHistoFile = datahistosFile.replace( 'V2p4', 'V2p4_combinedBD'+(args.numBtags if 'UDD323' in args.decay else '')+'_'+args.cutTop+'_ABCDEst' )
+		#newBkgHistoFile = datahistosFile.replace( 'V2p4', 'V2p4_combinedBD'+'_'+args.cutTop+'_ABCDEst' )
 		newBkgFile = TFile( newBkgHistoFile )
 		hDataRatioBD = newBkgFile.Get('massAve_prunedMassAsymVsdeltaEtaDijet_DATAMinusResBkg_RatioBD' )
 		if (hDataRatioBD.GetBinWidth( 15 ) != hDataC.GetBinWidth( 15 ) ): 
@@ -590,13 +592,15 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 			highEdgeWindow = int(signalMaximum/args.reBin + 2*( int( signalMassWidth )/args.reBin ))+2
 		else:
 			peak = min(range(len(boostedMassAveBins)), key=lambda x:abs(boostedMassAveBins[x]-int(signalMaximum)))+1
-			lowEdgeWindow = peak - 2
-			highEdgeWindow = peak + 3
+			lowEdgeWindow = peak - (2 if (signalMass < 200 ) else 1 )
+			highEdgeWindow = peak + (3 if (signalMass < 200 ) else 2 )
+			#lowEdgeWindow = min(range(len(boostedMassAveBins)), key=lambda x:abs(boostedMassAveBins[x]-int(signalMaximum-2*signalMassWidth)))
+			#highEdgeWindow = min(range(len(boostedMassAveBins)), key=lambda x:abs(boostedMassAveBins[x]-int(signalMaximum+2*signalMassWidth)))
 	else: 
 		signalMassWidht = 20 ## dummy
 		lowEdgeWindow = 30
 		highEdgeWindow = 40
-	print '%'*30, signalMassWidth, lowEdgeWindow*args.reBin, highEdgeWindow*args.reBin
+	print '%'*30, signalMassWidth, lowEdgeWindow, highEdgeWindow, boostedMassAveBins[lowEdgeWindow], boostedMassAveBins[highEdgeWindow], lowEdgeWindow*args.reBin, highEdgeWindow*args.reBin
 
 	#### test
 	#for ibin in range(1, hSignal.GetNbinsX()+1):
@@ -658,7 +662,7 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 			except ZeroDivisionError: mcbkgstatunc = 1.8
 			accDict[ sample.lower() ] = [ round(mcbkgacc,3), round(mcbkgstatunc,3) ]
 		if args.ttbarAsSignal: del accDict[ 'TT' ]
-		#print ibin, sigAcc, accDict, contData
+		print ibin, sigAcc, accDict, contData
 				
 
 		######################## Creating  datacards
@@ -715,7 +719,7 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 		subprocess.call(  combineCards+' > '+statDir+'/Datacards/datacard_'+outputName+'_bins.txt', shell=True  )
 		print ' |----> Running combine -M Asymptotic:'
 		newOutputName = outputName.replace('pruned', 'Boosted')
-		subprocess.call( 'combine -M Asymptotic '+statDir+'/Datacards/datacard_'+outputName+'_bins.txt --rMax 0.1 -n _'+newOutputName, shell=True )
+		subprocess.call( 'combine -M Asymptotic '+statDir+'/Datacards/datacard_'+outputName+'_bins.txt --rMax 0.5 -n _'+newOutputName, shell=True )
 		#subprocess.call( 'combine -M Asymptotic '+statDir+'/Datacards/datacard_'+outputName+'_bins.txt -n _'+outputName+'_2sigma', shell=True )
 		subprocess.call( 'mv higgsCombine* '+statDir, shell=True )
 		print ' |----> Done. Have a wonderful day. :D'
@@ -774,7 +778,13 @@ if __name__ == '__main__':
 		for f in files: os.remove(f)
 
 	if 'gaus' in args.job: 
-		gausFunctList = createGausShapes( range( 80, 200, 20 ), 'massAve_'+( 'deltaEtaDijet' if 'UDD312' in args.decay else args.numBtags ), 0, 500, args.reBin, 0.85, 0.45, False, plot=False )
+		gausFunctList = createGausShapes( 
+						range( 80, 260, 20 )+[300, 350, 400, 450], 
+						'massAve_'+( 'deltaEtaDijet' if 'UDD312' in args.decay else args.numBtags ), 
+						0, 500, args.reBin, 
+						0.85, 0.45, 
+						False, 
+						plot=True )
 		massList = range( 80, 360, 20 )
 		sys.exit(0)
 		jesUncAcc = [1]*len(massList)
@@ -784,24 +794,24 @@ if __name__ == '__main__':
 
 		uncDict = {}
 		##      mass   =  btag, 	JES, 	JER, 	PU, 	PDF,	UDD323 JES, 	JER, 	PU, 	PDF	
-		uncDict[ 80 ] = [ 0.049, 	0.025, 	0.039, 	0.001,	0.112,		0.025, 	0.038, 	0.001, 	0.107,	 ]
-		uncDict[ 100 ] = [ 0.005, 	0.023, 	0.035, 	0.001,	0.106,		0.024, 	0.036, 	0.001, 	0.108,	 ]
-		uncDict[ 120 ] = [ 0.052, 	0.022, 	0.035, 	0.001,	0.106,		0.023, 	0.031, 	0.001, 	0.108,	 ]
-		uncDict[ 140 ] = [ 0.054, 	0.023, 	0.036, 	0.002,	0.115,		0.027, 	0.042, 	0.005, 	0.122,	 ]
-		uncDict[ 160 ] = [ 0.057, 	0.021, 	0.038, 	0.004,	0.12,		0.023, 	0.034, 	0.006, 	0.133,	 ]
-		uncDict[ 180 ] = [ 0.058, 	0.018, 	0.03, 	0.001,	0.123,		0.019, 	0.026, 	0.001, 	0.11,	 ]
-		uncDict[ 200 ] = [ 0.065, 	0.013, 	0.02, 	0.001,	0.137,		0.017, 	0.025, 	0.004, 	0.155,	 ]
-		uncDict[ 220 ] = [ 0.069, 	0.014, 	0.017, 	0.003,	0.128,		0.018, 	0.013, 	0.005, 	0.156,	 ]
-		uncDict[ 240 ] = [ 0.077, 	0.012, 	0.021, 	0.008,	0.172,		0.014, 	0.015, 	0.002, 	0.164,	 ]
-		uncDict[ 260 ] = [ 0.078, 	0., 	0., 	0.,	0.,		0.011, 	0.009, 	0.007, 	0.182,	 ]
-		uncDict[ 280 ] = [ 0.084, 	0., 	0., 	0., 	0.,		0.025, 	0.009, 	0.012, 	0.209,	 ]
-		uncDict[ 300 ] = [ 0.088, 	0.012, 	0.014, 	0.001, 	0.162,		0.022, 	0.014, 	0.004, 	0.17,	 ]
-		uncDict[ 350 ] = [ 0.110, 	0.018, 	0.014, 	0.004, 	0.206,		0.015, 	0.003, 	0.004, 	0.223,	 ]
-		uncDict[ 400 ] = [ 0.110, 	0.018, 	0.014, 	0.004, 	0.206,		0.015, 	0.003, 	0.004, 	0.223,	 ]
+		uncDict[ 80 ] = [ 0.049, 	0.025, 	0.039, 	0.021,	0.112,		0.025, 	0.038, 	0.021, 	0.107,	 ]
+		uncDict[ 100 ] = [ 0.005, 	0.023, 	0.035, 	0.011,	0.106,		0.024, 	0.036, 	0.011, 	0.108,	 ]
+		uncDict[ 120 ] = [ 0.052, 	0.022, 	0.035, 	0.016,	0.106,		0.023, 	0.031, 	0.016, 	0.108,	 ]
+		uncDict[ 140 ] = [ 0.054, 	0.023, 	0.036, 	0.009,	0.115,		0.027, 	0.042, 	0.009, 	0.122,	 ]
+		uncDict[ 160 ] = [ 0.057, 	0.021, 	0.038, 	0.010,	0.12,		0.023, 	0.034, 	0.010, 	0.133,	 ]
+		uncDict[ 180 ] = [ 0.058, 	0.018, 	0.03, 	0.007,	0.123,		0.019, 	0.026, 	0.007, 	0.11,	 ]
+		uncDict[ 200 ] = [ 0.065, 	0.013, 	0.02, 	0.009,	0.137,		0.017, 	0.025, 	0.009, 	0.155,	 ]
+		uncDict[ 220 ] = [ 0.069, 	0.014, 	0.017, 	0.005,	0.128,		0.018, 	0.013, 	0.005, 	0.156,	 ]
+		uncDict[ 240 ] = [ 0.077, 	0.012, 	0.021, 	0.017,	0.172,		0.014, 	0.015, 	0.017, 	0.164,	 ]
+		uncDict[ 260 ] = [ 0.078, 	0., 	0., 	0.,	0.,		0.011, 	0.009, 	0.010, 	0.182,	 ]
+		uncDict[ 280 ] = [ 0.084, 	0., 	0., 	0., 	0.,		0.025, 	0.009, 	0.010, 	0.209,	 ]
+		uncDict[ 300 ] = [ 0.088, 	0.012, 	0.014, 	0.004, 	0.162,		0.022, 	0.014, 	0.004, 	0.17,	 ]
+		uncDict[ 350 ] = [ 0.110, 	0.018, 	0.014, 	0.003, 	0.206,		0.015, 	0.003, 	0.003, 	0.223,	 ]
+		uncDict[ 400 ] = [ 0.110, 	0.018, 	0.014, 	0.022, 	0.206,		0.015, 	0.003, 	0.022, 	0.223,	 ]
 		uncDict[ 450 ] = [ 0.110, 	0.018, 	0.014, 	0.004, 	0.206,		0.015, 	0.003, 	0.004, 	0.223,	 ]
 		uncDict[ 500 ] = [ 0.110, 	0.018, 	0.014, 	0.004, 	0.206,		0.015, 	0.003, 	0.004, 	0.223,	 ]
-		uncDict[ 550 ] = [ 0.110, 	0.018, 	0.014, 	0.004, 	0.206,		0.015, 	0.003, 	0.004, 	0.223,	 ]
-		uncDict[ 600 ] = [ 0.110, 	0.018, 	0.014, 	0.004, 	0.206,		0.015, 	0.003, 	0.004, 	0.223,	 ]
+		#uncDict[ 550 ] = [ 0.110, 	0.018, 	0.014, 	0.004, 	0.206,		0.015, 	0.003, 	0.004, 	0.223,	 ]
+		#uncDict[ 600 ] = [ 0.110, 	0.018, 	0.014, 	0.004, 	0.206,		0.015, 	0.003, 	0.004, 	0.223,	 ]
 
 	if args.massValue > 0: massList = [ args.massValue ]
 	if args.signalInjec: massList = massList * 1000

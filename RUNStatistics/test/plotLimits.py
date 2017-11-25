@@ -73,6 +73,7 @@ def readCombineFile( listMass, version ):
 			if tmp == 0.98: listDict[ '2sigma_up' ].append( tmpTree.limit * XS ) 
 			if tmp == -1: listDict[ 'observed' ].append( tmpTree.limit * XS )
 
+	print len(listDict['expected']), len(listDict['2sigma_down'])
 	for i in range(0,len(listMass)):
 		masses_exp.append( listMass[len(listMass)-i-1] )
 		listDict[ '1sigma_down' ].append( listDict[ '1sigma_up' ][len(listMass)-i-1] )
@@ -635,8 +636,8 @@ if __name__ == '__main__':
 
 	elif "Boosted" in args.boosted:
 		#listMass = [ 80, 100, 120, 140, 160, 180, 200 ]
-		if '312' in args.decay:  listMass = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 300, 350, 400, 450, 500, 550]
-		else: listMass = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 280, 300, 350, 400, 450, 500, 550 ]
+		if '312' in args.decay:  listMass = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 300, 350, 400 ] #, 500, 550]
+		else: listMass = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 280, 300, 350, 400, 450 ] #, 500, 550 ]
 	else:
 		if '312' in args.decay:  
 			listMass = range( 80, 260, 20) + range( 300, 1050, 50 ) + range( 1000, 1600, 100 )

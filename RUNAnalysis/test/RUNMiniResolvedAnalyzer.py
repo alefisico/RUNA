@@ -271,20 +271,20 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 #
 #
 #
-##	### n-1 plots
-#	get2DHistoFromTree( fileSample, treeName,
-#			'massAve', 'delta1', 
-#			SF,
-#			presel + TCut( cuts.replace('&& (delta1>200)','').replace('&& (delta2>200)','') ), 
-#			allHistos[ 'deltavsMassAve_n-1_'+sample ], 
-#			1 ) #( 0.10 if 'JetHT' in sample else 1 ) )
-#	get2DHistoFromTree( fileSample, treeName,
-#			'massAve', 'delta2', 
-#			SF,
-#			presel + TCut( cuts.replace('&& (delta1>200)','').replace('&& (delta2>200)','') ), 
-#			allHistos[ 'deltavsMassAve_n-1_'+sample ], 
-#			1 ) #( 0.10 if 'JetHT' in sample else 1 ) )
-#
+#	### n-1 plots
+	get2DHistoFromTree( fileSample, treeName,
+			'massAve', 'delta1', 
+			SF,
+			presel + TCut( cuts.replace('&& (delta1>200)','').replace('&& (delta2>200)','') ), 
+			allHistos[ 'deltavsMassAve_n-1_'+sample ], 
+			1 ) #( 0.10 if 'JetHT' in sample else 1 ) )
+	get2DHistoFromTree( fileSample, treeName,
+			'massAve', 'delta2', 
+			SF,
+			presel + TCut( cuts.replace('&& (delta1>200)','').replace('&& (delta2>200)','') ), 
+			allHistos[ 'deltavsMassAve_n-1_'+sample ], 
+			1 ) #( 0.10 if 'JetHT' in sample else 1 ) )
+
 	getHistoFromTree( fileSample, treeName,
 			'massAsym',
 			SF,
@@ -492,7 +492,7 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 	"""docstring for myAnalyzer: creates new variables from tree """
 
-	outputFileName = 'Rootfiles/RUNMiniResolvedAnalysis_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p3.root' 
+	outputFileName = 'Rootfiles/RUNMiniResolvedAnalysis_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p12.root' 
 	#outputFileName = 'Rootfiles/RUNMiniResolvedAnalysis_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p1_4jetsOnly.root' 
 	outputFile = TFile( outputFileName, 'RECREATE' )
 
@@ -640,7 +640,7 @@ def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 		fraction = 10.*i/(1.*numEntries)
 		if TMath.FloorNint(fraction) > d: print str(10*TMath.FloorNint(fraction))+'%' 
 		d = TMath.FloorNint(fraction)
-		if ('JetHT' in sample) and ( dummy > subNumEntries ): break
+		#if ('JetHT' in sample) and ( dummy > subNumEntries ): break
 
 		Run		= events.run
 		Lumi    	= events.lumi
@@ -668,8 +668,8 @@ def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 				if (not 'JetHT' in sample) and ('RPV' in sample): tmpGenTLV.SetPtEtaPhiE( events.jetsGenPt[j], events.jetsGenEta[j], events.jetsGenPhi[j], events.jetsGenE[j] )
 				listOfJets.append( [ tmpTLV, events.jetsCSVv2[j], tmpGenTLV ] )
 
-		#if len(listOfJets) > 3:
-		if len(listOfJets) == 4:
+		if (len(listOfJets) > 3) and (HT>1000):
+		#if len(listOfJets) == 4:
 			numPreselection+=1
 			comb = range(0, len(listOfJets) )
 			possibleCombinations = []
@@ -775,7 +775,7 @@ def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 #	
 							if( ( (listOfPairsDeltaR[0][1] > 0.5426) or (listOfPairsDeltaR[1][1] > 0.5426) ) and ( (listOfPairsDeltaR[2][1] > 0.5426) or (listOfPairsDeltaR[3][1] > 0.5426) ) ):
 #								if varDeltaR[0] > 160: print str(Run)+':'+str(Lumi)+':'+str(NumEvent)
-								allHistos[ "massAve_cut2CSVv2M_"+sample ].Fill( varDeltaR[0], SF )
+								allHistos[ "massAve_cut2CSVv2L_"+sample ].Fill( varDeltaR[0], SF )
 #							if( ( (listOfPairsDeltaR[0][1] > 0.5426) or (listOfPairsDeltaR[1][1] > 0.5426) ) and ( (listOfPairsDeltaR[2][1] > 0.5426) or (listOfPairsDeltaR[3][1] > 0.5426) ) ):
 #								allHistos[ "massAve_cut2CSVv2L_"+sample ].Fill( varDeltaR[0], SF )
 #
