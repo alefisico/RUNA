@@ -1526,72 +1526,66 @@ if __name__ == '__main__':
 	if 'Resolved' in args.boosted: args.grooming = ''
 
 	if args.miniTree:
-		#dataFile = TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_JetHT_Run2016_80X_V2p4_'+args.version+'.root')
-		dataFile = TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_JetHT_Run2016_80X_V2p4_v09p10.root')
+		dataFile = TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_JetHT_Run2016_80X_V2p4_'+args.version+'.root')
+
 		signalFiles[ args.mass ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p4_'+args.version+'.root'), 
-				args.lumi, 
-				'M_{#tilde{t}} = '+str(args.mass)+' GeV', 
-				kRed]
+				args.lumi, 'M_{#tilde{t}} = '+str(args.mass)+' GeV', kRed]
+
 		if ( 'Norm' in args.process ) or ( 'DATA' in args.process ) or ( 'CF' in args.process ): 
 			otherMass = ( '180' if args.boosted == 'Boosted' else '600' )
 			signalFiles[ otherMass ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+otherMass+'_Moriond17_80X_V2p4_'+args.version+'.root'), 
-					args.lumi, 
-					'M_{#tilde{t}} = '+otherMass+' GeV', 
-					kRed+2]
+					args.lumi, 'M_{#tilde{t}} = '+otherMass+' GeV',  kRed+2]
 
 		if 'Boosted' in args.boosted: 
-			bkgFiles[ 'Dibosons' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_Dibosons_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'Dibosons', kMagenta+2 ]
-			bkgFiles[ 'DYJetsToQQ' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_DYJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi*1.45, 'DY + Jets', kOrange ]
-			bkgFiles[ 'WJetsToQQ' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_WJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi*1.35, 'W + Jets', 38 ]
-			bkgFiles[ 'TT' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_TT_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 't #bar{t} + Jets', kGreen+2 ]
-			#bkgFiles[ 'ZJetsToQQ' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_ZJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'Z + Jets', kOrange ]
-		bkgFiles[ 'QCD'+args.qcd+'All' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_QCD'+args.qcd+'All_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi*QCDSF, 'QCD multijets MC', kBlue-4 ]
+			bkgFiles[ 'Dibosons' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_Dibosons_Moriond17_80X_V2p4_'+args.version+'.root'), 
+						args.lumi, 'Dibosons', kMagenta+2 ]
+
+			bkgFiles[ 'DYJetsToQQ' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_DYJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'), 
+						args.lumi*1.45, 'DY + Jets', kOrange ]
+
+			bkgFiles[ 'WJetsToQQ' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_WJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'), 
+						args.lumi*1.35, 'W + Jets', 38 ]
+
+			bkgFiles[ 'TT' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_TT_Moriond17_80X_V2p4_'+args.version+'.root'), 
+						args.lumi, 't #bar{t} + Jets', kGreen+2 ]
+
+		bkgFiles[ 'QCD'+args.qcd+'All' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_QCD'+args.qcd+'All_Moriond17_80X_V2p4_'+args.version+'.root'), 
+						args.lumi*QCDSF, 'QCD multijets MC', kBlue-4 ]
+
 	else:
 		dataFile = TFile.Open(folder+'/RUNAnalysis_JetHT_Run2016_80X_V2p4_'+args.version+'.root')
-		signalFiles[ args.mass ] = [ TFile.Open(folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = '+str(args.mass)+' GeV', kRed]
-		#signalFiles[ args.mass ] = [ TFile.Open('~/mySpace/archiveEOS/Archive/v7414/RUNAnalysis_RPVSt350tojj_13TeV_pythia8RunIISpring15MiniAODv2-74X_Asympt25ns_v09_v01.root'), args.lumi, 'M_{#tilde{t}} = '+str(args.mass)+' GeV', kRed]
+
+		signalFiles[ args.mass ] = [ TFile.Open(folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_80X_V2p4_'+args.version+'.root'), 
+						args.lumi, 'M_{#tilde{t}} = '+str(args.mass)+' GeV', kRed]
+
 		if ( 'Norm' in args.process ) or ( 'DATA' in args.process ) or ( 'CF' in args.process ): 
-			#signalFiles[ 500 ] = [ TFile.Open(folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(500)+'_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = '+str(500)+' GeV', kRed]
 			otherMass = ( 180 if args.boosted == 'Boosted' else 700 )
-			#signalFiles[ otherMass ] = [ TFile.Open(folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(otherMass)+'_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = '+str(otherMass)+' GeV', kRed]
-			#signalFiles[ '800' ] = [ TFile.Open('~/mySpace/archiveEOS/Archive/v7414/RUNAnalysis_RPVStopStopToJets_UDD312_M-800-madgraph_RunIISpring15MiniAODv2-74X_Asympt25ns_v09_v03.root'), args.lumi, 'M_{#tilde{t}} = 800 GeV', kRed]
+			signalFiles[ otherMass ] = [ TFile.Open(folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(otherMass)+'_80X_V2p4_'+args.version+'.root'), 
+						args.lumi, 'M_{#tilde{t}} = '+str(otherMass)+' GeV', kRed]
+
 		if 'Boosted' in args.boosted: 
-			bkgFiles[ 'Dibosons' ] = [ TFile.Open(folder+'/RUNAnalysis_Dibosons_80X_V2p4_'+args.version+'.root'), args.lumi , 'Dibosons', kMagenta+2 ]
-			bkgFiles[ 'DYJetsToQQ' ] = [ TFile.Open(folder+'/RUNAnalysis_DYJetsToQQ_80X_V2p4_'+args.version+'.root'), args.lumi*1.45, 'DY + Jets', kOrange ]
-			bkgFiles[ 'WJetsToQQ' ] = [ TFile.Open(folder+'/RUNAnalysis_WJetsToQQ_80X_V2p4_'+args.version+'.root'), args.lumi*1.35, 'W + Jets', 38 ]
-			bkgFiles[ 'TT' ] = [ TFile.Open(folder+'/RUNAnalysis_TT_80X_V2p4_'+args.version+'.root'), args.lumi, 't #bar{t} + Jets', kGreen+2 ]
-			#bkgFiles[ 'ZJetsToQQ' ] = [ TFile.Open(folder+'/RUNAnalysis_ZJetsToQQ_80X_V2p4_'+args.version+'.root'), args.lumi, 'Z + Jets', kOrange ]
-			#bkgFiles[ 'WWTo4Q' ] = [ TFile.Open(folder+'/RUNAnalysis_WWTo4Q_80X_V2p4_'+args.version+'.root'), args.lumi , 'WW (had)', kMagenta+2 ]
-			#bkgFiles[ 'ZZTo4Q' ] = [ TFile.Open(folder+'/RUNAnalysis_ZZTo4Q_80X_V2p4_'+args.version+'.root'), args.lumi, 'ZZ (had)', kOrange+2 ]
-			#bkgFiles[ 'WZ' ] = [ TFile.Open(folder+'/RUNAnalysis_WZ_80X_V2p4_'+args.version+'.root'), args.lumi, 'WZ', kCyan ]
-		bkgFiles[ 'QCD'+args.qcd+'All' ] = [ TFile.Open(folder+'/RUNAnalysis_QCD'+args.qcd+'All_80X_V2p4_'+args.version+'.root'), args.lumi*QCDSF, 'QCD'+args.qcd+'', kBlue-4 ]
-		#bkgFiles[ 'QCDPtAll' ] = [ TFile.Open(folder+'/RUNAnalysis_QCDHTAll_80X_V2p4_'+args.version+'.root'), args.lumi*QCDSF, 'QCD'+args.qcd+'', kBlue-4 ]
-		#bkgFiles[ 'QCD'+args.qcd+'All' ] = [ TFile.Open('~/mySpace/archiveEOS/Archive/v7414/RUNAnalysis_QCDPtAll_RunIISpring15MiniAODv2-74X_Asympt25ns_v09_v01.root'), args.lumi*QCDSF, 'QCD'+args.qcd+'', kBlue-4 ]
+			bkgFiles[ 'Dibosons' ] = [ TFile.Open(folder+'/RUNAnalysis_Dibosons_80X_V2p4_'+args.version+'.root'), 
+							args.lumi , 'Dibosons', kMagenta+2 ]
+
+			bkgFiles[ 'DYJetsToQQ' ] = [ TFile.Open(folder+'/RUNAnalysis_DYJetsToQQ_80X_V2p4_'+args.version+'.root'), 
+							args.lumi*1.45, 'DY + Jets', kOrange ]
+
+			bkgFiles[ 'WJetsToQQ' ] = [ TFile.Open(folder+'/RUNAnalysis_WJetsToQQ_80X_V2p4_'+args.version+'.root'), 
+							args.lumi*1.35, 'W + Jets', 38 ]
+
+			bkgFiles[ 'TT' ] = [ TFile.Open(folder+'/RUNAnalysis_TT_80X_V2p4_'+args.version+'.root'), 
+							args.lumi, 't #bar{t} + Jets', kGreen+2 ]
+
+		bkgFiles[ 'QCD'+args.qcd+'All' ] = [ TFile.Open(folder+'/RUNAnalysis_QCD'+args.qcd+'All_80X_V2p4_'+args.version+'.root'), args.lumi*QCDSF, 'QCD multijets', kBlue-4 ]
 
 
-	dijetlabX = 0.85
-	dijetlabY = 0.55
-	subjet112vs212labX = 0.7
-	subjet112vs212labY = 0.88
-	polAnglabX = 0.2
-	polAnglabY = 0.88
 	taulabX = 0.90
 	taulabY = 0.85
-	cosPhilabX = 0.15
-	cosPhilabY = 0.45
-
 	massMinX = 0
 	massMaxX = 400
-	polAngXmin = 0.7
-	polAngXmax = 1.0
-	HTMinX = 300
-	HTMaxX = 1300
-	ptMinX = 100
-	ptMaxX = 800
-
 
 	plotList = [ 
-		[ '2D', 'Boosted', 'leadMassHT', 'Leading Jet Mass [GeV]', 'HT [GeV]', 0, massMaxX, 1, 100, HTMaxX, 1, jetMassHTlabX, jetMassHTlabY],
+		[ '2D', 'Boosted', 'leadMassHT', 'Leading Jet Mass [GeV]', 'HT [GeV]', 0, massMaxX, 1, 100, 1300, 1, jetMassHTlabX, jetMassHTlabY],
 
 		[ '2D', 'Boosted', 'jet1Tau21VsRhoDDT', 'Leading jet #tau_{21}', 'Leading jet #rho\'', 0, 1, 1, -6, 10, 1, jetMassHTlabX, jetMassHTlabY],
 		[ '2D', 'Boosted', 'jet2Tau21VsRhoDDT', '2nd Leading jet #tau_{21}', '2nd Leading jet #rho\'', 0, 1, 1, -6, 10, 1, jetMassHTlabX, jetMassHTlabY],
