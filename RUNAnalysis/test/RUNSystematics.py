@@ -67,6 +67,8 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 	errUpOverNomArray = []
 	downOverNomArray = []
 	errDownOverNomArray = []
+	maxRelArray = []
+	maxRelErrArray = []
 
 	if args.batchSys: folder = '/cms/gomez/archiveEOS/Archive/v8020/Analysis/'+args.version+'/'
 	else: folder = 'Rootfiles/'
@@ -94,11 +96,14 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 			histos[ 'Nominal' ] = rootFile.Get( args.boosted+'AnalysisPlots/'+name ) 
 			histos[ 'Up' ] = rootFile.Get( args.boosted+'AnalysisPlots'+args.unc+'Up/'+name )
 			histos[ 'Down' ] = rootFile.Get( args.boosted+'AnalysisPlots'+args.unc+'Down/'+name )
-		print histos[ 'Nominal' ]
+
+		#print histos[ 'Nominal' ]
 		#scale = 1 / (scaleFactor( 'RPVStopStopToJets_UDD312_M-'+str(xmass) ) )  ## removing scaling of histogram
 		for k in histos: 
 			#histos[ k ].Scale( scale )
 			histos[ k ] = histos[ k ].Rebin( args.reBin )
+			recoverSF = (histos[k].Integral()/histos[k].GetEntries()) ##### to return to pure number of events instead of weighted
+			histos[ k ].Scale( 1/recoverSF )  
 
 		#histos[ 'Up' ] = histos[ 'Up' ].Rebin( len( boostedMassAveBins )-1, histos[ 'Up' ].GetName(), boostedMassAveBins )
 		#histos[ 'Down' ] = histos[ 'Down' ].Rebin( len( boostedMassAveBins )-1, histos[ 'Down' ].GetName(), boostedMassAveBins )
@@ -109,9 +114,10 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 
 		##### window for acceptance
 		if 'Resolved' in args.boosted: massWindow = 9.73 + ( 0.029 * xmass ) 	## from generator level 
-		else: massWindow = 30 
+		else: massWindow = int(-1.78 + ( 0.1097 * xmass) + ( -0.0002897 * xmass*xmass ) + ( 3.18e-07 * xmass*xmass*xmass))
 		lowEdgeWindow = int(xmass/args.reBin -  2*( massWindow )/args.reBin )
 		highEdgeWindow = int(xmass/args.reBin + 2*( massWindow )/args.reBin )
+		print massWindow, lowEdgeWindow, xmass
 
 		'''
 		####### Fits for Nominal/Up/Down
@@ -154,31 +160,32 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 		errorIntUp = Double(0)
 		eventsUpInWindow = histos['Up'].IntegralAndError( lowEdgeWindow, highEdgeWindow, errorIntUp )
 		failedEvents = totalNumber - eventsUpInWindow
-		accXeffErr = sqrt( (1/failedEvents) + (1/eventsUpInWindow) ) * failedEvents * eventsUpInWindow / pow( ( totalNumber ), 2 )
+		upAccXeffErr = sqrt( (1/failedEvents) + (1/eventsUpInWindow) ) * failedEvents * eventsUpInWindow / pow( ( totalNumber ), 2 )
 		upArray.append( eventsUpInWindow / totalNumber ) 
-		upArrayErr.append( accXeffErr )
+		upArrayErr.append( upAccXeffErr )
 
 		errorIntDown = Double(0)
 		eventsDownInWindow = histos['Down'].IntegralAndError( lowEdgeWindow, highEdgeWindow, errorIntDown )
 		failedEvents = totalNumber - eventsDownInWindow
-		accXeffErr = sqrt( (1/failedEvents) + (1/eventsDownInWindow) ) * failedEvents * eventsDownInWindow / pow( ( totalNumber ), 2 )
+		downAccXeffErr = sqrt( (1/failedEvents) + (1/eventsDownInWindow) ) * failedEvents * eventsDownInWindow / pow( ( totalNumber ), 2 )
 		downArray.append( eventsDownInWindow / totalNumber ) 
-		downArrayErr.append( accXeffErr )
+		downArrayErr.append( downAccXeffErr )
 
 		upOverNom = ( eventsUpInWindow - eventsInWindow ) / eventsInWindow
 		upOverNomArray.append( upOverNom )
 		### errors
-		errorSubs = TMath.Sqrt( TMath.Power(errorIntUp,2) + TMath.Power( TMath.Sqrt( eventsInWindow ), 2 ) )
 		errorUpOverNom = TMath.Abs( upOverNom ) * TMath.Sqrt( TMath.Power( errorIntUp / eventsUpInWindow, 2 ) + TMath.Power( TMath.Sqrt( eventsInWindow )/ eventsInWindow , 2 ) )
 		errUpOverNomArray.append( errorUpOverNom )
 
 		downOverNom = ( eventsDownInWindow - eventsInWindow ) / eventsInWindow
 		downOverNomArray.append( downOverNom )
 		### errors
-		errorSubs = TMath.Sqrt( TMath.Power(errorIntDown,2) + TMath.Power( TMath.Sqrt( eventsInWindow ), 2 ) )
 		errorDownOverNom = TMath.Abs( downOverNom ) * TMath.Sqrt( TMath.Power( errorIntDown / eventsDownInWindow, 2 ) + TMath.Power( TMath.Sqrt( eventsInWindow )/ eventsInWindow , 2 ) )
 		errDownOverNomArray.append( errorDownOverNom )
-
+		maxRel = max( abs(upOverNom), abs(downOverNom) )
+		maxRelArray.append( maxRel )
+		maxRelErr = ( errorUpOverNom if ( abs(upOverNom)==maxRel ) else errorDownOverNom )
+		maxRelErrArray.append( maxRelErr )
 
 		legend=TLegend(0.70,0.75,0.90,0.90)
 		legend.SetFillStyle(0)
@@ -196,18 +203,8 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 		histos[ 'Nominal' ].SetMaximum( 1.2* max( histos[ 'Nominal' ].GetMaximum(), histos[ 'Up' ].GetMaximum(), histos[ 'Down' ].GetMaximum() ) ) 
 		if xmax: histos[ 'Nominal' ].GetXaxis().SetRangeUser( xmin, xmax )
 
-		if 'PDF' in args.unc:
-			tdrStyle.SetPadRightMargin(0.05)
-			tdrStyle.SetPadLeftMargin(0.15)
-			can = TCanvas('c1', 'c1',  10, 10, 750, 750 )
-			pad1 = TPad("pad1", "Fit",0,0.207,1.00,1.00,-1)
-			pad2 = TPad("pad2", "Pull",0,0.00,1.00,0.30,-1);
-			pad1.Draw()
-			pad2.Draw()
-			pad1.cd()
-		else:
-			can = TCanvas('c'+str(xmass), 'c'+str(xmass),  10, 10, 750, 500 )
-			if log: can.SetLogy()
+		can = TCanvas('c'+str(xmass), 'c'+str(xmass),  10, 10, 750, 500 )
+		if log: can.SetLogy()
 		#histos['Sample1'].SetMinimum(10)
 		histos['Nominal'].GetXaxis().SetRangeUser( xmass-70, xmass+70   )
 		histos['Nominal'].Draw('histes') 
@@ -249,35 +246,8 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 		legend.Draw()
 		CMS_lumi.extraText = "Simulation Preliminary"
 		CMS_lumi.relPosX = 0.12
-		#CMS_lumi.CMS_lumi( (pad1 if 'PDF' in args.unc else 'can' ), 4, 0)
 		if not (labX and labY): labels( name, '' )
 		else: labels( name, '', labX, labY )
-
-		if 'PDF' in args.unc:
-			pad2.cd()
-			pad2.SetGrid()
-			pad2.SetTopMargin(0)
-			pad2.SetBottomMargin(0.3)
-
-			hRatioUp = histos['Nominal'].Clone()
-			hRatioUp.Divide( histos['Up'].Clone() )
-			hRatioUp.SetMaximum( 1.3 )
-			hRatioUp.SetMinimum( 0.7 )
-			hRatioUp.SetLineColor(kRed)
-			hRatioUp.GetYaxis().SetNdivisions(505)
-			hRatioUp.GetXaxis().SetLabelSize(0.12)
-			hRatioUp.GetXaxis().SetTitleSize(0.12)
-			hRatioUp.GetYaxis().SetTitle( 'Up(Down)/Nominal' )
-			hRatioUp.GetYaxis().SetTitleOffset(1.5)
-			hRatioUp.GetYaxis().SetLabelSize(0.12)
-			hRatioUp.GetYaxis().SetTitleSize(0.12)
-			hRatioUp.GetYaxis().SetTitleOffset(0.45)
-			hRatioUp.GetYaxis().CenterTitle()
-			hRatioUp.Draw()
-			hRatioDown = histos['Nominal'].Clone()
-			hRatioDown.Divide( histos['Down'].Clone() )
-			hRatioDown.SetLineColor(kBlue)
-			hRatioDown.Draw("same")
 
 		can.SaveAs( 'Plots/'+outputFileName )
 		del can
@@ -285,13 +255,16 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 	tdrStyle.SetPadRightMargin(0.05)
 	tdrStyle.SetPadLeftMargin(0.15)
 	can = TCanvas('c1', 'c1',  10, 10, 750, 750 )
-	pad1 = TPad("pad1", "Fit",0,0.207,1.00,1.00,-1)
-	pad2 = TPad("pad2", "Pull",0,0.00,1.00,0.30,-1);
+	pad1 = TPad("pad1", "Fit", 0,0.50,1.00,1.00,-1)
+	pad2 = TPad("pad2", "Pull",0,0.25,1.00,0.50,-1);
+	pad3 = TPad("pad3", "Max", 0,0.00, 1.00,0.25,-1);
 	pad1.Draw()
 	pad2.Draw()
+	pad3.Draw()
 
 	pad1.cd()
 	if log: pad1.SetLogy()
+	pad1.SetBottomMargin(0.001)
 	#PT = TText(0.1, 0.1, sample )
 	multiGraph = TMultiGraph()
 	legend=TLegend(0.70,0.70,0.90,0.90)
@@ -324,7 +297,7 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 	legend.AddEntry( downGraph, args.unc+'Down', 'l' )
 
 	multiGraph.Draw("AP")
-	multiGraph.GetXaxis().SetTitle('Average pruned mass [GeV]')
+	multiGraph.GetXaxis().SetRangeUser( (massList[0]-20), (massList[-1]+20))
 	multiGraph.GetYaxis().SetTitle('Acceptance')
 	multiGraph.GetYaxis().SetTitleOffset(0.95)
 	legend.Draw()
@@ -336,14 +309,15 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 	pad2.cd()
 	pad2.SetGrid()
 	pad2.SetTopMargin(0)
-	pad2.SetBottomMargin(0.3)
+	pad2.SetBottomMargin(0.005)
 	multiGraphRatio = TMultiGraph()
 
 	uncAcceptanceError = []
 	for m in range(len(massList)): 	
-		print massList[m], round(upOverNomArray[m],3), round(downOverNomArray[m],3), round( max( abs( upOverNomArray[m] ), abs( downOverNomArray[m] ) ), 3 )
+	#	print massList[m], round(upOverNomArray[m],3), round(downOverNomArray[m],3), round( max( abs( upOverNomArray[m] ), abs( downOverNomArray[m] ) ), 3 )
 		uncAcceptanceError.append( round( max( abs( upOverNomArray[m] ), abs( downOverNomArray[m] ) ), 3 ) )
-	print '-'*10, args.unc+' list:', uncAcceptanceError
+	#print '-'*10, args.unc+' list:', uncAcceptanceError
+	maxSys = max( abs(max(upOverNomArray, key=abs)) , abs(max(downOverNomArray, key=abs)) )
 	#upOverNomGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', upOverNomArray), array( 'd', [0]*len(massList) ), array( 'd', errUpOverNomArray) )		
 	upOverNomGraph = TGraph( len( massList ), array( 'd', massList), array( 'd', upOverNomArray) )		
 	upOverNomGraph.SetMarkerStyle( 20 )
@@ -356,12 +330,12 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 	multiGraphRatio.Add( downOverNomGraph )
 
 	multiGraphRatio.Draw("AP")
-	if 'PDF' in args.unc: multiGraphRatio.GetYaxis().SetRangeUser(-0.6, .6)
-	else: multiGraphRatio.GetYaxis().SetRangeUser(-0.1,0.1)
+	#if 'PDF' in args.unc: multiGraphRatio.GetYaxis().SetRangeUser(-0.6, .6)
+	#else: multiGraphRatio.GetYaxis().SetRangeUser(-0.1,0.1)
+	maxRatioSys = 1.5*maxSys
+	multiGraphRatio.GetXaxis().SetRangeUser( (massList[0]-20), (massList[-1]+20))
+	multiGraphRatio.GetYaxis().SetRangeUser(-maxRatioSys, maxRatioSys)
 	multiGraphRatio.GetYaxis().SetNdivisions(505)
-	multiGraphRatio.GetXaxis().SetTitle('Average pruned mass [GeV]')
-	multiGraphRatio.GetXaxis().SetLabelSize(0.12)
-	multiGraphRatio.GetXaxis().SetTitleSize(0.12)
 	multiGraphRatio.GetYaxis().SetTitle('Rel. Error')
 	#multiGraphRatio.GetYaxis().SetTitle('(Up(Down)-Nom)/Nom')
 	multiGraphRatio.GetYaxis().SetTitleOffset(1.5)
@@ -369,6 +343,34 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 	multiGraphRatio.GetYaxis().SetTitleSize(0.12)
 	multiGraphRatio.GetYaxis().SetTitleOffset(0.45)
 	multiGraphRatio.GetYaxis().CenterTitle()
+
+	pad3.cd()
+	pad3.SetGrid()
+	pad3.SetTopMargin(0)
+	pad3.SetBottomMargin(0.3)
+	gStyle.SetStatX(.95)
+	gStyle.SetStatH(.2)
+	gStyle.SetStatW(.13)
+
+	#maxRelGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', maxRelArray), array('d', [0]*len(massList)), array('d',maxRelErrArray) )
+	maxRelGraph = TGraph( len( massList ), array( 'd', massList), array( 'd', maxRelArray) )
+	maxRelGraph.SetMarkerStyle( 20 )
+	maxRelGraph.Fit( 'pol0' )
+	maxRelGraph.Draw("AP")
+
+	maxRelGraph.GetYaxis().SetRangeUser(0, maxRatioSys)
+	maxRelGraph.GetXaxis().SetRangeUser( (massList[0]-20), (massList[-1]+20))
+	maxRelGraph.GetXaxis().SetTitle('Average pruned mass [GeV]')
+	maxRelGraph.GetXaxis().SetLabelSize(0.12)
+	maxRelGraph.GetXaxis().SetTitleSize(0.12)
+	maxRelGraph.GetYaxis().SetNdivisions(505)
+	maxRelGraph.GetYaxis().SetTitle('Max. Rel. Error')
+	maxRelGraph.GetYaxis().SetTitleOffset(1.5)
+	maxRelGraph.GetYaxis().SetLabelSize(0.12)
+	maxRelGraph.GetYaxis().SetTitleSize(0.12)
+	maxRelGraph.GetYaxis().SetTitleOffset(0.45)
+	maxRelGraph.GetYaxis().CenterTitle()
+
 	can.SaveAs('Plots/'+name+'_'+args.decay+'RPVSt_'+args.unc+args.boosted+'_'+args.version+'.'+args.ext)
 	del can
 	
@@ -381,7 +383,7 @@ if __name__ == '__main__':
 	parser.add_argument('-b', '--boosted', action='store', default='Boosted', dest='boosted', help='Boosted or Resolved boosted, example: Boosted' )
 	parser.add_argument('-v', '--version', action='store', default='v05', dest='version', help='Version of files: v05.' )
 	parser.add_argument('-g', '--grom', action='store', default='pruned_', dest='grooming', help='Grooming Algorithm, example: Pruned, Filtered.' )
-	parser.add_argument('-C', '--cut', action='store', default='_deltaEtaDijet', dest='cut', help='cut, example: cutDEta' )
+	parser.add_argument('-C', '--cut', action='store', default='deltaEtaDijet', dest='cut', help='cut, example: cutDEta' )
 	parser.add_argument('-e', '--extension', action='store', default='png', dest='ext', help='Extension of plots.' )
 	parser.add_argument('-u', '--unc', action='store', default='JES', dest='unc',  help='Type of uncertainty' )
 	parser.add_argument('-R', '--reBin', action='store', default=5, type=float, dest='reBin', help='Rebin number.' )

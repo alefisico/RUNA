@@ -119,6 +119,7 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 	################################################################################################## Running the Analysis
 	print '-'*40
 	SF = TCut( '1' if 'JetHT' in sample else ( str(sf) if sample in ['TT', 'DYJetsToQQ'] else 'lumiWeight' )+' * puWeight') 
+	btagSF = TCut( '1' if 'JetHT' in sample else ( str(sf) if sample in ['TT', 'DYJetsToQQ'] else 'lumiWeight' )+' * puWeight * btagWeight') 
 	#print SF
 	#SF = TCut( '1' if 'JetHT' in sample else 'lumiWeight * puWeight') 
 	preselection = TCut('HT>900') + TCut("numJets>=2") 
@@ -142,18 +143,18 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 	#btag1Selection = TCut('(jet1btagCSVv2 > 0.8484) || (jet2btagCSVv2 > 0.8484)')
 	btag1Selection = TCut('(jet1btagCSVv2 > 0.5426) || (jet2btagCSVv2 > 0.5426)')
 	ABCDRegions1Btag = {}
-	ABCDRegions1Btag[ '_A' ] = preselection + TCut( stringSel ) + TCut( btag1Selection )
-	ABCDRegions1Btag[ '_B' ] = preselection + TCut( stringSel.replace('deltaEtaDijet<', 'deltaEtaDijet>') ) + TCut( btag1Selection )
-	ABCDRegions1Btag[ '_C' ] = preselection + TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>') ) + TCut( btag1Selection )
-	ABCDRegions1Btag[ '_D' ] = preselection + TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>').replace('deltaEtaDijet<', 'deltaEtaDijet>') ) + TCut( btag1Selection )
+	ABCDRegions1Btag[ '_A' ] = preselection + TCut( stringSel ) + TCut( btag1Selection ) 
+	ABCDRegions1Btag[ '_B' ] = preselection + TCut( stringSel.replace('deltaEtaDijet<', 'deltaEtaDijet>') ) + TCut( btag1Selection ) 
+	ABCDRegions1Btag[ '_C' ] = preselection + TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>') ) + TCut( btag1Selection ) 
+	ABCDRegions1Btag[ '_D' ] = preselection + TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>').replace('deltaEtaDijet<', 'deltaEtaDijet>') ) + TCut( btag1Selection ) 
 
 	#btag2Selection = '(jet1btagCSVv2 > 0.8484) && (jet2btagCSVv2 > 0.8484)'
 	btag2Selection = '(jet1btagCSVv2 > 0.5426) && (jet2btagCSVv2 > 0.5426)'
 	ABCDRegions2Btag = {}
-	ABCDRegions2Btag[ '_A' ] = preselection + TCut( stringSel ) + TCut( btag2Selection )
-	ABCDRegions2Btag[ '_B' ] = preselection + TCut( stringSel.replace('deltaEtaDijet<', 'deltaEtaDijet>') ) + TCut( btag2Selection )
-	ABCDRegions2Btag[ '_C' ] = preselection + TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>') ) + TCut( btag2Selection )
-	ABCDRegions2Btag[ '_D' ] = preselection + TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>').replace('deltaEtaDijet<', 'deltaEtaDijet>') ) + TCut( btag2Selection )
+	ABCDRegions2Btag[ '_A' ] = preselection + TCut( stringSel ) + TCut( btag2Selection ) 
+	ABCDRegions2Btag[ '_B' ] = preselection + TCut( stringSel.replace('deltaEtaDijet<', 'deltaEtaDijet>') ) + TCut( btag2Selection ) 
+	ABCDRegions2Btag[ '_C' ] = preselection + TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>') ) + TCut( btag2Selection ) 
+	ABCDRegions2Btag[ '_D' ] = preselection + TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>').replace('deltaEtaDijet<', 'deltaEtaDijet>') ) + TCut( btag2Selection ) 
 	#ABCDRegions2Btag[ '_B' ] = preselection + TCut( stringSel.replace('deltaEtaDijet<', 'deltaEtaDijet>').replace('Tau21<', 'Tau21>') ) + TCut( btag2Selection )
 	#ABCDRegions2Btag[ '_C' ] = preselection + TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>') ) + TCut( btag2Selection )
 	#ABCDRegions2Btag[ '_D' ] = preselection + TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>').replace('deltaEtaDijet<', 'deltaEtaDijet>').replace('Tau21<', 'Tau21>') ) + TCut( btag2Selection )
@@ -162,8 +163,8 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 	#ABCDRegions2Btag[ '_D' ] = preselection + TCut( stringSel.replace('prunedMassAsym<', 'prunedMassAsym>').replace('deltaEtaDijet<', 'deltaEtaDijet>') + ' && deltaEtaDijet<2.5 && prunedMassAsym<0.5 ' ) + TCut( btag2Selection )
 
 	sel = preselection + TCut( stringSel )
-	btag2Sel = sel + TCut( btag2Selection ) + TCut( 'btagWeight' )
-	btag1Sel = sel + TCut( btag1Selection ) + TCut( 'btagWeight' )
+	btag2Sel = sel + TCut( btag2Selection ) 
+	btag1Sel = sel + TCut( btag1Selection ) 
 
 	treeName = 'BoostedAnalysisPlots'+('Puppi' if 'Puppi' in args.grooming else '')+'/RUNATree'
 
@@ -370,10 +371,10 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 				allHistos[ 'prunedMassAsymVsdeltaEtaDijet_'+sample+region ],
 				1 ) 
 
-	# Btagging
+	#### Btagging
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAve', 
-			SF,
+			btagSF,
 			btag1Sel, 
 			allHistos[ 'massAve_1btag_'+sample ], 
 			1 )
@@ -382,20 +383,20 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 		getHistoFromTree( fileSample, treeName,
 				'prunedMassAve', 
 				selABCD, 
-				SF,
+				btagSF,
 				allHistos[ 'massAve_prunedMassAsymVsdeltaEtaDijet_'+sample+'_1btag'+region ], 
 				1 )
 	
 		get2DHistoFromTree( fileSample, treeName,
 				'prunedMassAsym', 'deltaEtaDijet',
-				SF,
+				btagSF,
 				selABCD, 
 				allHistos[ 'prunedMassAsymVsdeltaEtaDijet_'+sample+'_1btag'+region ],
 				1 ) 
 
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAve', 
-			SF,
+			btagSF,
 			btag2Sel, 
 			allHistos[ 'massAve_2btag_'+sample ], 
 			1 ) 
@@ -404,14 +405,14 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 		###selABCD = selABCD + TCut( "prunedMassAve>200" )
 		getHistoFromTree( fileSample, treeName,
 				'prunedMassAve', 
-				SF,
+				btagSF,
 				selABCD, 
 				allHistos[ 'massAve_prunedMassAsymVsdeltaEtaDijet_'+sample+'_2btag'+region ], 
 				1 ) 
 	
 		get2DHistoFromTree( fileSample, treeName,
 				'prunedMassAsym', 'deltaEtaDijet',
-				SF,
+				btagSF,
 				selABCD, 
 				allHistos[ 'prunedMassAsymVsdeltaEtaDijet_'+sample+'_2btag'+region ],
 				1 ) 
@@ -419,50 +420,50 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 	## n-1 selection btagged
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAsym', 
-			SF,
+			btagSF,
 			preselection + TCut( stringSel.replace('&& (prunedMassAsym<0.1)','') ) + TCut( btag2Selection ), 
 			allHistos[ 'prunedMassAsym_n-1_2btag_'+sample ], 
 			1 ) 
 
 	getHistoFromTree( fileSample, treeName,
 			'deltaEtaDijet', 
-			SF,
+			btagSF,
 			preselection + TCut( stringSel.replace(('&& (deltaEtaDijet<1.5)' if 'pruned' in args.grooming else '&& (deltaEtaDijet<1.0)' ),'') ) + TCut( btag2Selection ), 
 			allHistos[ 'deltaEtaDijet_n-1_2btag_'+sample ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet1Tau21', 
-			SF,
+			btagSF,
 			preselection + TCut( stringSel.replace('&& (jet2Tau21<0.45)','').replace('&& (jet1Tau21<0.45)','') ) + TCut( btag2Selection ), 
 			allHistos[ 'jet1Tau21_n-1_2btag_'+sample ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet2Tau21', 
-			SF,
+			btagSF,
 			preselection + TCut( stringSel.replace('&& (jet2Tau21<0.45)','').replace('&& (jet1Tau21<0.45)','') ) + TCut( btag2Selection ), 
 			allHistos[ 'jet2Tau21_n-1_2btag_'+sample ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet1Tau32', 
-			SF,
+			btagSF,
 			preselection + TCut( stringSel.replace('&& (jet2Tau32<0.57)','').replace('&& (jet1Tau32<0.57)','') ) + TCut( btag2Selection ), 
 			allHistos[ 'jet1Tau32_n-1_2btag_'+sample ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet2Tau32', 
-			SF,
+			btagSF,
 			preselection + TCut( stringSel.replace('&& (jet2Tau32<0.57)','').replace('&& (jet1Tau32<0.57)','') ) + TCut( btag2Selection ), 
 			allHistos[ 'jet2Tau32_n-1_2btag_'+sample ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet1btagCSVv2', 
-			SF,
+			btagSF,
 			sel,
 			allHistos[ 'jet1btagCSVv2_n-1_2btag_'+sample ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet2btagCSVv2', 
-			SF,
+			btagSF,
 			sel,
 			allHistos[ 'jet2btagCSVv2_n-1_2btag_'+sample ], 
 			1 ) 
@@ -477,8 +478,8 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 ######################################
 def myAnalyzer( fileSample, listCuts, sample, UNC ):
 
-	outputFileName = 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p3TEST.root' 
-	#outputFile = TFile( outputFileName, 'RECREATE' )
+	outputFileName = 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p4.root' 
+	outputFile = TFile( outputFileName, 'RECREATE' )
 
 
 	################################################################################################## Histos
@@ -632,14 +633,14 @@ def myAnalyzer( fileSample, listCuts, sample, UNC ):
 		#jetPtCut =  ( jet1Pt > 500 ) and ( jet2Pt > 450 )
 		jetPtCut =  ( jet1Pt > 150 ) and ( jet2Pt > 150 )
 		
-		#if HTCut and dijetCut and jetPtCut:
-		if HTCut and dijetCut :
-			if ( events.jet1Tau32 > 0.57 ) and  ( events.jet2Tau32 > 0.57 ) and ( events.jet1Tau21 < 0.45 ) and  ( events.jet2Tau21 < 0.45 ) and ( events.prunedMassAsym < 0.10 ) and  ( events.deltaEtaDijet < 1.5 ) and (massAve > 500 ):
-					print str(Run)+':'+str(Lumi)+':'+str(NumEvent)
-					#allHistos[ 'massAve_deltaEtaDijet_'+sample ].Fill( massAve, scale )
-					#if ( jet1BtagCSV and jet2BtagCSV ): 
+		if HTCut and dijetCut and jetPtCut:
+		#if HTCut and dijetCut :
+			if ( events.jet1Tau32 > 0.57 ) and  ( events.jet2Tau32 > 0.57 ) and ( events.jet1Tau21 < 0.45 ) and  ( events.jet2Tau21 < 0.45 ) and ( events.prunedMassAsym < 0.10 ) and  ( events.deltaEtaDijet < 1.5 ): # and (massAve > 500 ):
+					#print str(Run)+':'+str(Lumi)+':'+str(NumEvent)
+					allHistos[ 'massAve_deltaEtaDijet_'+sample ].Fill( massAve, scale )
+					if ( jet1BtagCSV and jet2BtagCSV ): 
 						#print str(Run)+':'+str(Lumi)+':'+str(NumEvent)
-					#	allHistos[ 'massAve_btag_'+sample ].Fill( massAve, scale )  ### adding two prong scale factor
+						allHistos[ 'massAve_btag_'+sample ].Fill( massAve, scale )  ### adding two prong scale factor
 
 #				cutFlowList[ 'Preselection' ] += 1
 #				cutFlowScaledList[ 'Preselection' ] += scale
@@ -795,10 +796,10 @@ def myAnalyzer( fileSample, listCuts, sample, UNC ):
 #		'''
 
 
-#	outputFile.Write()
-#	##### Closing
-#	print 'Writing output file: '+ outputFileName
-#	outputFile.Close()
+	outputFile.Write()
+	##### Closing
+	print 'Writing output file: '+ outputFileName
+	outputFile.Close()
 
 
 def plotABCD( listSel, var, fromTree, massAve, scale, sample ):

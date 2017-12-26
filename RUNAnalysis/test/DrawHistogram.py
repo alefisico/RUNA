@@ -53,7 +53,8 @@ line.SetLineColor(kRed)
 jetMassHTlabY = 0.20
 jetMassHTlabX = 0.85
 
-boostedMassAveBins = array( 'd', [ 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 225, 240, 255, 270, 285, 300, 315, 330, 345, 360, 375, 395, 420, 445, 470, 500, 540, 580, 640, 1000 ] )
+#boostedMassAveBins = array( 'd', [ 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 225, 240, 255, 270, 285, 300, 315, 330, 345, 360, 375, 395, 420, 445, 470, 500, 540, 580, 640, 1000 ] )
+boostedMassAveBins = array( 'd', [ 0, 60, 64, 68, 72, 77, 82, 88, 94, 100, 106, 113, 121, 129, 137, 146, 155, 164, 174, 184, 195, 206, 217, 228, 240, 253, 265, 278, 291, 304, 318, 332, 346, 360, 374, 389, 404, 420, 435, 451, 468, 485, 503, 521, 540, 560, 582, 604, 628, 1000 ] )
 
 
 def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax, rebinX, labX, labY, log, posLegend, addRatioFit=False, Norm=False ):
@@ -226,8 +227,9 @@ def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax
 					if 'massAve' in nameInRoot: 
 						#lowEdgeWindow = int(int(sample) - ( int( massWidthList[int(sample)])*3 ))
 						#highEdgeWindow = int(int(sample) + ( int( massWidthList[int(sample)])*3 ))
-						lowEdgeWindow = int(int(sample) - 15 )
-						highEdgeWindow = int(int(sample) + 15 )
+						tmpResolution = 2*(-1.78 + ( 0.1097 * int(sample)) + ( -0.0002897 * int(sample)*int(sample) ) + ( 3.18e-07 * int(sample)*int(sample)*int(sample)))
+						lowEdgeWindow = int(int(sample) - tmpResolution )
+						highEdgeWindow = int(int(sample) + tmpResolution )
 						signalHistos[ sample ].GetXaxis().SetRangeUser( lowEdgeWindow, highEdgeWindow )
 					signalHistos[ sample ].Draw("hist same")
 		else:  
@@ -672,7 +674,7 @@ def plotSignalShape( nameInRoot, rebinX, massList, massWidthList, log ):
 	outputFileName = 'signalShape_'+nameInRoot+'_'+args.grooming+'_'+args.decay+'RPVSt_'+args.boosted+'AnalysisPlots'+args.version+'.'+args.ext 
 	print 'Processing.......', outputFileName
 
-	legend=TLegend(0.65,(0.4 if 'Tau21' in nameInRoot else 0.50),0.90,0.87)
+	legend=TLegend(0.65,(0.4 if 'Tau21' in nameInRoot else 0.45),0.90,0.87)
 	legend.SetFillStyle(0)
 	legend.SetTextSize(0.04)
 	histos = {}
@@ -692,25 +694,30 @@ def plotSignalShape( nameInRoot, rebinX, massList, massWidthList, log ):
 	multiGraph = TMultiGraph()
 	for m in range( len(massList) ): 
 		histos[ massList[m] ] = files[ massList[m] ].Get( nameInRoot+'_RPVStopStopToJets_'+args.decay+'_M-'+str( massList[m] ) )
-		#histos[ massList[m] ].Scale( 1/(histos[ massList[m] ].Integral()))
 		histos[ massList[m] ].Scale( args.lumi )
-		if rebinX > 1: histos[ massList[m] ] = histos[ massList[m] ].Rebin( rebinX )
+		#histos[ massList[m] ].Scale( 1/histos[ massList[m] ].Integral() )
+		if rebinX > 1: 
+			histos[ massList[m] ] = histos[ massList[m] ].Rebin( rebinX )
+#			if 'massAve' in nameInRoot: 
+#				histos[ massList[m] ] = histos[ massList[m] ].Rebin( len( boostedMassAveBins )-1, histos[ massList[m] ].GetName(), boostedMassAveBins )
+#				histos[ massList[m] ].Scale( 1, 'width')
+		if 'Resolved' in args.boosted: tmpResolution = 9.73 + ( 0.029 * massList[m])
+		else: tmpResolution = -1.78 + ( 0.1097 * massList[m]) + ( -0.0002897 * massList[m]*massList[m] ) + ( 3.18e-07 * massList[m]*massList[m]*massList[m])
+		histos[ massList[m] ].Fit( "gaus", 'ELLSR', '', massList[m]-(2*tmpResolution), massList[m]+(2*tmpResolution) )
+		massWindow = histos[ massList[m] ].GetFunction("gaus").GetParameter( 2 )* 3
+		meanList.append( histos[ massList[m] ].GetFunction("gaus").GetParameter( 1 ))
+		meanErrList.append( histos[ massList[m] ].GetFunction("gaus").GetParError( 1 ))
+		sigmaList.append( histos[ massList[m] ].GetFunction("gaus").GetParameter( 2 ))
+		sigmaErrList.append( histos[ massList[m] ].GetFunction("gaus").GetParError( 2 ))
 		if 'Boosted' in args.boosted:
-			if 'massAve' in args.single: histos[ massList[m] ].GetXaxis().SetRangeUser( massList[m]-(int(massWidthList[m])*3), massList[m]+(int(massWidthList[m])*3) )
+			if 'massAve' in args.single: 
+				histos[ massList[m] ].GetXaxis().SetRangeUser( massList[m]-(int(massWidthList[m])*3), massList[m]+(int(massWidthList[m])*3) )
 			binWidth = histos[ massList[m] ].GetBinWidth(1)
 			maxList.append( histos[ massList[m] ].GetMaximum() )
 			histos[ massList[m] ].SetLineWidth(2)
 			histos[ massList[m] ].SetLineColor( dummy )
 			legend.AddEntry( histos[ massList[m] ], 'M_{#tilde{t}} = '+str( massList[m] )+' GeV' , 'l' )
 		else:
-			tmpResolution = 9.73 + ( 0.029 * massList[m])
-			#tmpResolution = 7.67 + ( 0.06547 * massList[m])
-			histos[ massList[m] ].Fit( "gaus", 'ELLSR', '', massList[m]-(5*tmpResolution), massList[m]+(5*tmpResolution) )
-			massWindow = histos[ massList[m] ].GetFunction("gaus").GetParameter( 2 )* 3
-			meanList.append( histos[ massList[m] ].GetFunction("gaus").GetParameter( 1 ))
-			meanErrList.append( histos[ massList[m] ].GetFunction("gaus").GetParError( 1 ))
-			sigmaList.append( histos[ massList[m] ].GetFunction("gaus").GetParameter( 2 ))
-			sigmaErrList.append( histos[ massList[m] ].GetFunction("gaus").GetParError( 2 ))
 			functs[ massList[m] ] = TF1( "RPVStop"+str(massList[m]), "gaus", massList[m]-massWindow, massList[m]+massWindow )
 			functs[ massList[m] ].SetParameter( 0, histos[ massList[m] ].GetFunction("gaus").GetParameter( 0 ) )
 			functs[ massList[m] ].SetParameter( 1, massList[m] )
@@ -729,16 +736,16 @@ def plotSignalShape( nameInRoot, rebinX, massList, massWidthList, log ):
 	if log: can.SetLogy()
 
 	if 'Boosted' in args.boosted: 
-		if 'mass' in nameInRoot: histos[ massList[-1] ].GetXaxis().SetRangeUser( 50, 600 ) 
+		if 'massAve' in nameInRoot: histos[ massList[-1] ].GetXaxis().SetRangeUser( 60, 451 ) 
 		elif 'Pt' in nameInRoot: histos[ massList[-1] ].GetXaxis().SetRangeUser( 200, 2000 ) 
 		histos[ massList[-1] ].GetYaxis().SetTitle( 'Normalized' ) #Events / '+str(binWidth)+' GeV' )
-		#histos[ massList[-1] ].GetXaxis().SetTitle( 'Average puned jet mass [GeV]' ) 
+		histos[ massList[-1] ].GetXaxis().SetTitle( 'Resonance mass [GeV]' ) 
 		histos[ massList[-1] ].GetYaxis().SetTitleOffset( 0.95 )
 		#histos[ massList[-1] ].SetMinimum( (0.1 if 'high' in args.RANGE else 0.00001 ) )
 		histos[ massList[-1] ].SetMaximum(  1.2*max(maxList) )
 		histos[ massList[-1] ].Draw( ('hist' if 'Boosted' in args.boosted else 'l') )
 		for k in histos: histos[ k ].Draw( ('hist' if 'Boosted' in args.boosted else 'l')+" same")
-		labelAxis( nameInRoot, histos[ massList[-1] ], 'pruned' )
+		#labelAxis( nameInRoot, histos[ massList[-1] ], 'pruned' )
 	else: 
 		can.SetLogy()
 		multiGraph.Draw("al")
@@ -758,7 +765,7 @@ def plotSignalShape( nameInRoot, rebinX, massList, massWidthList, log ):
 	#### Mean graph
 	zeroList = [0]*len(massList)
 	meanGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', meanList), array('d', zeroList ), array( 'd', meanErrList) )
-	meanFit = TF1("meanFit", "pol1", 200, 2000 )
+	meanFit = TF1("meanFit", "pol1", massList[0], massList[-1] )
 	meanGraph.Fit( meanFit, 'MIR' )
 	canMean = TCanvas('canMean', 'canMean',  10, 10, 750, 500 )
 	gStyle.SetOptFit(1)
@@ -785,7 +792,7 @@ def plotSignalShape( nameInRoot, rebinX, massList, massWidthList, log ):
 	#### Sigma graph
 	zeroList = [0]*len(massList)
 	sigmaGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', sigmaList), array('d', zeroList ), array( 'd', sigmaErrList) )
-	sigmaFit = TF1("sigmaFit", "pol1", 200, 2000 )
+	sigmaFit = TF1("sigmaFit", ("pol1" if 'Resolved' in args.boosted else 'pol3'), massList[0], massList[-1] )
 	sigmaGraph.Fit( sigmaFit, 'MIR' )
 	canSigma = TCanvas('canSigma', 'canSigma',  10, 10, 750, 500 )
 	gStyle.SetOptFit(1)
@@ -816,7 +823,8 @@ def plotSignalAcceptance( miniRunaFile, nameInRoot, massList, massWidthList, log
 	outputFileName = 'signalAcceptance_'+nameInRoot+'_'+args.grooming+'_'+args.decay+'RPVSt_AnalysisPlots_diffVersions.'+args.ext 
 	print 'Processing.......', outputFileName
 
-	legend=TLegend(0.60,(0.5 if 'Tau21' in nameInRoot else 0.72),0.90,0.87)
+	#legend=TLegend(0.60,(0.5 if 'Tau21' in nameInRoot else 0.72),0.90,0.87)
+	legend=TLegend(0.60,(0.20 if 'Boosted' in args.boosted else 0.72), 0.90, (0.4 if 'Boosted' in args.boosted else 0.87))
 	legend.SetFillStyle(0)
 	legend.SetTextSize(0.03)
 	histos = {}
@@ -847,19 +855,22 @@ def plotSignalAcceptance( miniRunaFile, nameInRoot, massList, massWidthList, log
 			if ('UDD323' in d) and (massList[m]>1300): continue
 			NAME = 'RPVStopStopToJets_'+d+'_M-'+str( massList[m] )
 			events = search( dictEvents, NAME )[0]
-
-			histos[ str(massList[m])+d ] = files[ str(massList[m])+d ].Get( nameInRoot+('_2CSVv2L_' if 'UDD323' in d else '_')+NAME )
+			
+			histoName = nameInRoot.replace( args.cut, ('2btag' if 'UDD323' in d else args.cut) )+( '_2CSVv2L_' if(('UDD323' in d) and (args.boosted == 'Resolved')) else '_')+NAME
+			histos[ str(massList[m])+d ] = files[ str(massList[m])+d ].Get( histoName  )
 			recoverSF = (histos[ str(massList[m])+d ].Integral()/histos[ str(massList[m])+d ].GetEntries()) ##### to return to pure number of events instead of weighted
 			histos[ str(massList[m])+d ].Scale( 1/recoverSF )  
-			tmpResolution = int(2*( 10.48 + ( 0.04426 * massList[m]) ) )
-			eventsInWindow = histos[ str(massList[m])+d ].Integral( (massList[m]-tmpResolution), (massList[m]+tmpResolution) )
+			if 'Resolved' in args.boosted: tmpResolution = int(2*( 10.48 + ( 0.04426 * massList[m]) ) )
+			else: tmpResolution = int(2*(-1.78 + ( 0.1097 * massList[m]) + ( -0.0002897 * massList[m]*massList[m] ) + ( 3.18e-07 * massList[m]*massList[m]*massList[m])))
+			peakPosition = ( histos[ str(massList[m])+d ].GetMaximumBin() if massList[m] < 400 else 400 )
+			eventsInWindow = histos[ str(massList[m])+d ].Integral( (peakPosition-tmpResolution), (peakPosition+tmpResolution) )
 			failedEvents = events - eventsInWindow
 			#acceptance = eventsInHisto/events
 			#efficiency = eventsInWindow/eventsInHisto
 			#accXeff = acceptance * efficiency
-			accXeff = eventsInWindow / events 
+			accXeff = eventsInWindow/ events 
 			accXeffErr = sqrt( (1/failedEvents) + (1/eventsInWindow) ) * failedEvents * eventsInWindow / pow( ( events ), 2 )
-			print d, massList[m], eventsInWindow, events, accXeff, accXeffErr
+			print d, massList[m], peakPosition, (peakPosition-tmpResolution), (peakPosition+tmpResolution), eventsInWindow, events, accXeff, accXeffErr
 			accXeffList[d].append( accXeff )
 			accXeffErrList[d].append( accXeffErr )
 
@@ -868,12 +879,14 @@ def plotSignalAcceptance( miniRunaFile, nameInRoot, massList, massWidthList, log
 	dummy=1
 	for d in [ 'UDD312', 'UDD323' ]:
 		accXeffGraph[ args.boosted+d ] = TGraphErrors(len(massesList), array( 'd', massesList), array( 'd', accXeffList[d]), array('d', [0]*len(massesList)), array('d', accXeffErrList[d]) ) 
-
-		accXeffGraph[ args.boosted+d ].Fit( 'pol3', 'R', '', 400, ( 1300 if 'UDD323' in d else 1500 ) )
-		accXeffGraph[ args.boosted+d ].GetFunction('pol3').SetLineColor(dummy)
-		accXeffGraph[ args.boosted+d ].GetFunction('pol3').SetLineWidth(2)
+		fitFunction = ('pol3' if args.boosted == 'Resolved' else 'pol5' )
+		maxFit = (( 1300 if 'UDD323' in d else 1500 ) if args.boosted == 'Resolved' else 400 )
+		minFit = ( 400 if args.boosted == 'Resolved' else 80 )
+		accXeffGraph[ args.boosted+d ].Fit( fitFunction, 'R', '', minFit, maxFit )
+		accXeffGraph[ args.boosted+d ].GetFunction(fitFunction).SetLineColor(dummy)
+		accXeffGraph[ args.boosted+d ].GetFunction(fitFunction).SetLineWidth(2)
 		accXeffGraph[ args.boosted+d ].SetLineColor(dummy)
-		#accXeffGraph[ args.boosted+d ].SetLineWidth(2)
+		accXeffGraph[ args.boosted+d ].SetLineWidth(2)
 		accXeffGraph[ args.boosted+d ].SetMarkerStyle(8)
 		legend.AddEntry( accXeffGraph[ args.boosted+d ], ('Inclusive selection' if 'UDD312' in d else 'Btagged selection') , 'pl' )
 		multiGraph.Add( accXeffGraph[ args.boosted+d ] )
@@ -886,8 +899,8 @@ def plotSignalAcceptance( miniRunaFile, nameInRoot, massList, massWidthList, log
 	multiGraph.GetYaxis().SetTitle( 'Acceptance #times efficiency' )
 	multiGraph.GetXaxis().SetTitle( "Resonance mass [GeV]" )
 	multiGraph.GetYaxis().SetTitleOffset( 0.8 )
-	multiGraph.SetMaximum( 0.05 )
-	multiGraph.SetMinimum( 0.001 )
+	#multiGraph.SetMaximum( 0.05 )
+	#multiGraph.SetMinimum( 0.001 )
 
 
 	legend.Draw()
@@ -1717,11 +1730,11 @@ if __name__ == '__main__':
 		[ 'NormDATA', 'Boosted', 'prunedMassAsym', '', '', 1, 0.40, 0.80, False, False],
 		[ 'Norm', 'Boosted', 'deltaEtaDijet', '', '', 5, '', '', False, False],
 		[ 'NormDATA', 'Boosted', 'deltaEtaDijet', '', '', 5, '', '', False, False],
-		[ 'Norm', 'Boosted', 'jet1Tau32', '', '', 1, taulabX, taulabY, False, True],
-		[ 'NormDATA', 'Boosted', 'jet1Tau32', '', '', 1, taulabX, taulabY, False, True],
-		[ 'Norm', 'Boosted', 'jet2Tau32', '', '', 1, taulabX, taulabY, False, True],
-		[ 'NormDATA', 'Boosted', 'jet2Tau32', '', '', 1, taulabX, taulabY, False, True],
-		[ 'Norm', 'Boosted', 'numJets', '', '', 1, taulabX, taulabY, False, True],
+		[ 'Norm', 'Boosted', 'jet1Tau32', '', '', 1, 0.3, 0.55, False, True],
+		[ 'NormDATA', 'Boosted', 'jet1Tau32', '', '', 1, 0.3, 0.55, False, True],
+		[ 'Norm', 'Boosted', 'jet2Tau32', '', '', 1, 0.3, 0.55, False, True],
+		[ 'NormDATA', 'Boosted', 'jet2Tau32', '', '', 1, 0.3, 0.55, False, True],
+		[ 'Norm', 'Boosted', 'numJets', '', '', 1, 0.3, 0.55, False, True],
 		[ 'Norm', 'Boosted', 'jet1SubjetPtRatio', '', '', 1, '', '', True, False],
 		[ 'Norm', 'Boosted', 'jet2SubjetPtRatio', '', '', 1, '', '', True, False],
 		[ 'Norm', 'Boosted', 'subjetPtRatio', '', '', 1, '', '', True, False],

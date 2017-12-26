@@ -371,7 +371,7 @@ def plotFinalLimits( boostedMasses, boostedVersion, resolvedMasses, resolvedVers
 	c = TCanvas("c", "",800,600)
 	c.cd()
 
-	legend = TLegend(.45,.60,.90,.88)
+	legend = TLegend(.17,.15,.50,.45)
 	legend.SetTextSize(0.03)
 	legend.SetBorderSize(0)
 	legend.SetFillColor(0)
@@ -381,6 +381,8 @@ def plotFinalLimits( boostedMasses, boostedVersion, resolvedMasses, resolvedVers
 
 	graph_xs_th.GetXaxis().SetTitle("Resonance mass [GeV]")
 	graph_xs_th.GetYaxis().SetTitle("(pp #rightarrow #tilde{t} #bar{#tilde{t}}, #tilde{t} #rightarrow "+("q#bar{q}" if 'UDD312' in args.decay else "b#bar{q}" )+") #sigma #bf{#it{#Beta}} [pb] ")
+	graph_xs_th.GetYaxis().SetRangeUser(0.001,5e+03)
+	#graph_xs_th.GetXaxis().SetRangeUser(50,1600)
 	graph_xs_th.GetYaxis().SetTitleOffset(1.1)
 	#graph_xs_th.GetXaxis().SetNdivisions(1005)
 
@@ -388,18 +390,18 @@ def plotFinalLimits( boostedMasses, boostedVersion, resolvedMasses, resolvedVers
 	Boosted_exp_2sigma.Draw("F")
 	Boosted_exp_1sigma.Draw("F")
 	Boosted_exp.Draw("L")
-        Boosted_obs.Draw("L")
+        Boosted_obs.Draw("LP")
 	Resolved_exp_2sigma.Draw("F")
 	Resolved_exp_1sigma.Draw("F")
 	Resolved_exp.Draw("L")
-        Resolved_obs.Draw("L")
+        Resolved_obs.Draw("LP")
 	graph_xs_th.Draw("L")
 
-        #legend.AddEntry(graph_xs_th,"RPV #lambda_{312}^{''} (#tilde{t} #rightarrow qq) cross section","l")
-        legend.AddEntry(graph_xs_th,"Top squark pair production #lambda'' _{"+("312" if '312' in args.decay else '323')+"} (#tilde{t} #rightarrow "+("q#bar{q})" if '312' in args.decay else 'b#bar{q})' ),"l")
+	legend.AddEntry(Boosted_obs,"Observed limit","lp")
 	legend.AddEntry(Boosted_exp,"Expected limit","lp")
 	legend.AddEntry(Boosted_exp_1sigma,"Expected #pm 1#sigma","F")
 	legend.AddEntry(Boosted_exp_2sigma,"Expected #pm 2#sigma","F")
+        legend.AddEntry(graph_xs_th,"Top squark pair production #lambda'' _{"+("312" if '312' in args.decay else '323')+"} (#tilde{t} #rightarrow "+("q#bar{q})" if '312' in args.decay else 'b#bar{q})' ),"l")
     	legend.Draw()
 #	if 'final' in args.boosted: 
 #		xline2 = array('d', [ 190, 190 ])
@@ -423,6 +425,7 @@ def plotFinalLimits( boostedMasses, boostedVersion, resolvedMasses, resolvedVers
 	CMS_lumi.CMS_lumi(c, 4, 0)
 
 	c.SetLogy()
+	c.SetLogx()
 	fileName = 'xs_limit_RPVStop_'+args.decay+'_final_'+args.method+'_'+args.version+'.'+args.ext
 	if args.log:
 		c.SetLogx()
@@ -455,7 +458,8 @@ def compareLimits( listMasses, diffVersions ):
 					if mass in [600, 700, 800]:
 						combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(mass)+args.boosted+'_'+ver+'_'+args.version+'.'+args.method+".mH120.root"
 					else: break
-			else: combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(mass)+'_'+args.boosted+'_'+ver+'_'+args.version+'.'+args.method+".mH120.root"
+			#else: combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(mass)+'_'+args.boosted+'_'+ver+'_'+args.version+'.'+args.method+".mH120.root"
+			else: combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(mass)+'_'+args.boosted+'_'+ver+'.'+args.method+".mH120.root"
 			tmpFile, tmpTree, tmpEntries = getTree( combineFile, "limit" )
 			for i in xrange(tmpEntries):
 				tmpTree.GetEntry(i)
@@ -492,7 +496,8 @@ def compareLimits( listMasses, diffVersions ):
 		diffLimitsGraphDict[ l ].SetLineWidth(3)
 		diffLimitsGraphDict[ l ].SetLineStyle(2)
 		diffLimitsGraphDict[ l ].SetLineColor(dummy)
-		legend.AddEntry(diffLimitsGraphDict[ l ], ( 'Nominal' if '_' == l else l.replace('_', '') ),"lp")
+		#legend.AddEntry(diffLimitsGraphDict[ l ], ( 'Nominal' if '_' == l else l.replace('_', '') ),"lp")
+		legend.AddEntry(diffLimitsGraphDict[ l ], ( 'Nominal' if '_' == l else ( 'Njets=2' if dummy==1 else 'Njets>=2' ) ),"lp")
 		dummy+=1
 
 	c = TCanvas("c", "",800,600)
@@ -501,7 +506,7 @@ def compareLimits( listMasses, diffVersions ):
 	diffLimitsGraphDict[ diffVersions[-2]+'_' ].GetXaxis().SetTitle("Resonance mass [GeV]")
 	diffLimitsGraphDict[ diffVersions[-2]+'_' ].GetYaxis().SetTitle("#sigma #bf{#it{#Beta}} [pb]")
 	diffLimitsGraphDict[ diffVersions[-2]+'_' ].GetYaxis().SetTitleOffset(1.1)
-	if 'Boosted' in args.boosted: diffLimitsGraphDict[ diffVersions[-2]+'_' ].GetYaxis().SetRangeUser(3,1e+04)
+	if 'Boosted' in args.boosted: diffLimitsGraphDict[ diffVersions[-2]+'_' ].GetYaxis().SetRangeUser(0.1,1e+04)
 	elif 'Resolved' in args.boosted: diffLimitsGraphDict[ diffVersions[-2]+'_' ].GetYaxis().SetRangeUser(0.01,100)
 	else: diffLimitsGraphDict[ diffVersions[-2]+'_' ].GetYaxis().SetRangeUser(0.01,10000)
 
@@ -610,7 +615,7 @@ if __name__ == '__main__':
 	parser.add_argument('-b', '--boosted', dest='boosted', action='store', default='Boosted', help='Boosted or non version, example: Boosted' )
 	parser.add_argument('-v', '--version', dest='version', action='store', default='v05', help='Version of the root files' )
 	parser.add_argument('-t', '--theta', dest='theta', action='store', type=float, default=False, help='Input from theta or not.' )
-	parser.add_argument('-l', '--lumi', dest='lumi', action='store', type=float, default=149.9, help='Luminosity, example: 1.' )
+	parser.add_argument('-l', '--lumi', dest='lumi', action='store', type=float, default=35864, help='Luminosity, example: 1.' )
 	parser.add_argument('-e', '--extension', dest='ext', action='store', default='png', help='Extension of plots.' )
 	parser.add_argument('-s', '--sys', dest='sys', action='store', default='NOSys', help='With systematics or not.' )
 	parser.add_argument('-m', '--method', dest='method', action='store', default='AsymptoticLimits', help='Limit method: Asymptotic, HybridNew' )
@@ -631,29 +636,30 @@ if __name__ == '__main__':
 	#if 'gaus' in args.process: listMass = range( 80, 360, 10 )
 	if 'Resolved' in args.boosted: 
 		if '312' in args.decay:  
-			listMass = [ 200, 220, 240 ] + range( 300, 1050, 50 ) + range( 1100, 1400, 100 ) 
-		else: listMass = [ 200, 220, 240, 260, 280 ] + range( 300, 1050, 50 ) #+ [1100, 1200 ] 
+			listMass = range( 400, 1050, 50 ) + range( 1100, 1600, 100 ) 
+		else: listMass = range( 400, 1050, 50 ) + [1100, 1200, 1300, 1400 ] 
 
 	elif "Boosted" in args.boosted:
-		#listMass = [ 80, 100, 120, 140, 160, 180, 200 ]
-		if '312' in args.decay:  listMass = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 300, 350, 400 ] #, 500, 550]
-		else: listMass = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 280, 300, 350, 400, 450 ] #, 500, 550 ]
+		if 'Gauss' in args.version: listMass = range( 80, 200, 20 ) + range( 200, 450, 50 )
+		else:
+			if '312' in args.decay:  listMass = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 300, 350, 400 ] #, 500, 550]
+			else: listMass = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 280, 300, 350, 400 ] #, 450, 500, 550 ]
 	else:
 		if '312' in args.decay:  
 			listMass = range( 80, 260, 20) + range( 300, 1050, 50 ) + range( 1000, 1600, 100 )
 		else: 
-			listMass = range( 80, 300, 20) + range( 300, 1050, 50 ) + [ 1100, 1200, 1300 ]
+			listMass = range( 80, 300, 20) + range( 300, 1050, 50 ) + [ 1100, 1200, 1300, 1400 ]
 			listMass.remove(100)
 
-	if 'compare' in args.process: compareLimits( listMass, ([ '1btag_jet1Tau32_Bin5', '2btag_jet1Tau32_Bin5' ] if 'Boosted' in args.boosted else [ 'delta', 'delta_massWindow', 'delta_doubleGaus' ] ) ) 
+	if 'compare' in args.process: compareLimits( listMass, ([ 'jet1Tau32_BinReso_v09p11', 'jet1Tau32_BinReso_v09p15' ] if 'Boosted' in args.boosted else [ 'delta', 'delta_massWindow', 'delta_doubleGaus' ] ) ) 
 	elif 'full' in args.process: 
 		compareFinalLimits( listMass, 
 				#[ 'Boosted_jet1Tau32_Bin5_v09p2', 'Resolved_delta_'+( '2CSVv2L_' if 'UDD323' in args.decay else '' )+'massWindow_v09p1', 'final_v09' ] ) 
 				[ 'final_v09', 'final_inclusive_v09' ] )
 	elif 'final' in args.process: 
 		plotFinalLimits( range( 80, (300 if 'UDD323' in args.decay else 240), 20 ) + [ 300, 350, 400 ], 
-				('2btag_' if 'UDD323' in args.decay else '')+'jet1Tau32_BinReso_v09p11', 
-				range( 400, 1050, 50) + range(1000, (1400 if 'UDD323' in args.decay else 1600), 100), 
+				('2btag_' if 'UDD323' in args.decay else '')+'jet1Tau32_BinReso_v09p15', 
+				range( 400, 1050, 50) + range(1000, (1500 if 'UDD323' in args.decay else 1600), 100), 
 				'delta_'+('2CSVv2L_' if 'UDD323' in args.decay else '')+'massWindow_v09p10', 
 				listMass
 				)
