@@ -25,9 +25,9 @@ then
 		#masses="80 100 120 140 160 180 200 2"
 		if [ $4 == "UDD312" ]
 		then
-			masses="80 100 120 140 160 180 200 220 240 300 350 400 450 500 550"
+			masses="80 100 120 140 160 180 200 220 240 300 350 400"
 		else
-			masses="80 100 120 140 160 180 200 220 240 260 280 300 350"
+			masses="80 100 120 140 160 180 200 220 240 260 280 300 350 400"
 		fi
 	fi
 
@@ -60,13 +60,14 @@ do
 
 	elif [ $2 == "fullCLs" ]
 	then
-		NAME="_RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_${version}"
-		combine Datacards/datacard${NAME}.txt -M HybridNew --LHCmode LHC-limits -n ${NAME} 
-		combine Datacards/datacard${NAME}.txt -M HybridNew --LHCmode LHC-limits -n ${NAME} --expectedFromGrid 0.025
-		combine Datacards/datacard${NAME}.txt -M HybridNew --LHCmode LHC-limits -n ${NAME} --expectedFromGrid 0.16
-		combine Datacards/datacard${NAME}.txt -M HybridNew --LHCmode LHC-limits -n ${NAME} --expectedFromGrid 0.50
-		combine Datacards/datacard${NAME}.txt -M HybridNew --LHCmode LHC-limits -n ${NAME} --expectedFromGrid 0.84
-		combine Datacards/datacard${NAME}.txt -M HybridNew --LHCmode LHC-limits -n ${NAME} --expectedFromGrid 0.975
+		#NAME="_RPVStopStopToJets_${decay}_M-${mass}_Resolved_${3}_${version}"
+		NAME="_RPVStopStopToJets_${decay}_M-${mass}_pruned_${3}_${version}_bins"
+		combine Datacards/datacard${NAME}.txt -M HybridNew --LHCmode LHC-limits -n ${NAME} --rMax 1
+		combine Datacards/datacard${NAME}.txt -M HybridNew --LHCmode LHC-limits -n ${NAME} --expectedFromGrid 0.025 --rMax 1
+		combine Datacards/datacard${NAME}.txt -M HybridNew --LHCmode LHC-limits -n ${NAME} --expectedFromGrid 0.16 --rMax 1
+		combine Datacards/datacard${NAME}.txt -M HybridNew --LHCmode LHC-limits -n ${NAME} --expectedFromGrid 0.50 --rMax 1
+		combine Datacards/datacard${NAME}.txt -M HybridNew --LHCmode LHC-limits -n ${NAME} --expectedFromGrid 0.84 --rMax 1
+		combine Datacards/datacard${NAME}.txt -M HybridNew --LHCmode LHC-limits -n ${NAME} --expectedFromGrid 0.975 --rMax 1
 		hadd higgsCombine${NAME}.HybridNewAll.mH120.root higgsCombine${NAME}.HybridNew*root 
 
 	elif [ $2 == "pseudo" ]

@@ -54,7 +54,7 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 		massWindow = 30 
 	else:
 		if '312' in args.decay: 
-			massList = range( 400, 1050, 50 ) + range( 1100, 1300, 100 ) 
+			massList = range( 400, 1050, 50 ) + range( 1100, 1400, 100 ) 
 		else: massList = range( 400, 1050, 50 ) + range( 1100, 1300, 100 ) 
 
 	nomArray = []
@@ -113,11 +113,11 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 		#for k in histos: histos[ k ] = histos[ k ].Rebin( len( boostedMassAveBins )-1, histos[ k ].GetName(), boostedMassAveBins )
 
 		##### window for acceptance
-		if 'Resolved' in args.boosted: massWindow = 9.73 + ( 0.029 * xmass ) 	## from generator level 
+		if 'Resolved' in args.boosted: massWindow = 10.48 + ( 0.04426 * xmass) 	## from generator level 
 		else: massWindow = int(-1.78 + ( 0.1097 * xmass) + ( -0.0002897 * xmass*xmass ) + ( 3.18e-07 * xmass*xmass*xmass))
 		lowEdgeWindow = int(xmass/args.reBin -  2*( massWindow )/args.reBin )
 		highEdgeWindow = int(xmass/args.reBin + 2*( massWindow )/args.reBin )
-		print massWindow, lowEdgeWindow, xmass
+		print xmass, massWindow, lowEdgeWindow, highEdgeWindow, histos['Nominal'].GetBinLowEdge(lowEdgeWindow), histos['Nominal'].GetBinLowEdge(highEdgeWindow), args.reBin
 
 		'''
 		####### Fits for Nominal/Up/Down
@@ -206,7 +206,7 @@ def plotSystematics( name, xmin, xmax, labX, labY, log):
 		can = TCanvas('c'+str(xmass), 'c'+str(xmass),  10, 10, 750, 500 )
 		if log: can.SetLogy()
 		#histos['Sample1'].SetMinimum(10)
-		histos['Nominal'].GetXaxis().SetRangeUser( xmass-70, xmass+70   )
+		histos['Nominal'].GetXaxis().SetRangeUser( xmass-100, xmass+100   )
 		histos['Nominal'].Draw('histes') 
 		histos['Up'].Draw('histe sames')
 		histos['Down'].Draw('histe sames')
@@ -386,7 +386,7 @@ if __name__ == '__main__':
 	parser.add_argument('-C', '--cut', action='store', default='deltaEtaDijet', dest='cut', help='cut, example: cutDEta' )
 	parser.add_argument('-e', '--extension', action='store', default='png', dest='ext', help='Extension of plots.' )
 	parser.add_argument('-u', '--unc', action='store', default='JES', dest='unc',  help='Type of uncertainty' )
-	parser.add_argument('-R', '--reBin', action='store', default=5, type=float, dest='reBin', help='Rebin number.' )
+	parser.add_argument('-R', '--reBin', action='store', default=5, type=int, dest='reBin', help='Rebin number.' )
 	parser.add_argument('-B', '--batchSys', action='store_true',  dest='batchSys', default=False, help='Process: all or single.' )
 	parser.add_argument('-t', '--miniTree', action='store_true', default=False, help='miniTree: if plots coming from miniTree or RUNAnalysis.' )
 

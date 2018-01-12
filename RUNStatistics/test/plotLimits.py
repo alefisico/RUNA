@@ -66,12 +66,12 @@ def readCombineFile( listMass, version ):
 			tmp = round( tmpTree.quantileExpected, 2)
 			if tmp == 0.03: listDict[ '2sigma_down' ].append( tmpTree.limit * XS )
 			if tmp == 0.16: listDict[ '1sigma_down' ].append( tmpTree.limit * XS )
-			if tmp == 0.5: 
-				listDict[ 'expected' ].append( tmpTree.limit * XS )
-				print imass, round( tmpTree.limit * XS, 2)
+			if tmp == 0.5: listDict[ 'expected' ].append( tmpTree.limit * XS )
 			if tmp == 0.84: listDict[ '1sigma_up' ].append( tmpTree.limit * XS )
 			if tmp == 0.98: listDict[ '2sigma_up' ].append( tmpTree.limit * XS ) 
 			if tmp == -1: listDict[ 'observed' ].append( tmpTree.limit * XS )
+
+		print imass, '&', round(listDict['expected'][-1],1), '&', round(listDict['observed'][-1],1)
 
 	print len(listDict['expected']), len(listDict['2sigma_down'])
 	for i in range(0,len(listMass)):
@@ -643,7 +643,7 @@ if __name__ == '__main__':
 		if 'Gauss' in args.version: listMass = range( 80, 200, 20 ) + range( 200, 450, 50 )
 		else:
 			if '312' in args.decay:  listMass = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 300, 350, 400 ] #, 500, 550]
-			else: listMass = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 280, 300, 350, 400 ] #, 450, 500, 550 ]
+			else: listMass = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 350, 400 ] #, 450, 500, 550 ]
 	else:
 		if '312' in args.decay:  
 			listMass = range( 80, 260, 20) + range( 300, 1050, 50 ) + range( 1000, 1600, 100 )

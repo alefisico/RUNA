@@ -547,6 +547,11 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 			sigGaus = TF1( 'sigGaus', 'gaus', 0, 500 )
 			tmpResolution = 2*(-1.78 + ( 0.1097 * signalMass) + ( -0.0002897 * signalMass*signalMass ) + ( 3.18e-07 * signalMass*signalMass*signalMass))
 			hSignal.Fit( sigGaus, 'MIR', '', (signalMass-tmpResolution), (signalMass+tmpResolution) )
+			#c1 = TCanvas('c1', 'c1',  10, 10, 750, 500 )
+			#hSignal.GetXaxis().SetRangeUser(60, 100)
+			#hSignal.Draw()
+			#c1.SaveAs('test.'+args.extension)
+			#del c1
 		signalMassWidth = sigGaus.GetParameter(2)
 		signalMaximum = sigGaus.GetParameter(1)
 
@@ -611,9 +616,10 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 			lowEdgeWindow = int(signalMaximum/args.reBin - 2*( int( signalMassWidth )/args.reBin ))+1
 			highEdgeWindow = int(signalMaximum/args.reBin + 2*( int( signalMassWidth )/args.reBin ))+2
 		else:
-			peak = min(range(len(boostedMassAveBins)), key=lambda x:abs(boostedMassAveBins[x]-int(signalMaximum)))+1
-			lowEdgeWindow = peak - (2 if (signalMass < 200 ) else 1 )
-			highEdgeWindow = peak + (1 if (signalMass < 200 ) else 2 )
+			peak = min(range(len(boostedMassAveBins)), key=lambda x:abs(boostedMassAveBins[x]-int(signalMaximum)))
+			#print peak, boostedMassAveBins[peak]
+			lowEdgeWindow = peak - ( 1 if (signalMass in [200, 300, 350, 400] ) else 2 )
+			highEdgeWindow = peak + (2 if (signalMass in [ 100, 120, 200, 300, 400 ] ) else 1 )
 	else: 
 		signalMassWidht = 20 ## dummy
 		lowEdgeWindow = 30
@@ -625,15 +631,24 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 	#	print ibin, hSignal.GetBinContent( ibin ), hSignal.GetBinCenter( ibin )
 	############################
 
+	totalData = 0
+	totalBkg = 0
+	totalBkgStat = 0
+	totalSig = 0
+	totalSigStat = 0
+
 	combineCards = 'combineCards.py '
 	accDict = OrderedDict()
-	for ibin in range( lowEdgeWindow, highEdgeWindow ):
+	for ibin in range( lowEdgeWindow+1, highEdgeWindow+2 ):
 
 		### Signal
 		sigAcc = hSignal.GetBinContent( ibin )
-		#print 'signal', hSignal.GetBinLowEdge( ibin ), sigAcc
+		print 'signal', hSignal.GetBinLowEdge( ibin ), sigAcc
 		if ( sigAcc == 0 ): continue
-		sigStatUnc = 1 + hSignal.GetBinError( ibin )/sigAcc  #1+ ( abs(hSignal.GetBinError( ibin )-sigAcc)/sigAcc) 
+		totalSig += sigAcc
+		sigAccUnc = hSignal.GetBinError( ibin )
+		totalSigStat += sigAccUnc
+		sigStatUnc = 1 + sigAccUnc/sigAcc  
 		accDict[ 'signal' ] = [ round(sigAcc,3), round(sigStatUnc,3) ]
 		if args.unc:
 			if hSigSyst['JERDown'].GetBinContent( ibin ) != 0:
@@ -658,6 +673,7 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 
 		### data
 		contData = hData.GetBinContent( ibin )
+		totalData += contData
 		#print 'data', hData.GetBinLowEdge( ibin ), contData
 
 		### bkg
@@ -673,6 +689,7 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 			tf = round( hDataRatioBD.GetBinContent( ibin ), 3 )
 			errBD = 1+ ( hDataRatioBD.GetBinError( ibin ) / tf )
 		bkgAcc = tf * contDataC
+		totalBkg += bkgAcc
 		accDict[ 'qcd' ] = [ round(bkgAcc,3), round(args.bkgUncValue,3) ]
 
 		#### adding MC bkgs
@@ -681,9 +698,11 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 			#print bkgHistos[ sample ].GetBinLowEdge( ibin )
 			try: mcbkgstatunc = 1 + ( abs(bkgHistos[ sample ].GetBinError( ibin ))/mcbkgacc )
 			except ZeroDivisionError: mcbkgstatunc = 1.8
+			totalBkg += mcbkgacc
+			totalBkgStat += abs(bkgHistos[ sample ].GetBinError( ibin ))
 			accDict[ sample.lower() ] = [ round(mcbkgacc,3), round(mcbkgstatunc,3) ]
 		if args.ttbarAsSignal: del accDict[ 'TT' ]
-		print ibin, sigAcc, accDict, contData
+		#print ibin, sigAcc, accDict, contData
 				
 
 		######################## Creating  datacards
@@ -722,13 +741,13 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 				tmp+=1
 
 			datacard.write('JESshape\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(sigShapeJESDown)+'/'+str(sigShapeJESUp) for i in range(len(accDict)) ] ) +'\n' ) 
-			datacard.write('JESaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else ( str(uncJES) if 'gaus' in args.job else ( str(1+uncDict[signalMass][(1 if 'UDD312' in args.decay else 5)]))) for i in range(len(accDict)) ]) +'\n' ) 
+			datacard.write('JESaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(uncJES) for i in range(len(accDict)) ]) +'\n' ) 
 
 			datacard.write('JERshape\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(sigShapeJERDown)+'/'+str(sigShapeJERUp) for i in range(len(accDict)) ] ) +'\n' ) 
-			datacard.write('JERaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else ( str(uncJER) if 'gaus' in args.job else ( str(1+uncDict[signalMass][(2 if 'UDD312' in args.decay else 6)]))) for i in range(len(accDict)) ] ) +'\n' ) 
-			datacard.write('PUaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else ( str(uncPU) if 'gaus' in args.job else ( str(1+uncDict[signalMass][(3 if 'UDD312' in args.decay else 7)]))) for i in range(len(accDict)) ] ) +'\n' ) 
-			datacard.write('PDFaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else ( str(uncPDF) if 'gaus' in args.job else ( str(1+uncDict[signalMass][(4 if 'UDD312' in args.decay else 8)]))) for i in range(len(accDict)) ] ) +'\n' ) 
-			if 'UDD323' in args.decay: datacard.write('Btagaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else ( str(uncBtag) if 'gaus' in args.job else ( str(1+uncDict[signalMass][0]))) for i in range(len(accDict)) ] ) +'\n' ) 
+			datacard.write('JERaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(uncJER) for i in range(len(accDict)) ] ) +'\n' ) 
+			datacard.write('PUaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(uncPU) for i in range(len(accDict)) ] ) +'\n' ) 
+			datacard.write('PDFaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(uncPDF) for i in range(len(accDict)) ] ) +'\n' ) 
+			if 'UDD323' in args.decay: datacard.write('Btagaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(uncBtag) for i in range(len(accDict)) ] ) +'\n' ) 
 
 
 		datacard.close()
@@ -744,6 +763,8 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 		#subprocess.call( 'combine -M Asymptotic '+statDir+'/Datacards/datacard_'+outputName+'_bins.txt -n _'+outputName+'_2sigma', shell=True )
 		subprocess.call( 'mv higgsCombine* '+statDir, shell=True )
 		print ' |----> Done. Have a wonderful day. :D'
+
+	print '@'*10, signalMass, ' & [ ', int(boostedMassAveBins[lowEdgeWindow]), ',', int(boostedMassAveBins[highEdgeWindow]), ' ] & ', int(totalData), ' & ', round(totalBkg,1), '$\pm$', round(totalBkgStat,1), ' & ', round(totalSig,1), '$\pm$', round(totalSigStat,1), '\\\\'
 
 
 if __name__ == '__main__':
@@ -767,6 +788,7 @@ if __name__ == '__main__':
 	parser.add_argument('-E', '--extension', action='store', default='png', dest='extension', help='Extension of plots: png, pdf' )
 	parser.add_argument('-b', '--numBtags', dest='numBtags', default='2btag', help='Number of btags' )
     	parser.add_argument('-r', "--runCombine", dest="runCombine", action="store_true", default=False, help="Create theta file.")
+    	parser.add_argument('-T', "--createTable", dest="createTable", action="store_true", default=False, help="Create table.")
 
 	try:
 		args = parser.parse_args()
@@ -789,7 +811,11 @@ if __name__ == '__main__':
 	#ttbarSF = ( 1.00 if 'jet1Tau32' in args.cutTop else 0.96 )
 	MCunc = ( 1.10 if 'jet1Tau32' in args.cutTop else 1.25 )
 
-	uncDict = OrderedDict()
+	uncJES  = 1.012
+	uncJER  = 1.018
+	uncPU   = 1.01
+	uncPDF  = 1.01
+	uncBtag = 1.01
 
 	statDir = os.getcwdu()+'/../../RUNStatistics/test/'
 	outputFileTheta = ''
@@ -812,35 +838,9 @@ if __name__ == '__main__':
 						0.85, 0.45, 
 						False, 
 						plot=True )
-		uncJES  = 1.012
-		uncJER  = 1.018
-		uncPU   = 1.01
-		uncPDF  = 1.01
-		uncBtag = 1.01
-
 	else: 
 		if 'UDD312' in args.decay: massList = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 300, 350, 400, 450, 500, 550 ]
 		else: massList = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 350, 400, 450, 500, 550 ]
-
-		##      mass   =  btag, 	JES, 	JER, 	PU, 	PDF,	UDD323 JES, 	JER, 	PU, 	PDF	
-		uncDict[ 80 ] = [ 0.049, 	0.025, 	0.039, 	0.021,	0.112,		0.025, 	0.038, 	0.021, 	0.107,	 ]
-		uncDict[ 100 ] = [ 0.005, 	0.023, 	0.035, 	0.011,	0.106,		0.024, 	0.036, 	0.011, 	0.108,	 ]
-		uncDict[ 120 ] = [ 0.052, 	0.022, 	0.035, 	0.016,	0.106,		0.023, 	0.031, 	0.016, 	0.108,	 ]
-		uncDict[ 140 ] = [ 0.054, 	0.023, 	0.036, 	0.009,	0.115,		0.027, 	0.042, 	0.009, 	0.122,	 ]
-		uncDict[ 160 ] = [ 0.057, 	0.021, 	0.038, 	0.010,	0.12,		0.023, 	0.034, 	0.010, 	0.133,	 ]
-		uncDict[ 180 ] = [ 0.058, 	0.018, 	0.03, 	0.007,	0.123,		0.019, 	0.026, 	0.007, 	0.11,	 ]
-		uncDict[ 200 ] = [ 0.065, 	0.013, 	0.02, 	0.009,	0.137,		0.017, 	0.025, 	0.009, 	0.155,	 ]
-		uncDict[ 220 ] = [ 0.069, 	0.014, 	0.017, 	0.005,	0.128,		0.018, 	0.013, 	0.005, 	0.156,	 ]
-		uncDict[ 240 ] = [ 0.077, 	0.012, 	0.021, 	0.017,	0.172,		0.014, 	0.015, 	0.017, 	0.164,	 ]
-		uncDict[ 260 ] = [ 0.078, 	0., 	0., 	0.,	0.,		0.011, 	0.009, 	0.010, 	0.182,	 ]
-		uncDict[ 280 ] = [ 0.084, 	0., 	0., 	0., 	0.,		0.025, 	0.009, 	0.010, 	0.209,	 ]
-		uncDict[ 300 ] = [ 0.088, 	0.012, 	0.014, 	0.004, 	0.162,		0.022, 	0.014, 	0.004, 	0.17,	 ]
-		uncDict[ 350 ] = [ 0.110, 	0.018, 	0.014, 	0.003, 	0.206,		0.015, 	0.003, 	0.003, 	0.223,	 ]
-		uncDict[ 400 ] = [ 0.110, 	0.018, 	0.014, 	0.022, 	0.206,		0.015, 	0.003, 	0.022, 	0.223,	 ]
-		uncDict[ 450 ] = [ 0.110, 	0.018, 	0.014, 	0.004, 	0.206,		0.015, 	0.003, 	0.004, 	0.223,	 ]
-		uncDict[ 500 ] = [ 0.110, 	0.018, 	0.014, 	0.004, 	0.206,		0.015, 	0.003, 	0.004, 	0.223,	 ]
-		uncDict[ 550 ] = [ 0.110, 	0.018, 	0.014, 	0.004, 	0.206,		0.015, 	0.003, 	0.004, 	0.223,	 ]
-		uncDict[ 600 ] = [ 0.110, 	0.018, 	0.014, 	0.004, 	0.206,		0.015, 	0.003, 	0.004, 	0.223,	 ]
 
 	if args.massValue > 0: massList = [ args.massValue ]
 	if args.signalInjec: massList = massList * 1000
