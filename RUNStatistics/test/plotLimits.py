@@ -57,19 +57,32 @@ def readCombineFile( listMass, version ):
 	masses_exp = array('d', listMass )
 
 	for imass in listMass:
-		combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(imass)+'_'+version+'.'+args.method+".mH120.root"
 		XS = search( dictXS, 'RPVStopStopToJets_'+args.decay+'_M-'+str(imass) )
-
-		tmpFile, tmpTree, tmpEntries = getTree( combineFile, "limit" )
-		for i in xrange(tmpEntries):
-			tmpTree.GetEntry(i)
-			tmp = round( tmpTree.quantileExpected, 2)
-			if tmp == 0.03: listDict[ '2sigma_down' ].append( tmpTree.limit * XS )
-			if tmp == 0.16: listDict[ '1sigma_down' ].append( tmpTree.limit * XS )
-			if tmp == 0.5: listDict[ 'expected' ].append( tmpTree.limit * XS )
-			if tmp == 0.84: listDict[ '1sigma_up' ].append( tmpTree.limit * XS )
-			if tmp == 0.98: listDict[ '2sigma_up' ].append( tmpTree.limit * XS ) 
-			if tmp == -1: listDict[ 'observed' ].append( tmpTree.limit * XS )
+		if 'Asymptotic' in args.method:
+			combineFile = "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(imass)+'_'+version+'.'+args.method+".mH120.root"
+			tmpFile, tmpTree, tmpEntries = getTree( combineFile, "limit" )
+			for i in xrange(tmpEntries):
+				tmpTree.GetEntry(i)
+				tmp = round( tmpTree.quantileExpected, 2)
+				if tmp == 0.03: listDict[ '2sigma_down' ].append( tmpTree.limit * XS )
+				if tmp == 0.16: listDict[ '1sigma_down' ].append( tmpTree.limit * XS )
+				if tmp == 0.5: listDict[ 'expected' ].append( tmpTree.limit * XS )
+				if tmp == 0.84: listDict[ '1sigma_up' ].append( tmpTree.limit * XS )
+				if tmp == 0.98: listDict[ '2sigma_up' ].append( tmpTree.limit * XS ) 
+				if tmp == -1: listDict[ 'observed' ].append( tmpTree.limit * XS )
+		elif 'Hybrid' in args.method:
+			dictNames = OrderedDict()
+			dictNames[ '2sigma_down' ] = 'quant0.025'
+			dictNames[ '1sigma_down' ] = 'quant0.160'
+			dictNames[ 'expected' ] = 'quant0.500'
+			dictNames[ '1sigma_up' ] = 'quant0.840'
+			dictNames[ '2sigma_up' ] = 'quant0.975'
+			dictNames[ 'observed' ] = 'quant0.500'
+			for q, k in dictNames.iteritems():
+				tmpFile, tmpTree, tmpEntries = getTree( "higgsCombine_RPVStopStopToJets_"+args.decay+"_M-"+str(imass)+'_'+version+'_bins.'+args.method+".mH120."+k+".root", "limit" )
+				for i in xrange(tmpEntries):
+					tmpTree.GetEntry(i)
+					listDict[ q ].append( tmpTree.limit * XS )
 
 		print imass, '&', round(listDict['expected'][-1],1), '&', round(listDict['observed'][-1],1)
 
@@ -81,7 +94,7 @@ def readCombineFile( listMass, version ):
 
 	listGraphs = {}
 	listGraphs[ '2sigma' ] = TGraph( len(masses_exp), masses_exp, listDict['2sigma_down'] )
-	listGraphs[ '2sigma' ].SetFillColor( kYellow )
+	listGraphs[ '2sigma' ].SetFillColor( kOrange )
 	listGraphs[ '1sigma' ] = TGraph( len(masses_exp), masses_exp, listDict['1sigma_down'] )
 	listGraphs[ '1sigma' ].SetFillColor( kGreen+1 )
 	listGraphs[ 'expected' ] = TGraph( len(masses), masses, listDict['expected'] )
@@ -142,7 +155,7 @@ def plotLimits( listMasses  ):
 
 	else:
 
-		graph_obs, graph_exp, graph_exp_1sigma, graph_exp_2sigma = readCombineFile( listMasses, args.boosted+'_'+args.sys+'_'+args.version )
+		graph_obs, graph_exp, graph_exp_1sigma, graph_exp_2sigma = readCombineFile( listMasses, (args.boosted if 'Asymptotic' in args.method else 'pruned')+'_'+args.sys+'_'+args.version )
 
 
 	if args.addComparison: 
@@ -254,13 +267,14 @@ def plotLimits( listMasses  ):
 	legend.SetTextFont(42)
 	legend.SetHeader('95% CL upper limits')
 
-	graph_exp_2sigma.GetXaxis().SetTitle("Resonance mass [GeV]")
-	graph_exp_2sigma.GetYaxis().SetTitle("(pp #rightarrow #tilde{t} #bar{#tilde{t}}, #tilde{t} #rightarrow "+("q#bar{q}" if 'UDD312' in args.decay else "b#bar{q}" )+") #sigma #bf{#it{#Beta}} [pb] ")
+	graph_exp_2sigma.GetXaxis().SetTitle("m_{#tilde{t}} [GeV]")
+	graph_exp_2sigma.GetYaxis().SetTitle("(pp #rightarrow #tilde{t} #bar{#tilde{t}}, #tilde{t} #rightarrow "+("qq'" if 'UDD312' in args.decay else "bq'" )+") #sigma #bf{#it{#Beta}}^{2} [pb] ")
 	graph_exp_2sigma.GetYaxis().SetTitleOffset(1.1)
+	graph_exp_2sigma.GetXaxis().SetTitleOffset(0.8)
 	if 'Boosted' in args.boosted: graph_exp_2sigma.GetYaxis().SetRangeUser(0.1,1e+04)
 	elif 'Resolved' in args.boosted: graph_exp_2sigma.GetYaxis().SetRangeUser(0.01,100)
 	else: graph_exp_2sigma.GetYaxis().SetRangeUser(0.01,10000)
-	#graph_exp_2sigma.GetXaxis().SetNdivisions(1005)
+	graph_exp_2sigma.GetXaxis().SetNdivisions(510)
 
 	graph_exp_2sigma.Draw("AF")
 	graph_exp_1sigma.Draw("F")
@@ -271,11 +285,11 @@ def plotLimits( listMasses  ):
 	if not args.addComparison: graph_obs.Draw("LP")
 
         #legend.AddEntry(graph_xs_th,"RPV #lambda_{312}^{''} (#tilde{t} #rightarrow qq) cross section","l")
-        legend.AddEntry(graph_xs_th,"Top squark pair production #lambda'' _{"+("312" if '312' in args.decay else '323')+"} (#tilde{t} #rightarrow "+("q#bar{q})" if '312' in args.decay else 'b#bar{q})' ),"l")
-	if not args.addComparison: legend.AddEntry(graph_obs,"Observed limit","lp")
-	legend.AddEntry(graph_exp,"Expected limit","lp")
-	legend.AddEntry(graph_exp_1sigma,"Expected #pm 1#sigma","F")
-	legend.AddEntry(graph_exp_2sigma,"Expected #pm 2#sigma","F")
+        legend.AddEntry(graph_xs_th,"Top squark pair production #lambda'' _{"+("312" if '312' in args.decay else '323')+"} (#tilde{t} #rightarrow "+("qq')" if '312' in args.decay else "bq')" ),"l")
+	if not args.addComparison: legend.AddEntry(graph_obs,"Observed","lp")
+	legend.AddEntry(graph_exp,"Median expected","lp")
+	legend.AddEntry(graph_exp_1sigma,"68% expected","F")
+	legend.AddEntry(graph_exp_2sigma,"95% expected","F")
 	#legend.AddEntry(graph_xs_cms13TeV2015,"Expected limit 2015 data","L")
 	if args.addComparison:
 		if 'Boosted' in args.boosted:
@@ -355,38 +369,43 @@ def plotFinalLimits( boostedMasses, boostedVersion, resolvedMasses, resolvedVers
 	
 	masses = array('d', allMasses )
 	xs_theory = array('d')
-	for mass in allMasses: xs_theory.append( search( dictXS, 'RPVStopStopToJets_'+args.decay+'_M-'+str(mass) ) )
+	xs_theory_unc = array('d')
+	for mass in allMasses: 
+		xs_theory.append( search( dictXS, 'RPVStopStopToJets_'+args.decay+'_M-'+str(mass) ) )
+		xs_theory_unc.append( search( dictXS, 'RPVStopStopToJets_'+args.decay+'_M-'+str(mass)+'Unc' ) )
+	shadow_graph_xs_th = TGraphErrors(len(masses),masses,xs_theory, array('d', [0]*len(masses)), xs_theory_unc )
 	graph_xs_th = TGraph(len(masses),masses,xs_theory)
-	shadow_graph_xs_th = graph_xs_th.Clone()
-	graph_xs_th.SetLineWidth(3)
-	graph_xs_th.SetLineStyle(2)
-	graph_xs_th.SetLineColor(kMagenta)
-	shadow_graph_xs_th.SetLineWidth(10)
-	shadow_graph_xs_th.SetLineColorAlpha(kMagenta, 0.15);
+	shadow_graph_xs_th.SetLineWidth(3)
+	shadow_graph_xs_th.SetFillStyle(1001)
+	shadow_graph_xs_th.SetLineStyle(2)
+	shadow_graph_xs_th.SetFillColorAlpha(kMagenta, 0.1)
+	shadow_graph_xs_th.SetLineColor(kMagenta)
 
 	Boosted_obs, Boosted_exp, Boosted_exp_1sigma, Boosted_exp_2sigma = readCombineFile( boostedMasses, 'Boosted_'+boostedVersion )
 
 	Resolved_obs, Resolved_exp, Resolved_exp_1sigma, Resolved_exp_2sigma = readCombineFile( resolvedMasses, 'Resolved_'+resolvedVersion )
 
+	tdrStyle.SetPadBottomMargin(0.13)
 	c = TCanvas("c", "",800,600)
 	c.cd()
 
 	legend = TLegend(.17,.15,.50,.45)
-	legend.SetTextSize(0.03)
+	legend.SetTextSize(0.04)
 	legend.SetBorderSize(0)
 	legend.SetFillColor(0)
 	legend.SetFillStyle(0)
 	legend.SetTextFont(42)
 	legend.SetHeader('95% CL upper limits')
 
-	graph_xs_th.GetXaxis().SetTitle("Resonance mass [GeV]")
-	graph_xs_th.GetYaxis().SetTitle("(pp #rightarrow #tilde{t} #bar{#tilde{t}}, #tilde{t} #rightarrow "+("q#bar{q}" if 'UDD312' in args.decay else "b#bar{q}" )+") #sigma #bf{#it{#Beta}} [pb] ")
-	graph_xs_th.GetYaxis().SetRangeUser(0.001,5e+03)
-	#graph_xs_th.GetXaxis().SetRangeUser(50,1600)
-	graph_xs_th.GetYaxis().SetTitleOffset(1.1)
-	#graph_xs_th.GetXaxis().SetNdivisions(1005)
+	shadow_graph_xs_th.GetXaxis().SetTitle("m_{#tilde{t}} [GeV]")
+	shadow_graph_xs_th.GetYaxis().SetTitle("(pp #rightarrow #tilde{t} #bar{#tilde{t}}, #tilde{t} #rightarrow "+("qq'" if 'UDD312' in args.decay else "bq'" )+") #sigma #bf{#it{#Beta}}^{2} [pb] ")
+	shadow_graph_xs_th.GetYaxis().SetRangeUser(0.001,5e+03)
+	#shadow_graph_xs_th.GetXaxis().SetRangeUser(50,1600)
+	shadow_graph_xs_th.GetYaxis().SetTitleOffset(1.1)
+	shadow_graph_xs_th.GetXaxis().SetLabelOffset(0.0001)
+	shadow_graph_xs_th.GetXaxis().SetNdivisions(50510)
 
-	graph_xs_th.Draw("AL")
+	shadow_graph_xs_th.Draw("A3")
 	Boosted_exp_2sigma.Draw("F")
 	Boosted_exp_1sigma.Draw("F")
 	Boosted_exp.Draw("L")
@@ -395,13 +414,20 @@ def plotFinalLimits( boostedMasses, boostedVersion, resolvedMasses, resolvedVers
 	Resolved_exp_1sigma.Draw("F")
 	Resolved_exp.Draw("L")
         Resolved_obs.Draw("LP")
-	graph_xs_th.Draw("L")
 
-	legend.AddEntry(Boosted_obs,"Observed limit","lp")
-	legend.AddEntry(Boosted_exp,"Expected limit","lp")
-	legend.AddEntry(Boosted_exp_1sigma,"Expected #pm 1#sigma","F")
-	legend.AddEntry(Boosted_exp_2sigma,"Expected #pm 2#sigma","F")
-        legend.AddEntry(graph_xs_th,"Top squark pair production #lambda'' _{"+("312" if '312' in args.decay else '323')+"} (#tilde{t} #rightarrow "+("q#bar{q})" if '312' in args.decay else 'b#bar{q})' ),"l")
+	graph_xs_th.SetLineWidth(3)
+	graph_xs_th.SetLineStyle(2)
+	graph_xs_th.SetLineColor(kMagenta)
+	#graph_xs_th.SetLineColorAlpha(kMagenta, 0.05)
+	graph_xs_th.Draw("L")
+	shadow_graph_xs_th.Draw('3')
+
+	legend.AddEntry(Boosted_obs,"Observed","lp")
+	legend.AddEntry(Boosted_exp,"Median expected","lp")
+	legend.AddEntry(Boosted_exp_1sigma,"68% expected","F")
+	legend.AddEntry(Boosted_exp_2sigma,"95% expected","F")
+        #legend.AddEntry(graph_xs_th,"Top squark pair production #lambda_{"+("312" if '312' in args.decay else '323')+"}'' (#tilde{t} #rightarrow "+("qq')" if '312' in args.decay else "bq')" ),"l")
+        legend.AddEntry(shadow_graph_xs_th,"Top squark pair production","fl")
     	legend.Draw()
 #	if 'final' in args.boosted: 
 #		xline2 = array('d', [ 190, 190 ])
@@ -485,7 +511,7 @@ def compareLimits( listMasses, diffVersions ):
 	graph_xs_th.SetLineColor(kMagenta)
 	shadow_graph_xs_th.SetLineWidth(10)
 	shadow_graph_xs_th.SetLineColorAlpha(kMagenta, 0.15);
-        legend.AddEntry(graph_xs_th,"Top squark pair production #lambda_{"+("312" if '312' in args.decay else '323')+"}^{''} (#tilde{t} #rightarrow "+("qq)" if '312' in args.decay else 'bq)' ),"l")
+        legend.AddEntry(graph_xs_th,"Top squark pair production #lambda_{"+("312" if '312' in args.decay else '323')+"}^{''} (#tilde{t} #rightarrow "+("qq)" if '312' in args.decay else "bq')" ),"l")
 
 	diffLimitsGraphDict = OrderedDict()
 	dummy=1
@@ -497,7 +523,7 @@ def compareLimits( listMasses, diffVersions ):
 		diffLimitsGraphDict[ l ].SetLineStyle(2)
 		diffLimitsGraphDict[ l ].SetLineColor(dummy)
 		#legend.AddEntry(diffLimitsGraphDict[ l ], ( 'Nominal' if '_' == l else l.replace('_', '') ),"lp")
-		legend.AddEntry(diffLimitsGraphDict[ l ], ( 'Nominal' if '_' == l else ( 'Njets=2' if dummy==1 else 'Njets>=2' ) ),"lp")
+		legend.AddEntry(diffLimitsGraphDict[ l ], ( 'Nominal' if '_' == l else ( 'w/o inflated TF error' if dummy==1 else 'with inflated TF error' ) ),"lp")
 		dummy+=1
 
 	c = TCanvas("c", "",800,600)
@@ -586,13 +612,13 @@ def compareFinalLimits( listMasses, categories ):
 	graph_xs_th.SetLineColor(kMagenta)
 	shadow_graph_xs_th.SetLineWidth(10)
 	shadow_graph_xs_th.SetLineColorAlpha(kMagenta, 0.15);
-        legend.AddEntry(graph_xs_th,"Top squark pair production #lambda_{"+("312" if '312' in args.decay else '323')+"}^{''} (#tilde{t} #rightarrow "+("qq)" if '312' in args.decay else 'bq)' ),"l")
+        legend.AddEntry(graph_xs_th,"Top squark pair production #lambda_{"+("312" if '312' in args.decay else '323')+"}^{''} (#tilde{t} #rightarrow "+("qq')" if '312' in args.decay else "bq')" ),"l")
 
 	c = TCanvas("c", "",800,600)
 	c.cd()
 
 	graph_xs_th.GetXaxis().SetTitle("Resonance mass [GeV]")
-	graph_xs_th.GetYaxis().SetTitle("(pp #rightarrow #tilde{t} #tilde{t}, #tilde{t} #rightarrow "+("#mathrm{q#overline{q}}" if 'UDD312' in args.decay else "bq" )+") #sigma #bf{#it{#Beta}} [pb] ")
+	graph_xs_th.GetYaxis().SetTitle("(pp #rightarrow #tilde{t} #tilde{t}, #tilde{t} #rightarrow "+("#mathrm{qq'}" if 'UDD312' in args.decay else "bq'" )+") #sigma #bf{#it{#Beta}} [pb] ")
 	graph_xs_th.GetYaxis().SetTitleOffset(1.1)
 	graph_xs_th.GetYaxis().SetRangeUser(0.01,10000)
 	graph_xs_th.Draw("AL")
@@ -651,13 +677,13 @@ if __name__ == '__main__':
 			listMass = range( 80, 300, 20) + range( 300, 1050, 50 ) + [ 1100, 1200, 1300, 1400 ]
 			listMass.remove(100)
 
-	if 'compare' in args.process: compareLimits( listMass, ([ 'jet1Tau32_BinReso_v09p11', 'jet1Tau32_BinReso_v09p15' ] if 'Boosted' in args.boosted else [ 'delta', 'delta_massWindow', 'delta_doubleGaus' ] ) ) 
+	if 'compare' in args.process: compareLimits( listMass, ([ '2btag_jet1Tau32_BinReso_v09p15_btaggedTF', '2btag_jet1Tau32_BinReso_v09p15' ] if 'Boosted' in args.boosted else [ 'delta', 'delta_massWindow', 'delta_doubleGaus' ] ) ) 
 	elif 'full' in args.process: 
 		compareFinalLimits( listMass, 
 				#[ 'Boosted_jet1Tau32_Bin5_v09p2', 'Resolved_delta_'+( '2CSVv2L_' if 'UDD323' in args.decay else '' )+'massWindow_v09p1', 'final_v09' ] ) 
 				[ 'final_v09', 'final_inclusive_v09' ] )
 	elif 'final' in args.process: 
-		plotFinalLimits( range( 80, (300 if 'UDD323' in args.decay else 240), 20 ) + [ 300, 350, 400 ], 
+		plotFinalLimits( range( 80, (300 if 'UDD323' in args.decay else 260), 20 ) + [ 300, 350, 400 ], 
 				('2btag_' if 'UDD323' in args.decay else '')+'jet1Tau32_BinReso_v09p15', 
 				range( 400, 1050, 50) + range(1000, (1500 if 'UDD323' in args.decay else 1600), 100), 
 				'delta_'+('2CSVv2L_' if 'UDD323' in args.decay else '')+'massWindow_v09p10', 

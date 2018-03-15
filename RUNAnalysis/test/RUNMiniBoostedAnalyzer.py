@@ -25,7 +25,7 @@ gROOT.SetBatch()
 ######################################
 def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 
-	outputFileName = 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p15.root' 
+	outputFileName = 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p20.root' 
 	outputFile = TFile( outputFileName, 'RECREATE' )
 
 
@@ -100,6 +100,7 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 		allHistos[ "massAve_"+tmpNameSam+'_'+k ] = TH1F( "massAve_"+tmpNameSam+'_'+k, "massAve_"+tmpNameSam+'_'+k, massBins, massXmin, massXmax )
 		allHistos[ "massAve_"+tmpNameSam+'_1btag_'+k ] = TH1F( "massAve_"+tmpNameSam+'_1btag_'+k, "massAve_"+tmpNameSam+'_1btag_'+k, massBins, massXmin, massXmax )
 		allHistos[ "massAve_"+tmpNameSam+'_2btag_'+k ] = TH1F( "massAve_"+tmpNameSam+'_2btag_'+k, "massAve_"+tmpNameSam+'_2btag_'+k, massBins, massXmin, massXmax )
+		allHistos[ "massAve_"+tmpNameSam+'_jet2Tau32_'+k ] = TH1F( "massAve_"+tmpNameSam+'_jet2Tau32_'+k, "massAve_"+tmpNameSam+'_jet2Tau32_'+k, massBins, massXmin, massXmax )
 		allHistos[ tmpNameSam+'_'+k ] = TH2F( tmpNameSam+'_'+k, tmpNameSam+'_'+k, 
 				(50 if 'deltaEta' in listCuts[-2][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[-2][0] else 1. ),
 				(50 if 'deltaEta' in listCuts[-1][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[-1][0] else 1. ) 
@@ -110,6 +111,11 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 				)
 
 		allHistos[ tmpNameSam+'_2btag_'+k ] = TH2F( tmpNameSam+'_2btag_'+k, tmpNameSam+'_2btag_'+k, 
+				(50 if 'deltaEta' in listCuts[-2][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[-2][0] else 1. ),
+				(50 if 'deltaEta' in listCuts[-1][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[-1][0] else 1. ) 
+				)
+
+		allHistos[ tmpNameSam+'_jet2Tau32_'+k ] = TH2F( tmpNameSam+'_jet2Tau32_'+k, tmpNameSam+'_jet2Tau32_'+k, 
 				(50 if 'deltaEta' in listCuts[-2][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[-2][0] else 1. ),
 				(50 if 'deltaEta' in listCuts[-1][0] else 20 ), 0., (5. if 'deltaEta' in listCuts[-1][0] else 1. ) 
 				)
@@ -291,13 +297,35 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 
 
 	### ttbar selection inclusive
+	ttbarSelection = stringSel.replace('(jet1Tau32>0.57)','(jet1Tau32<0.57)').replace('(jet2Tau32>0.57)','(jet2Tau32<0.57)')  
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAve', 
 			SF,
-			preselection + TCut( stringSel.replace('(jet1Tau32>0.57)','(jet1Tau32<0.57)').replace('(jet2Tau32>0.57)','(jet2Tau32<0.57)') ), 
-			#preselection + TCut( stringSel ) + TCut( '(jet1Tau32<0.57) && (jet2Tau32<0.57)') , 
+			preselection + TCut(ttbarSelection),
 			allHistos[ 'massAve_jet2Tau32_'+sample ], 
 			1 ) 
+
+	ABCDTTbarRegions = {}
+	ABCDTTbarRegions[ '_A' ] = preselection + TCut( ttbarSelection )
+	ABCDTTbarRegions[ '_B' ] = preselection + TCut( ttbarSelection.replace('deltaEtaDijet<', 'deltaEtaDijet>') )
+	ABCDTTbarRegions[ '_C' ] = preselection + TCut( ttbarSelection.replace('prunedMassAsym<', 'prunedMassAsym>') )
+	ABCDTTbarRegions[ '_D' ] = preselection + TCut( ttbarSelection.replace('prunedMassAsym<', 'prunedMassAsym>').replace('deltaEtaDijet<', 'deltaEtaDijet>') )
+
+	for region, selABCD in ABCDTTbarRegions.items():
+		getHistoFromTree( fileSample, treeName,
+				'prunedMassAve', 
+				selABCD, 
+				SF,
+				allHistos[ 'massAve_prunedMassAsymVsdeltaEtaDijet_'+sample+'_jet2Tau32'+region ], 
+				1 )
+	
+		get2DHistoFromTree( fileSample, treeName,
+				'prunedMassAsym', 'deltaEtaDijet',
+				SF,
+				selABCD, 
+				allHistos[ 'prunedMassAsymVsdeltaEtaDijet_'+sample+'_jet2Tau32'+region ],
+				1 ) 
+
 
 	getHistoFromTree( fileSample, treeName,
 			'prunedMassAve', 
@@ -332,25 +360,25 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 	getHistoFromTree( fileSample, treeName,
 			'jet1Tau21', 
 			SF,
-			preselection + TCut( stringSel.replace('&& (jet2Tau21<0.45)','').replace('&& (jet1Tau21<0.45)','') ), 
+			preselection + TCut( stringSel.replace('&& (jet2Tau21<0.45)','').replace('&& (jet1Tau21<0.45)','').replace('&& (jet2Tau32<0.57)','').replace('&& (jet1Tau32<0.57)','') ), 
 			allHistos[ 'jet1Tau21_n-1_'+sample ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet2Tau21', 
 			SF,
-			preselection + TCut( stringSel.replace('&& (jet2Tau21<0.45)','').replace('&& (jet1Tau21<0.45)','') ), 
+			preselection + TCut( stringSel.replace('&& (jet2Tau21<0.45)','').replace('&& (jet1Tau21<0.45)','').replace('&& (jet2Tau32<0.57)','').replace('&& (jet1Tau32<0.57)','') ), 
 			allHistos[ 'jet2Tau21_n-1_'+sample ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet1Tau32', 
 			SF,
-			preselection + TCut( stringSel.replace('&& (jet2Tau32<0.57)','').replace('&& (jet1Tau32<0.57)','') ), 
+			preselection + TCut( stringSel.replace('&& (jet2Tau21<0.45)','').replace('&& (jet1Tau21<0.45)','').replace('&& (jet2Tau32<0.57)','').replace('&& (jet1Tau32<0.57)','') ), 
 			allHistos[ 'jet1Tau32_n-1_'+sample ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet2Tau32', 
 			SF,
-			preselection + TCut( stringSel.replace('&& (jet2Tau32<0.57)','').replace('&& (jet1Tau32<0.57)','') ), 
+			preselection + TCut( stringSel.replace('&& (jet2Tau21<0.45)','').replace('&& (jet1Tau21<0.45)','').replace('&& (jet2Tau32<0.57)','').replace('&& (jet1Tau32<0.57)','') ), 
 			allHistos[ 'jet2Tau32_n-1_'+sample ], 
 			1 ) 
 
@@ -434,25 +462,25 @@ def myPlotAnalyzer( fileSample, listCuts, sample, UNC ):
 	getHistoFromTree( fileSample, treeName,
 			'jet1Tau21', 
 			btagSF,
-			preselection + TCut( stringSel.replace('&& (jet2Tau21<0.45)','').replace('&& (jet1Tau21<0.45)','') ) + TCut( btag2Selection ), 
+			preselection + TCut( stringSel.replace('&& (jet2Tau21<0.45)','').replace('&& (jet1Tau21<0.45)','').replace('&& (jet2Tau32<0.57)','').replace('&& (jet1Tau32<0.57)','') ) + TCut( btag2Selection ), 
 			allHistos[ 'jet1Tau21_n-1_2btag_'+sample ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet2Tau21', 
 			btagSF,
-			preselection + TCut( stringSel.replace('&& (jet2Tau21<0.45)','').replace('&& (jet1Tau21<0.45)','') ) + TCut( btag2Selection ), 
+			preselection + TCut( stringSel.replace('&& (jet2Tau21<0.45)','').replace('&& (jet1Tau21<0.45)','').replace('&& (jet2Tau32<0.57)','').replace('&& (jet1Tau32<0.57)','') ) + TCut( btag2Selection ), 
 			allHistos[ 'jet2Tau21_n-1_2btag_'+sample ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet1Tau32', 
 			btagSF,
-			preselection + TCut( stringSel.replace('&& (jet2Tau32<0.57)','').replace('&& (jet1Tau32<0.57)','') ) + TCut( btag2Selection ), 
+			preselection + TCut( stringSel.replace('&& (jet2Tau21<0.45)','').replace('&& (jet1Tau21<0.45)','').replace('&& (jet2Tau32<0.57)','').replace('&& (jet1Tau32<0.57)','') ) + TCut( btag2Selection ), 
 			allHistos[ 'jet1Tau32_n-1_2btag_'+sample ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
 			'jet2Tau32', 
 			btagSF,
-			preselection + TCut( stringSel.replace('&& (jet2Tau32<0.57)','').replace('&& (jet1Tau32<0.57)','') ) + TCut( btag2Selection ), 
+			preselection + TCut( stringSel.replace('&& (jet2Tau21<0.45)','').replace('&& (jet1Tau21<0.45)','').replace('&& (jet2Tau32<0.57)','').replace('&& (jet1Tau32<0.57)','') ) + TCut( btag2Selection ), 
 			allHistos[ 'jet2Tau32_n-1_2btag_'+sample ], 
 			1 ) 
 	getHistoFromTree( fileSample, treeName,
@@ -608,6 +636,9 @@ def myAnalyzer( fileSample, listCuts, sample, UNC ):
 		jet2BtagCSV		= ( events.jet2btagCSVv2 > 0.5426 )
 		
 		#print 'Entry ', Run, ':', Lumi, ':', NumEvent
+		#if (Run==283877) and (Lumi==928) and (NumEvent==1706078380 ):
+		#	print jet1Pt, jet1Eta, jet1Mass, events.jet1Tau21, jet2Pt, jet2Eta, jet2Mass, events.jet2Tau21
+		#else: continue
 
 		if 'JetHT' in sample: scale = 1
 		#elif 'RPV' in sample: scale = 2606 * puWeight * SF
@@ -635,12 +666,14 @@ def myAnalyzer( fileSample, listCuts, sample, UNC ):
 		
 		if HTCut and dijetCut and jetPtCut:
 		#if HTCut and dijetCut :
-			if ( events.jet1Tau32 > 0.57 ) and  ( events.jet2Tau32 > 0.57 ) and ( events.jet1Tau21 < 0.45 ) and  ( events.jet2Tau21 < 0.45 ) and ( events.prunedMassAsym < 0.10 ) and  ( events.deltaEtaDijet < 1.5 ): # and (massAve > 500 ):
-					#print str(Run)+':'+str(Lumi)+':'+str(NumEvent)
-					allHistos[ 'massAve_deltaEtaDijet_'+sample ].Fill( massAve, scale )
+			if ( events.jet1Tau32 > 0.57 ) and  ( events.jet2Tau32 > 0.57 ) and ( events.jet1Tau21 < 0.45 ) and  ( events.jet2Tau21 < 0.45 ) and ( events.prunedMassAsym < 0.10 ) and  ( events.deltaEtaDijet < 1.5 ) and ((events.jet1Tau21 < 0.2) and (events.jet2Tau21 < 0.2) ):
+					print str(Run)+':'+str(Lumi)+':'+str(NumEvent)
+					print jet1Pt, jet1Eta, jet1Mass, events.jet1Tau21, jet2Pt, jet2Eta, jet2Mass, events.jet2Tau21
+					#allHistos[ 'massAve_deltaEtaDijet_'+sample ].Fill( massAve, scale )
 					if ( jet1BtagCSV and jet2BtagCSV ): 
-						#print str(Run)+':'+str(Lumi)+':'+str(NumEvent)
-						allHistos[ 'massAve_btag_'+sample ].Fill( massAve, scale )  ### adding two prong scale factor
+						print 'btagged', str(Run)+':'+str(Lumi)+':'+str(NumEvent)
+						print jet1Pt, jet1Eta, jet1Mass, events.jet1Tau21, jet2Pt, jet2Eta, jet2Mass, events.jet2Tau21
+						#allHistos[ 'massAve_btag_'+sample ].Fill( massAve, scale )  ### adding two prong scale factor
 
 #				cutFlowList[ 'Preselection' ] += 1
 #				cutFlowScaledList[ 'Preselection' ] += scale

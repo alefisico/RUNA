@@ -5,7 +5,6 @@
 ################################
 
 from ROOT import *
-#from ROOT import RooRealVar, RooDataHist, RooArgList, RooArgSet, RooAddPdf, RooFit, RooGenericPdf, RooWorkspace, RooMsgService, RooHistPdf, RooGaussian
 from array import array
 from collections import OrderedDict
 import argparse
@@ -15,16 +14,11 @@ import random
 import numpy as np
 import subprocess
 from RUNBkgEstimation import boostedMassAveBins, rebin
-try: 
-	from RUNA.RUNAnalysis.commonFunctions import *
-	import RUNA.RUNAnalysis.CMS_lumi as CMS_lumi 
-	import RUNA.RUNAnalysis.tdrstyle as tdrstyle
-except ImportError: 
-	sys.path.append('../python') 
-	from commonFunctions import *
-	import CMS_lumi as CMS_lumi 
-	import tdrstyle as tdrstyle
-
+sys.path.append('../python')
+from scaleFactors import *
+from commonFunctions import *
+import CMS_lumi as CMS_lumi
+import tdrstyle as tdrstyle
 
 gROOT.Reset()
 gROOT.SetBatch()
@@ -32,11 +26,6 @@ gROOT.ForceStyle()
 tdrstyle.setTDRStyle()
 #gSystem.SetIncludePath('-I$ROOFITSYS/include')
 if os.access('RooPowerFunction.cxx', os.R_OK): ROOT.gROOT.ProcessLine('.L RooPowerFunction.cxx+')
-
-#xline = array('d', [0,2000])
-#yline = array('d', [0,0])
-#line = TGraph(2, xline, yline)
-#line.SetLineColor(kRed)
 
 def signalUnc( hSignal, signalMass ):
 	"""docstring for signalUnc"""
@@ -102,10 +91,10 @@ def createPseudoExperiment( histo, acceptance ):
 	hPseudo.Reset()
 	newNumEvents = random.randint( acceptance-round(TMath.Sqrt(acceptance)), acceptance+round(TMath.Sqrt(acceptance)) )
 	print 'Events in sample:', acceptance, ', in PseudoExperiment:', newNumEvents
-	hPseudo.FillRandom( histo, newNumEvents ) 
+	hPseudo.FillRandom( histo, newNumEvents )
 	return hPseudo
 ############################################################################################
-	
+
 
 def shapeCards( datahistosFile, histosFile, signalFile, signalSample, hist, signalMass, minMass, maxMass, outputName, outputFileTheta ):
 	"""function to run Roofit and save workspace for RooStats"""
@@ -126,13 +115,13 @@ def shapeCards( datahistosFile, histosFile, signalFile, signalSample, hist, sign
 	#maxMass = signalMass+30
 	massAve = RooRealVar( 'massAve', 'massAve', minMass, maxMass  )
 	#massAveData = RooRealVar( 'massAveData', 'massAveData', minMass, maxMass  )
-	rooDataHist = RooDataHist('rooDatahist','rooDatahist',RooArgList(massAve), hData ) 
+	rooDataHist = RooDataHist('rooDatahist','rooDatahist',RooArgList(massAve), hData )
 	rooDataHist.Print()
 	############################################################################################
 
-	
-	####################### Signal 
-	if 'gaus' in args.job: 
+
+	####################### Signal
+	if 'gaus' in args.job:
 		hSignal = TH1F( 'massAve_RPVStop', 'massAve_RPVStop', maxMass/args.reBin, minMass, maxMass)
 		for q in range( hSignal.GetNbinsX()+1 ):
 			gausEval = signalFile.Eval( hSignal.GetXaxis().GetBinCenter( q ) )
@@ -160,7 +149,7 @@ def shapeCards( datahistosFile, histosFile, signalFile, signalSample, hist, sign
 	#signal_norm.Print()
 
 	#####################################################################
-	hSigSyst = signalUnc( hSignal, signalMass ) 
+	hSigSyst = signalUnc( hSignal, signalMass )
         hSigSystDataHist = {}
         if args.unc:
 		hSigSystDataHist['JESUp'] = RooDataHist('hSignalJESUp','hSignalJESUp',RooArgList(massAve),hSigSyst['JESUp'])
@@ -174,11 +163,11 @@ def shapeCards( datahistosFile, histosFile, signalFile, signalSample, hist, sign
 	if args.withABCDTFactor:
 		htmpBkg = dataFile.Get('massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016_ABCDProj')
 		htmpBkg.Rebin( args.reBin )
-	else: 
+	else:
 		newBkgHistoFile = datahistosFile.replace( 'DATA', 'DATA_ABCDBkg' )
 		newBkgFile = TFile( newBkgHistoFile )
 		htmpBkg = newBkgFile.Get('massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016_ABCDProj' )
-		if (htmpBkg.GetBinWidth( 1 ) != args.reBin ): 
+		if (htmpBkg.GetBinWidth( 1 ) != args.reBin ):
 			print '|----- Bin size in DATA_C histogram is different than rest.'
 			sys.exit(0)
 	#hBkg = histosFile.Get('massAve_prunedMassAsymVsdeltaEtaDijet_QCDPtAll_ABCDProj')
@@ -205,7 +194,7 @@ def shapeCards( datahistosFile, histosFile, signalFile, signalSample, hist, sign
 	hBkgStatUncDown = hBkg.Clone()
 	hBkgStatUncDown.Reset()
 	for i in range( hBkg.GetNbinsX()+1 ):
-		cont = hBkg.GetBinContent(i) 
+		cont = hBkg.GetBinContent(i)
 		contErr = hBkg.GetBinError(i)
 		hBkgStatUncUp.SetBinContent( i,  cont + (1*contErr) )
 		hBkgStatUncDown.SetBinContent( i, cont - (1*contErr) )
@@ -265,11 +254,11 @@ def shapeCards( datahistosFile, histosFile, signalFile, signalSample, hist, sign
         #getattr(myWS,'import')(signal_norm)
         #getattr(myWS,'import')(background_norm)
 	'''
-	if 'gaus' in args.job: 
-		getattr(myWS,'import')(signalPdf,RooFit.Rename("signal")) 
-		getattr(myWS,'import')(signalPdfJESUp,RooFit.Rename("signal__JESUp")) 
-		getattr(myWS,'import')(signalPdfJESDown,RooFit.Rename("signal__JESDown")) 
-	else: 
+	if 'gaus' in args.job:
+		getattr(myWS,'import')(signalPdf,RooFit.Rename("signal"))
+		getattr(myWS,'import')(signalPdfJESUp,RooFit.Rename("signal__JESUp"))
+		getattr(myWS,'import')(signalPdfJESDown,RooFit.Rename("signal__JESDown"))
+	else:
 	'''
 	getattr(myWS,'import')(rooSigHist,RooFit.Rename("signal"))
 	if args.unc:
@@ -296,8 +285,8 @@ def shapeCards( datahistosFile, histosFile, signalFile, signalSample, hist, sign
 	del c1
 	'''
 	############################################################################################
-        
-	
+
+
 	######################### write a datacard
 
 	dataCardName = statDir+'/Datacards/datacard_'+outputName+'.txt'
@@ -336,7 +325,7 @@ def shapeCards( datahistosFile, histosFile, signalFile, signalSample, hist, sign
 	if args.theta:
 		print ' |----> Creating Theta file\n', outputFileTheta
 		outFile = TFile( outputFileTheta, 'update')
-		tmpName = 'rpvstopjj'+str(signalMass) 
+		tmpName = 'rpvstopjj'+str(signalMass)
 		hSignal.SetName('massAve__'+tmpName)
 		hSignal.Write()
 		hSigSyst['JESDown'].SetName('massAve__'+tmpName+'__jes__down' )
@@ -389,7 +378,7 @@ def plotGausQuantities( massList, varList, varErrList, varName, varTitle, func, 
 	can.SaveAs( 'Plots/'+varName+'_'+args.decay+'_'+args.version+'.'+args.extension )
 	del can
 
-	return fitFunc 
+	return fitFunc
 
 ############################################################################################
 
@@ -423,11 +412,11 @@ def createGausShapes( massList, newMassList, name, xmin, xmax, rebinX, labX, lab
 
 		tmpResolution = 4*tmpResolution
 		sigGaus = TF1( 'sigGaus', 'gaus', 0, 1000 )
-		for i in range(2): 
+		for i in range(2):
 			sigGaus.SetParameter( 1, xmass )
 			hSignal.Fit( sigGaus, 'MIR', '', xmass-tmpResolution, xmass+tmpResolution)
 
-		gausParam[ xmass ] = sigGaus 
+		gausParam[ xmass ] = sigGaus
 		acceptanceList.append( sigGaus.Integral( xmass-tmpResolution, xmass+tmpResolution ) )
 		acceptanceErrList.append( sigGaus.IntegralError( xmass-tmpResolution, xmass+tmpResolution ) )
 		constList.append( sigGaus.GetParameter( 0 ) )
@@ -443,7 +432,7 @@ def createGausShapes( massList, newMassList, name, xmin, xmax, rebinX, labX, lab
 			hSignal.Draw()
 			can1.SaveAs( 'Plots/test'+str(xmass)+'.'+args.extension )
 			del can1
-	
+
 	zeroList = [0]*len(massList)
 	'''
 	numEventsGraph = TGraphErrors( len( massList ), array( 'd', massList), array( 'd', numEventsList), array('d', zeroList ), array( 'd', numEventsErrList) )
@@ -482,17 +471,17 @@ def createGausShapes( massList, newMassList, name, xmin, xmax, rebinX, labX, lab
 
 	for xmass in newMassList:
 		sigNewGaus = TF1( 'sigNewGaus', 'gaus', 0, 500 )
-		sigNewGaus.SetParameters( constFit.Eval( xmass ), 
-						meanFit.Eval( xmass ), 
+		sigNewGaus.SetParameters( constFit.Eval( xmass ),
+						meanFit.Eval( xmass ),
 						sigmaFit.Eval( xmass ) )
 						#(-1.78 + ( 0.1097 * xmass) + ( -0.0002897 * xmass*xmass ) + ( 3.18e-07 * xmass*xmass*xmass)))
-		newGausFunct[ xmass ] = sigNewGaus 
+		newGausFunct[ xmass ] = sigNewGaus
 	dummy=1
 	can1 = TCanvas('c', 'c',  10, 10, 750, 500 )
 	gausParam[ 80 ].Draw()
 	gausParam[ 80 ].GetXaxis().SetRangeUser( 50, 400  )
 	for x in gausParam:
-		if x != 80: 
+		if x != 80:
 			gausParam[ x ].SetLineColor(dummy)
 			gausParam[ x ].Draw("same")
 		dummy=dummy+1
@@ -506,7 +495,7 @@ def createGausShapes( massList, newMassList, name, xmin, xmax, rebinX, labX, lab
 	newGausFunct[ 160 ].GetXaxis().SetRangeUser( 50, 450  )
 	#newGausFunct[ 80 ].SetMinimum(0.001)
 	for x in newGausFunct:
-		#if x != 80: 
+		#if x != 80:
 		newGausFunct[ x ].SetLineColor(dummy2)
 		newGausFunct[ x ].Draw("same")
 		dummy2=dummy2+1
@@ -524,9 +513,9 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 	hData = dataFile.Get( hist+'_JetHT_Run2016')
 	hData = rebin( hData, ( args.reBin if (args.reBin>0) else 'reso' ) )
 
-	####################### Signal 
+	####################### Signal
 	if not args.ttbarAsSignal:
-		if 'gaus' in args.job: 
+		if 'gaus' in args.job:
 			sigGaus = signalFile
 			hSignal = TH1F( 'massAve_RPVStop', 'massAve_RPVStop', 1000, 0, 1000)
 			hSignal = rebin( hSignal, ( args.reBin if (args.reBin>0) else 'reso' ) )
@@ -542,8 +531,7 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 			signalHistosFile = TFile( signalFile )
 			hSignal = signalHistosFile.Get(hist+'_'+signalSample)
 			hSignal = rebin( hSignal, ( args.reBin if (args.reBin>0) else 'reso' ) )
-			hSignal.Scale( args.lumi )
-			hSignal.Scale ( twoProngSF*antithreeProngSF )
+			hSignal.Scale( args.lumi*twoProngSF*antithreeProngSF )
 			sigGaus = TF1( 'sigGaus', 'gaus', 0, 500 )
 			tmpResolution = 2*(-1.78 + ( 0.1097 * signalMass) + ( -0.0002897 * signalMass*signalMass ) + ( 3.18e-07 * signalMass*signalMass*signalMass))
 			hSignal.Fit( sigGaus, 'MIR', '', (signalMass-tmpResolution), (signalMass+tmpResolution) )
@@ -555,7 +543,7 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 		signalMassWidth = sigGaus.GetParameter(2)
 		signalMaximum = sigGaus.GetParameter(1)
 
-		hSigSyst = signalUnc( hSignal, signalMass ) 
+		hSigSyst = signalUnc( hSignal, signalMass )
 		if args.signalInjec and (signalMass == 100):
 			print ' |----> Runnning PseudoData'
 			hPseudoData = createPseudoExperiment( hData, hData.GetEntries() )
@@ -564,17 +552,22 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 			hData = hPseudoData.Clone()
 
 	##### Bkg estimation
-	if args.mcAsData: 
+	if args.mcAsData:
 		hDataC = bkghistosFile[ 'QCDPtAll' ][0].Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_QCDPtAll'+('_'+args.numBtags if 'UDD323' in args.decay else '')+'_C')
 		hDataC.Scale( bkghistosFile[ 'QCDPtAll' ][1] )
-	else: hDataC = dataFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016'+('_'+args.numBtags if 'UDD323' in args.decay else '')+'_C')
-	#else: hDataC = dataFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016_C')
-	hDataC = rebin( hDataC, ( args.reBin if (args.reBin>0) else 'reso' ) )
+	#else: hDataC = dataFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016'+('_'+args.numBtags if 'UDD323' in args.decay else '')+'_C')
+	else: 
+		newBkgHistoFile = datahistosFile.replace( 'V2p4', 'V2p4_combinedBD'+(args.numBtags if 'UDD323' in args.decay else '')+'_'+args.cutTop+'_ABCDEst' )
+		newBkgFile = TFile( newBkgHistoFile )
+		hDataC = newBkgFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016_woResBkg_C')
+
+	#hDataC = rebin( hDataC, ( args.reBin if (args.reBin>0) else 'reso' ) )
+	#for ibin in range(1, hDataC.GetNbinsX()+1):
+	#	print ibin, hDataC.GetBinContent(ibin), hDataC.GetBinContent(ibin)/hDataC.GetBinWidth(ibin), hDataC.GetBinWidth(ibin), hDataC.GetBinCenter(ibin)
 	#testFile = TFile('test.root', 'recreate')
 	#hDataC.Write()
 	#hData.Write()
 	#testFile.Close()
-	#sys.exit(0)
 
 	if args.withABCDTFactor:
 		hDataB = dataFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016'+('_'+args.numBtags if 'UDD323' in args.decay else '')+'_B')
@@ -584,28 +577,27 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 		#hDataD = dataFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016_D')
 		hDataD = rebin( hDataD, ( args.reBin if (args.reBin>0) else 'reso' ) )
 	else:
-		newBkgHistoFile = datahistosFile.replace( 'V2p4', 'V2p4_combinedBD'+(args.numBtags if 'UDD323' in args.decay else '')+'_'+args.cutTop+'_ABCDEst' )
 		#newBkgHistoFile = datahistosFile.replace( 'V2p4', 'V2p4_combinedBD'+'_'+args.cutTop+'_ABCDEst' )
-		newBkgFile = TFile( newBkgHistoFile )
+		#newBkgFile = TFile( newBkgHistoFile )
 		hDataRatioBD = newBkgFile.Get('massAve_prunedMassAsymVsdeltaEtaDijet_DATAMinusResBkg_RatioBD' )
 		#hDataC = newBkgFile.Get( 'massAve_prunedMassAsymVsdeltaEtaDijet_JetHT_Run2016'+('_'+args.numBtags if 'UDD323' in args.decay else '')+'_C')
-		if (hDataRatioBD.GetBinWidth( 15 ) != hDataC.GetBinWidth( 15 ) ): 
+		if (hDataRatioBD.GetBinWidth( 15 ) != hDataC.GetBinWidth( 15 ) ):
 			print '|----- Bin size in DATA_C histogram is different than rest.'
 			sys.exit(0)
 
 
 	bkgHistos = OrderedDict()
 	for sample in bkghistosFile:
-		if 'QCD' in sample and args.mcAsData: 
+		if 'QCD' in sample and args.mcAsData:
 			hMCAsData = bkghistosFile[ sample ][0].Get( hist+'_'+ sample )
 			hMCAsData = rebin( hMCAsData, ( args.reBin if (args.reBin>0) else 'reso' ) )
 			hMCAsData.Scale( twoProngSF*antithreeProngSF * bkghistosFile[ sample ][1] )
-		else: 
+		else:
 			bkgHistos[ sample ] = bkghistosFile[ sample ][0].Get( hist+'_'+ sample )
 			bkgHistos[ sample ] = rebin( bkgHistos[ sample ], ( args.reBin if (args.reBin>0) else 'reso' ) )
-			bkgHistos[ sample ].Scale( twoProngSF*antithreeProngSF * bkghistosFile[ sample ][1] )
+			bkgHistos[ sample ].Scale( bkghistosFile[ sample ][1]*twoProngSF*antithreeProngSF*ttbarSF )
 			if args.ttbarAsSignal and ('TT' in sample): hSignal = bkgHistos[ sample ].Clone()
-	
+
 	if args.mcAsData:
 		for sam in bkgHistos: hMCAsData.Add( bkgHistos[ sam ] )
 		hData = hMCAsData.Clone()
@@ -618,9 +610,11 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 		else:
 			peak = min(range(len(boostedMassAveBins)), key=lambda x:abs(boostedMassAveBins[x]-int(signalMaximum)))
 			#print peak, boostedMassAveBins[peak]
-			lowEdgeWindow = peak - ( 1 if (signalMass in [200, 300, 350, 400] ) else 2 )
-			highEdgeWindow = peak + (2 if (signalMass in [ 100, 120, 200, 300, 400 ] ) else 1 )
-	else: 
+			#tmpLowListMass = ( [ 160, 180 ] if 'UDD312' in args.decay else [ 80, 160 ] )
+			#tmpHighListMass = ( [ 160, 180, 220 ] if 'UDD312' in args.decay else [ 80, 100, 120, 160] )
+			lowEdgeWindow = peak - 2 #(3 if (signalMass in tmpLowListMass ) else 2 )
+			highEdgeWindow = peak + 1 #(1 if (signalMass in tmpHighListMass ) else 2 )
+	else:
 		signalMassWidht = 20 ## dummy
 		lowEdgeWindow = 30
 		highEdgeWindow = 40
@@ -628,7 +622,7 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 
 	#### test
 	#for ibin in range(1, hSignal.GetNbinsX()+1):
-	#	print ibin, hSignal.GetBinContent( ibin ), hSignal.GetBinCenter( ibin )
+	#	print ibin, hSignal.GetBinLowEdge( ibin ), hSignal.GetBinContent( ibin ), hSignal.GetBinContent( ibin )/hSignal.GetBinWidth( ibin ), hSignal.GetBinCenter( ibin )
 	############################
 
 	totalData = 0
@@ -643,31 +637,31 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 
 		### Signal
 		sigAcc = hSignal.GetBinContent( ibin )
-		print 'signal', hSignal.GetBinLowEdge( ibin ), sigAcc
+		print 'signal', hSignal.GetBinLowEdge( ibin ), hSignal.GetBinLowEdge( ibin+1 ), sigAcc
 		if ( sigAcc == 0 ): continue
 		totalSig += sigAcc
 		sigAccUnc = hSignal.GetBinError( ibin )
 		totalSigStat += sigAccUnc
-		sigStatUnc = 1 + sigAccUnc/sigAcc  
+		sigStatUnc = 1 + sigAccUnc/sigAcc
 		accDict[ 'signal' ] = [ round(sigAcc,3), round(sigStatUnc,3) ]
 		if args.unc:
 			if hSigSyst['JERDown'].GetBinContent( ibin ) != 0:
 				try: sigShapeJERDown = round(1/( hSigSyst['JERDown'].GetBinContent( ibin )/ sigAcc ), 3)
-				except ZeroDivisionError: sigShapeJERDown = 1.8 
+				except ZeroDivisionError: sigShapeJERDown = 1.8
 			else: sigShapeJERDown = 1
 			if hSigSyst['JERUp'].GetBinContent( ibin ) != 0:
 				try: sigShapeJERUp = round(1/( hSigSyst['JERUp'].GetBinContent( ibin )/ sigAcc ), 3)
-				except ZeroDivisionError: sigShapeJERUp = 1.8 
+				except ZeroDivisionError: sigShapeJERUp = 1.8
 			else: sigShapeJERUp = 1
 
 			### it has to be asymmetical: https://hypernews.cern.ch/HyperNews/CMS/get/higgs-combination/530/2.html
 			if hSigSyst['JESDown'].GetBinContent( ibin ) != 0:
 				try: sigShapeJESDown = round(1/( hSigSyst['JESDown'].GetBinContent( ibin )/ sigAcc ), 3)
-				except ZeroDivisionError: sigShapeJESDown = 1.8 
+				except ZeroDivisionError: sigShapeJESDown = 1.8
 			else: sigShapeJESDown = 1
 			if hSigSyst['JESUp'].GetBinContent( ibin ) != 0:
 				try: sigShapeJESUp = round(( hSigSyst['JESUp'].GetBinContent( ibin )/ sigAcc ), 3)
-				except ZeroDivisionError: sigShapeJESUp = 1.8 
+				except ZeroDivisionError: sigShapeJESUp = 1.8
 			else: sigShapeJESUp = 1
 		#print sigShapeJERDown, sigShapeJERUp, sigShapeJESDown, sigShapeJESUp
 
@@ -677,7 +671,7 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 		#print 'data', hData.GetBinLowEdge( ibin ), contData
 
 		### bkg
-		contDataC = hDataC.GetBinContent( ibin )
+		contDataC = abs(hDataC.GetBinContent( ibin )*hDataC.GetBinWidth(ibin))
 		if args.withABCDTFactor:
 			contDataB = hDataB.GetBinContent( ibin )
 			contDataD = hDataD.GetBinContent( ibin )
@@ -686,24 +680,25 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 			try: errBD = 1 + (TMath.Sqrt( TMath.Power( TMath.Sqrt( contDataD ) / contDataD, 2 ) + TMath.Power( TMath.Sqrt( contDataB ) / contDataB, 2 ) ) / tf )
 			except ZeroDivisionError: errBD = 1
 		else:
-			tf = round( hDataRatioBD.GetBinContent( ibin ), 3 )
+			#tf = round( hDataRatioBD.GetBinContent( ibin ), 3 )
+			tf = hDataRatioBD.GetBinContent( ibin )
 			errBD = 1+ ( hDataRatioBD.GetBinError( ibin ) / tf )
-		bkgAcc = tf * contDataC
+		bkgAcc = tf * contDataC 
 		totalBkg += bkgAcc
-		accDict[ 'qcd' ] = [ round(bkgAcc,3), round(args.bkgUncValue,3) ]
+		accDict[ 'qcd' ] = [ bkgAcc, args.bkgUncValue ]
 
 		#### adding MC bkgs
 		for sample in bkgHistos:
 			mcbkgacc = abs(bkgHistos[ sample ].GetBinContent( ibin ))
 			#print bkgHistos[ sample ].GetBinLowEdge( ibin )
 			try: mcbkgstatunc = 1 + ( abs(bkgHistos[ sample ].GetBinError( ibin ))/mcbkgacc )
-			except ZeroDivisionError: mcbkgstatunc = 1.8
+			except ZeroDivisionError: mcbkgstatunc = 1
 			totalBkg += mcbkgacc
 			totalBkgStat += abs(bkgHistos[ sample ].GetBinError( ibin ))
 			accDict[ sample.lower() ] = [ round(mcbkgacc,3), round(mcbkgstatunc,3) ]
 		if args.ttbarAsSignal: del accDict[ 'TT' ]
-		#print ibin, sigAcc, accDict, contData
-				
+		print ibin, sigAcc, accDict, contData
+
 
 		######################## Creating  datacards
 		dataCardName = statDir+'/Datacards/datacard_'+outputName+'_bin'+str(ibin)+'.txt'
@@ -715,39 +710,46 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 		datacard.write('bin\t\t'+signalSample+'bin'+str(ibin)+'\n')
 		datacard.write('observation\t\t'+str(int(contData))+'\n')
 		datacard.write(('-'*30)+'\n')
-		datacard.write('bin\t\t' + '\t'.join([ signalSample+'bin'+str(ibin) ]*len(accDict)) + '\n' ) 
-		datacard.write('process\t\t' + '\t'.join([ sample for sample, info in accDict.items() ]) + '\n' ) 
+		datacard.write('bin\t\t' + '\t'.join([ signalSample+'bin'+str(ibin) ]*len(accDict)) + '\n' )
+		datacard.write('process\t\t' + '\t'.join([ sample for sample, info in accDict.items() ]) + '\n' )
 		datacard.write('process\t\t' + '\t'.join([ str(q) for q in range( len(accDict) ) ]) + '\n' )
-		datacard.write('rate\t\t' + '\t'.join([ str(info[0]) for sample, info in accDict.items() ]) + '\n' ) 
+		datacard.write('rate\t\t' + '\t'.join([ str(info[0]) for sample, info in accDict.items() ]) + '\n' )
 		datacard.write(('-'*30)+'\n')
 		### ABCD region in combine
 		tmpList = ['-']*len(accDict)
-		datacard.write('qcdABCDmethod'+str(ibin)+'\tgmN\t'+str(int(contDataC))+'\t'+ '\t'.join( [ str(tf) if i==1 else '-' for i in range(len(accDict)) ] ) +'\n' ) 
+		datacard.write('qcdABCDmethod'+str(ibin)+'\tgmN\t'+str(int(contDataC))+'\t'+ '\t'.join( [ str(tf) if i==1 else '-' for i in range(len(accDict)) ] ) +'\n' )
 
-		if args.unc: 
-			datacard.write('lumi\t\tlnN\t'+ '\t'.join( [ '-' if i==1 else str(round(lumiValue,3)) for i in range(len(accDict)) ] ) +'\n' ) 
-			datacard.write('trigger\t\tlnN\t'+ '\t'.join( [ '-' if i==1 else str(round(triggerValue,3)) for i in range(len(accDict)) ] ) +'\n' ) 
-			datacard.write('twoProngSFSys\t\tlnN\t'+ '\t'.join( [ '-' if i==1 else str(round(twoProngValue,3)) for i in range(len(accDict)) ] ) +'\n' ) 
-			datacard.write('antithreeProngSFSys\t\tlnN\t'+ '\t'.join( [ '-' if i==1 else str(round(antithreeProngValue,3)) for i in range(len(accDict)) ] ) +'\n' ) 
+		if args.unc:
+			#datacard.write('lumi\t\tlnN\t'+ '\t'.join( [ '-' if i==1 else str(round(lumiValue,3)) for i in range(len(accDict)) ] ) +'\n' )
+			#datacard.write('trigger\t\tlnN\t'+ '\t'.join( [ '-' if i==1 else str(round(triggerValue,3)) for i in range(len(accDict)) ] ) +'\n' )
+			#datacard.write('twoProngSFSys\t\tlnN\t'+ '\t'.join( [ '-' if i==1 else str(round(twoProngValue,3)) for i in range(len(accDict)) ] ) +'\n' )
+			#datacard.write('antithreeProngSFSys\t\tlnN\t'+ '\t'.join( [ '-' if i==1 else str(round(antithreeProngValue,3)) for i in range(len(accDict)) ] ) +'\n' )
 
-			datacard.write('qcdtfUnc\t\tlnN\t'+ '\t'.join( [ str(round(1+(args.bkgUncValue/100.),3)) if i==1 else '-' for i in range(len(accDict)) ] ) +'\n' ) 
-			datacard.write('qcdtfStatUnc\t\tlnN\t'+ '\t'.join( [ str(errBD) if i==1 else '-' for i in range(len(accDict)) ] ) +'\n' ) 
-			datacard.write('mcUnc\t\tlnN\t'+ '\t'.join( [ str(MCunc) if i>1 else '-' for i in range(len(accDict)) ] ) +'\n' ) 
+			datacard.write('qcdClosureUnc\t\tlnN\t'+ '\t'.join( [ str(round(1+(args.bkgUncValue/100.),3)) if i==1 else '-' for i in range(len(accDict)) ] ) +'\n' )
+			datacard.write('qcdtfStatUnc\t\tlnN\t'+ '\t'.join( [ str(errBD) if i==1 else '-' for i in range(len(accDict)) ] ) +'\n' )
 			### statistical uncertanties
 			tmp = 0
 			for sample, acc in accDict.items():
 				if not 'qcd' in sample:
-					datacard.write(sample+'StatUnc'+str(ibin)+'\t\tlnN\t' + '\t'.join([ str(acc[1]) if tmp==i else '-' for i in range(len(accDict)) ]) + '\n' )
+					datacard.write(sample+'StatUnc'+str(ibin)+'\t\tlnN\t' + '\t'.join([ str(acc[1]) if ((tmp==i) and (accDict[sample][0]>0)) else '-' for i in range(len(accDict)) ]) + '\n' )
+					datacard.write(sample+'mcUnc\t\tlnN\t' + '\t'.join([ str(MCunc) if ((tmp==i) and (accDict[sample][0]>0)) else '-' for i in range(len(accDict)) ]) + '\n' )
+					if 'UDD323' in args.decay: 
+						datacard.write('Btag'+sample+'\t\tlnN\t'+ '\t'.join( [ str(uncBtag) if ((tmp==i) and (accDict[sample][0]>0)) else '-' for i in range(len(accDict)) ]) + '\n' ) 
 				tmp+=1
 
-			datacard.write('JESshape\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(sigShapeJESDown)+'/'+str(sigShapeJESUp) for i in range(len(accDict)) ] ) +'\n' ) 
-			datacard.write('JESaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(uncJES) for i in range(len(accDict)) ]) +'\n' ) 
+			datacard.write('lumi\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(round(lumiValue,3)) for i in range(len(accDict)) ] ) +'\n' )
+			datacard.write('trigger\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(round(triggerValue,3)) for i in range(len(accDict)) ] ) +'\n' )
+			datacard.write('twoProngSFSys\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(round(twoProngValue,3)) for i in range(len(accDict)) ] ) +'\n' )
+			datacard.write('antithreeProngSFSys\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(round(antithreeProngValue,3)) for i in range(len(accDict)) ] ) +'\n' )
+			datacard.write('JESshape\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(sigShapeJESDown)+'/'+str(sigShapeJESUp) for i in range(len(accDict)) ] ) +'\n' )
+			datacard.write('JESaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(uncJES) for i in range(len(accDict)) ]) +'\n' )
 
-			datacard.write('JERshape\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(sigShapeJERDown)+'/'+str(sigShapeJERUp) for i in range(len(accDict)) ] ) +'\n' ) 
-			datacard.write('JERaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(uncJER) for i in range(len(accDict)) ] ) +'\n' ) 
-			datacard.write('PUaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(uncPU) for i in range(len(accDict)) ] ) +'\n' ) 
-			datacard.write('PDFaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(uncPDF) for i in range(len(accDict)) ] ) +'\n' ) 
-			if 'UDD323' in args.decay: datacard.write('Btagaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(uncBtag) for i in range(len(accDict)) ] ) +'\n' ) 
+			datacard.write('JERshape\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(sigShapeJERDown)+'/'+str(sigShapeJERUp) for i in range(len(accDict)) ] ) +'\n' )
+			datacard.write('JERaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(uncJER) for i in range(len(accDict)) ] ) +'\n' )
+			datacard.write('PUaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(uncPU) for i in range(len(accDict)) ] ) +'\n' )
+			datacard.write('PDFaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(uncPDF) for i in range(len(accDict)) ] ) +'\n' )
+			#if 'UDD323' in args.decay: 
+			#	datacard.write('Btagaccept\t\tlnN\t'+ '\t'.join( [ '-' if i!=0 else str(uncBtag) for i in range(len(accDict)) ] ) +'\n' )
 
 
 		datacard.close()
@@ -756,15 +758,162 @@ def binByBinCards( datahistosFile, bkghistosFile, signalFile, signalSample, hist
 
 	if args.runCombine:
 		print ' |----> Running combinedCards.py:\n', statDir+'/Datacards/datacard_'+outputName+'_bins.txt'
-		subprocess.call(  combineCards+' > '+statDir+'/Datacards/datacard_'+outputName+'_bins.txt', shell=True  )
+		subprocess.call(  combineCards+' -S > '+statDir+'/Datacards/datacard_'+outputName+'_bins.txt', shell=True  )
 		print ' |----> Running combine -M Asymptotic:'
 		newOutputName = outputName.replace('pruned', 'Boosted')
 		subprocess.call( 'combine -M Asymptotic '+statDir+'/Datacards/datacard_'+outputName+'_bins.txt --rMax 0.5 -n _'+newOutputName, shell=True )
 		#subprocess.call( 'combine -M Asymptotic '+statDir+'/Datacards/datacard_'+outputName+'_bins.txt -n _'+outputName+'_2sigma', shell=True )
+
+	if args.addPostfit:
+
+		print ' |----> Running combinedCards.py:\n', statDir+'/Datacards/datacard_'+outputName+'_bins.txt'
+		subprocess.call(  combineCards+' -S > '+statDir+'/Datacards/datacard_'+outputName+'_bins.txt', shell=True  )
+		print ' |----> Running combined -M FitDiagnostics:\n', statDir+'/Datacards/datacard_'+outputName+'_bins.txt'
+		newOutputName = outputName.replace('pruned', 'Boosted')
+		subprocess.call( 'combine -M MaxLikelihoodFit '+statDir+'/Datacards/datacard_'+outputName+'_bins.txt -n _'+newOutputName+' --saveShapes --saveWithUncertainties', shell=True )
+
+		combineFile = TFile.Open("mlfit_"+newOutputName+".root")
+		########## Create pre- post-fit plot
+		bkgPrefit = hData.Clone()
+		bkgPrefit.Reset()
+		bkgSigPrefit = hData.Clone()
+		bkgSigPrefit.Reset()
+		dataPrefit = hData.Clone()
+		dataPrefit.Reset()
+		bkgPostfit = hData.Clone()
+		bkgPostfit.Reset()
+		bkgSigPostfit = hData.Clone()
+		bkgSigPostfit.Reset()
+		sigPrefit = hData.Clone()
+		sigPrefit.Reset()
+
+		totalBkgSigPreFit = 0
+		totalBkgSigPreFitErr = 0
+		totalBkgPostFit = 0
+		totalBkgPostFitErr = 0
+		totalBkgSigPostFit = 0
+		totalBkgSigPostFitErr = 0
+		totalDataPostFit = 0
+
+		for ibin in range( lowEdgeWindow+1, highEdgeWindow+2 ):
+
+			try: totalBkgPreFit = combineFile.Get('shapes_prefit/Bin'+str(ibin)+'/total_background').GetBinContent(1)
+			except AttributeError: continue
+			bkgPrefit.SetBinContent( ibin, totalBkgPreFit )
+
+			totalBkgSigPreFitVal = combineFile.Get('shapes_prefit/Bin'+str(ibin)+'/total').GetBinContent(1)
+			totalBkgSigPreFitValErr = combineFile.Get('shapes_prefit/Bin'+str(ibin)+'/total').GetBinError(1)
+			totalBkgSigPreFit += totalBkgSigPreFitVal
+			totalBkgSigPreFitErr += pow( totalBkgSigPreFitValErr, 2 )
+			bkgSigPrefit.SetBinContent( ibin, totalBkgSigPreFitVal )
+
+			sigPrefit.SetBinContent( ibin, combineFile.Get('shapes_prefit/Bin'+str(ibin)+'/total_signal').GetBinContent(1) )
+			dataVal = combineFile.Get('shapes_prefit/Bin'+str(ibin)+'/data').Eval(0.5)
+			totalDataPostFit += dataVal
+			totalBkgPostFitVal = combineFile.Get('shapes_fit_s/Bin'+str(ibin)+'/total_background').GetBinContent(1)
+			totalBkgPostFitValErr = combineFile.Get('shapes_fit_s/Bin'+str(ibin)+'/total_background').GetBinError(1)
+			totalBkgPostFit += totalBkgPostFitVal
+			totalBkgPostFitErr += pow( totalBkgPostFitValErr, 2 )
+
+			totalBkgSigPostFitVal = combineFile.Get('shapes_fit_s/Bin'+str(ibin)+'/total').GetBinContent(1)
+			totalBkgSigPostFitValErr = combineFile.Get('shapes_fit_s/Bin'+str(ibin)+'/total').GetBinError(1)
+			totalBkgSigPostFit += totalBkgSigPostFitVal
+			totalBkgSigPostFitErr += pow( totalBkgSigPostFitValErr, 2 )
+
+			dataPrefit.SetBinContent( ibin, dataVal  )
+			bkgPostfit.SetBinContent( ibin, totalBkgPostFitVal )
+			bkgPostfit.SetBinError( ibin, totalBkgPostFitValErr )
+			bkgSigPostfit.SetBinContent( ibin, totalBkgSigPostFitVal )
+			bkgSigPostfit.SetBinError( ibin, totalBkgSigPostFitValErr )
+
+			#totalResBkg = 0
+			#totalResBkgQCD = 0
+			#tmptt = combineFile.Get('shapes_prefit/Bin'+str(ibin)+'/tt').GetBinContent(1)/(bkgPrefit.GetBinWidth(ibin))
+			#tmpwjets = combineFile.Get('shapes_prefit/Bin'+str(ibin)+'/wjetstoqq').GetBinContent(1)/(bkgPrefit.GetBinWidth(ibin))
+			#tmpzjets = combineFile.Get('shapes_prefit/Bin'+str(ibin)+'/dyjetstoqq').GetBinContent(1)/(bkgPrefit.GetBinWidth(ibin))
+			#tmpdiboson = combineFile.Get('shapes_prefit/Bin'+str(ibin)+'/dibosons').GetBinContent(1)/(bkgPrefit.GetBinWidth(ibin))
+			#tmpQCD = combineFile.Get('shapes_prefit/Bin'+str(ibin)+'/qcd').GetBinContent(1)/(bkgPrefit.GetBinWidth(ibin))
+			#totalResBkgQCD = tmptt+ tmpwjets+ tmpzjets+ tmpdiboson+ tmpQCD
+			#print ibin, dataVal/(bkgPrefit.GetBinWidth(ibin)), tmptt, tmpwjets, tmpzjets, tmpdiboson, tmpQCD, totalResBkgQCD
+
+		##### plotting postfit
+		can = TCanvas('postFitPlots','postFitPlots', 10, 10, 750, 500 )
+		#can.SetLogy()
+		legend=TLegend(0.15,0.79,0.95,0.89)
+		legend.SetFillStyle(0)
+		legend.SetTextSize(0.04)
+		legend.SetNColumns(3)
+
+		bkgSigPrefit.GetXaxis().SetRangeUser(boostedMassAveBins[lowEdgeWindow], boostedMassAveBins[highEdgeWindow+1])
+		#bkgSigPrefit.GetYaxis().SetRangeUser( 1, 2000 )
+		bkgSigPrefit.SetMinimum(0)
+		bkgSigPrefit.SetLineWidth(2)
+		bkgSigPrefit.SetLineColor(kViolet-5)
+
+		dataPrefit.SetLineWidth(2)
+		dataPrefit.SetLineColor(kBlack)
+		legend.AddEntry( dataPrefit, 'Data', 'lep' )
+		legend.AddEntry( bkgSigPrefit, 'Sig+Bkg prefit', 'lep' )
+		bkgPrefit.SetLineWidth(2)
+		bkgPrefit.SetLineColor(kBlue-7)
+		legend.AddEntry( bkgPrefit, 'Bkg prefit', 'lep' )
+		bkgSigPrefit.SetLineWidth(2)
+		bkgSigPrefit.SetLineColor(kRed-5)
+		sigPrefit.SetLineWidth(2)
+		sigPrefit.SetLineColor(kGreen-5)
+		legend.AddEntry( sigPrefit, 'Signal prefit', 'lep' )
+		bkgPostfit.SetLineWidth(2)
+		bkgPostfit.SetLineColor(kBlue)
+		legend.AddEntry( bkgPostfit, 'Bkg postfit', 'lep' )
+		bkgSigPostfit.SetLineWidth(2)
+		bkgSigPostfit.SetLineColor(kRed)
+		legend.AddEntry( bkgSigPostfit, 'Sig+Bkg postfit', 'lep' )
+
+		bkgSigPrefit.Draw('hist')
+		bkgPrefit.Draw('hist same')
+		sigPrefit.Draw('hist same')
+		bkgPostfit.Draw('histe same')
+		bkgSigPostfit.Draw('histe same')
+		dataPrefit.Draw('histe same')
+		legend.Draw()
+		can.SaveAs('Plots/postFit_'+newOutputName+'.png')
+
+		###### read combine
+		combineFile = "higgsCombine_"+newOutputName+".Asymptotic.mH120.root"
+		XS = search( dictXS, 'RPVStopStopToJets_'+args.decay+'_M-'+str(signalMass) )
+
+		tmpFile, tmpTree, tmpEntries = getTree( combineFile, "limit" )
+		expLimit = 0
+		obsLimit = 0
+		for i in xrange(tmpEntries):
+			tmpTree.GetEntry(i)
+			tmp = round( tmpTree.quantileExpected, 2)
+			if tmp == 0.5:  expLimit = tmpTree.limit * XS 
+			if tmp == -1: obsLimit = tmpTree.limit * XS 
+
+		with open('table.txt', 'a') as txtFile:
+			txtFile.write( str(signalMass)+
+					' & ['+ str(int(boostedMassAveBins[lowEdgeWindow]))+ ','+ str(int(boostedMassAveBins[highEdgeWindow+1]))+ '] & '+
+					str(int(totalData))+ ' & ' + 
+					str(round(totalBkgSigPreFit,5))+ '$\pm$'+ str(round(TMath.Sqrt(totalBkgSigPreFitErr),5)) + ' & '+
+					str(round(totalBkgSigPostFit,5))+ '$\pm$'+ str(round(TMath.Sqrt(totalBkgSigPostFitErr),5))+ ' & '+ 
+					str(round(totalBkgPostFit,5))+ '$\pm$'+ str(round(TMath.Sqrt(totalBkgPostFitErr),5))+ ' & '+ 
+					str(round(expLimit,5))+ ' & '+ str(round(obsLimit,5))+ '\\\\\n' )
+		
+		subprocess.call( 'rename mlfit fitDiagnostics *', shell=True )
+		subprocess.call( 'rename MaxLikelihoodFit FitDiagnostics *', shell=True )
+		subprocess.call( 'mv *Diagnostics* '+statDir, shell=True )
+		if args.runCombine:
+			subprocess.call( 'rename Asymptotic AsymptoticLimits *', shell=True )
+			subprocess.call( 'mv higgsCombine* '+statDir, shell=True )
+		print ' |----> Done. Have a wonderful day. :D'
+
+	else:
+		subprocess.call( 'rename Asymptotic AsymptoticLimits *', shell=True )
 		subprocess.call( 'mv higgsCombine* '+statDir, shell=True )
 		print ' |----> Done. Have a wonderful day. :D'
 
-	print '@'*10, signalMass, ' & [ ', int(boostedMassAveBins[lowEdgeWindow]), ',', int(boostedMassAveBins[highEdgeWindow]), ' ] & ', int(totalData), ' & ', round(totalBkg,1), '$\pm$', round(totalBkgStat,1), ' & ', round(totalSig,1), '$\pm$', round(totalSigStat,1), '\\\\'
+		print '@'*10, signalMass, ' & [ ', int(boostedMassAveBins[lowEdgeWindow]), ',', int(boostedMassAveBins[highEdgeWindow+1]), ' ] & ', int(totalData), ' & ', round(totalBkg,1), '$\pm$', round(totalBkgStat,1), ' & ', round(totalSig,1), '$\pm$', round(totalSigStat,1), '\\\\'
 
 
 if __name__ == '__main__':
@@ -773,7 +922,7 @@ if __name__ == '__main__':
 	parser.add_argument('-j', '--job', action='store', dest='job', default='template', help='Process: template or fit.' )
 	parser.add_argument('-i', '--injSig', dest='signalInjec', action="store_true", default=False, help='Signal injection test.' )
 	parser.add_argument('-t', '--ttbarAsSignal', dest='ttbarAsSignal', action="store_true", default=False, help='ttbar as signal' )
-	parser.add_argument('-l', '--lumi', dest='lumi', action="store", default=1, type=int, help='Luminosity, example: 1.' )
+	parser.add_argument('-l', '--lumi', dest='lumi', action="store", default=35864, type=float, help='Luminosity, example: 1.' )
 	parser.add_argument('-nV', '--bkgUncValue', dest='bkgUncValue', type=int, default=10, help='Value for bkg nomralization uncertainty.' )
 	parser.add_argument('-u', '--unc', dest='unc', action="store_true", default=False, help='Luminosity, example: 1.' )
 	parser.add_argument('-g', '--grom', action='store', default='pruned', dest='grooming', help='Grooming Algorithm, example: Pruned, Filtered.' )
@@ -789,6 +938,7 @@ if __name__ == '__main__':
 	parser.add_argument('-b', '--numBtags', dest='numBtags', default='2btag', help='Number of btags' )
     	parser.add_argument('-r', "--runCombine", dest="runCombine", action="store_true", default=False, help="Create theta file.")
     	parser.add_argument('-T', "--createTable", dest="createTable", action="store_true", default=False, help="Create table.")
+    	parser.add_argument('-p', "--addPostfit", dest="addPostfit", action="store_true", default=False, help="Plot postfit and prefit.")
 
 	try:
 		args = parser.parse_args()
@@ -798,17 +948,17 @@ if __name__ == '__main__':
 
 	###### Input parameters
 	masses = OrderedDict()
-	minMass = 60 
-	maxMass = 451 
+	minMass = 60
+	maxMass = 451
 	lumiValue = 1.025
 	twoProngSF = 1.21
 	antithreeProngSF = 0.96
-	jesValue = 0.0
-	jerValue = 0.23
+	jesValue = 0.02
+	jerValue = 0.18
 	triggerValue = 1.03
 	twoProngValue = 1.23
-	antithreeProngValue = 1.01
-	#ttbarSF = ( 1.00 if 'jet1Tau32' in args.cutTop else 0.96 )
+	antithreeProngValue = 1.02
+	ttbarSF = 1.03
 	MCunc = ( 1.10 if 'jet1Tau32' in args.cutTop else 1.25 )
 
 	uncJES  = 1.012
@@ -826,21 +976,21 @@ if __name__ == '__main__':
 		files = glob.glob(outputFileTheta)
 		for f in files: os.remove(f)
 
-	if 'gaus' in args.job: 
+	if 'gaus' in args.job:
 
-		massList = range( 80, 200, 20) + range(200, 550, 50 )
-		gausFunctList = createGausShapes( 
-						#range( 80, 260, 20 )+[300, 350, 400], 
+		massList = range( 80, 280, 20) + range(200, 550, 50 )
+		gausFunctList = createGausShapes(
+						#range( 80, 260, 20 )+[300, 350, 400],
 						[ 80, 100, 120, 140, 160, 180, 200, 300, 350, 400 ],
 						massList,
-						'massAve_'+( 'deltaEtaDijet' if 'UDD312' in args.decay else args.numBtags ), 
-						0, 500, args.reBin, 
-						0.85, 0.45, 
-						False, 
+						'massAve_'+( 'deltaEtaDijet' if 'UDD312' in args.decay else args.numBtags ),
+						0, 500, args.reBin,
+						0.85, 0.45,
+						False,
 						plot=True )
-	else: 
-		if 'UDD312' in args.decay: massList = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 300, 350, 400, 450, 500, 550 ]
-		else: massList = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 350, 400, 450, 500, 550 ]
+	else:
+		if 'UDD312' in args.decay: massList = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 300, 350, 400 ]
+		else: massList = [ 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 350, 400 ]
 
 	if args.massValue > 0: massList = [ args.massValue ]
 	if args.signalInjec: massList = massList * 1000
@@ -853,45 +1003,44 @@ if __name__ == '__main__':
 		dataFileHistos = 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_JetHT_Run2016_80X_V2p4_'+args.version+'.root'
 		bkgFileHistos = {}
 
-		bkgFileHistos[ 'Dibosons' ] = [ TFile.Open('Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_Dibosons_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi*1., 'Dibosons', kMagenta+2 ]
-		#bkgFileHistos[ 'ZJetsToQQ' ] = [ TFile.Open('Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_ZJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi*1.45, 'Z + Jets', kOrange]
+		bkgFileHistos[ 'Dibosons' ] = [ TFile.Open('Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_Dibosons_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'Dibosons', kMagenta+2 ]
     		bkgFileHistos[ 'DYJetsToQQ' ] = [ TFile.Open('Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_DYJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi*1.45, 'DY + Jets', kOrange]
 		bkgFileHistos[ 'WJetsToQQ' ] = [ TFile.Open('Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_WJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi*1.35, 'W + Jets', 38]
-		bkgFileHistos[ 'TT' ] = [ TFile.Open('Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_TT_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi*0.98, 't #bar{t} + Jets', kGreen+2 ]
+		bkgFileHistos[ 'TT' ] = [ TFile.Open('Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_TT_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 't #bar{t} + Jets', kGreen+2 ]
 		if args.mcAsData: bkgFileHistos[ 'QCDPtAll' ] = [ TFile.Open('Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_QCDPtAll_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi*0.28, 'MC QCD multijets', kBlue ]
 
 		#if args.unc: outputName = signalSample+'_'+args.grooming+'_deltaEtaDijet_'+args.cutTop+'_Bin'+str(args.reBin)+'_'+args.version
 		if args.unc: outputName = signalSample+'_'+args.grooming+'_'+args.cutTop+'_Bin'+str(( args.reBin if args.reBin>0 else 'Reso' ))+'_'+args.version
 		else: outputName = signalSample+'_'+args.grooming+'_'+args.cutTop+'_NOSys_'+args.version
-		if args.signalInjec: 
+		if args.signalInjec:
 			outputName = outputName.replace( args.grooming, args.grooming+'_signalInjectionTest'+str(dummy0) )
 			dummy0 += 1
 		if args.withABCDTFactor: outputName = outputName.replace( args.grooming, args.grooming+'_withABCDTFactor' )
 		if args.mcAsData: outputName = outputName.replace( args.grooming, args.grooming+'_MCasDATA' )
 		if 'UDD323' in args.decay: outputName = outputName.replace( args.cutTop, args.numBtags+'_'+args.cutTop )
-		if 'gaus' in args.job: 
+		if 'gaus' in args.job:
 			outputName = outputName+'_GaussShape'
-			signalFileHistos = gausFunctList[ mass ] 
-		else: 
+			signalFileHistos = gausFunctList[ mass ]
+		else:
 			signalFileHistos = 'Rootfiles/RUNMiniBoostedAnalysis_'+args.grooming+'_RPVStopStopToJets_'+args.decay+'_M-'+str( mass )+'_Moriond17_80X_V2p4_'+args.version+'.root'
 
-		print '#'*50 
+		print '#'*50
 		print ' |----> Creating datacard and workspace for '+( str(mass) if args.ttbarAsSignal else 'RPV St'+str( mass ) )
-		print '#'*50  
+		print '#'*50
 
-		if 'bin' in args.job: 
-			binByBinCards( dataFileHistos, bkgFileHistos, signalFileHistos, 
-					signalSample, 
-					'massAve_'+( args.numBtags if 'UDD323' in args.decay else 'deltaEtaDijet' ), 
-					#'massAve_deltaEtaDijet', 
-					mass, 
-					minMass, maxMass, 
-					outputName ) 
+		if 'bin' in args.job:
+			binByBinCards( dataFileHistos, bkgFileHistos, signalFileHistos,
+					signalSample,
+					'massAve_'+( args.numBtags if 'UDD323' in args.decay else 'deltaEtaDijet' ),
+					#'massAve_deltaEtaDijet',
+					mass,
+					minMass, maxMass,
+					outputName )
 
-		else: shapeCards( dataFileHistos, TFile(bkgFileHistos), signalFileHistos, 
-					signalSample, 
-					'massAve_'+( args.numBtags if 'UDD323' in args.decay else 'deltaEtaDijet' ), 
-					mass, 
-					minMass, maxMass, 
-					outputName, 
-					outputFileTheta ) 
+		else: shapeCards( dataFileHistos, TFile(bkgFileHistos), signalFileHistos,
+					signalSample,
+					'massAve_'+( args.numBtags if 'UDD323' in args.decay else 'deltaEtaDijet' ),
+					mass,
+					minMass, maxMass,
+					outputName,
+					outputFileTheta )

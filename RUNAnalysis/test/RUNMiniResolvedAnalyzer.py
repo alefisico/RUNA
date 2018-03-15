@@ -53,6 +53,7 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 	allHistos[ "massAve_cutBestPair_"+sample ] = TH1F( "massAve_cutBestPair_"+sample, "massAve_cutBestPair_"+sample, 3000, 0., 3000 )
 	allHistos[ "massAsym_cutBestPair_"+sample ] = TH1F( "massAsym_cutBestPair_"+sample, "massAsym_cutBestPair_"+sample, 20, 0., 1 )
 	allHistos[ "deltaEta_cutBestPair_"+sample ] = TH1F( "deltaEta_cutBestPair_"+sample, "deltaEta_cutBestPair_"+sample, 50, 0., 5 )
+	allHistos[ "etas_cutBestPair_"+sample ] = TH2F( "etas_cutBestPair_"+sample, "etas_cutBestPair_"+sample, 100, -5, 5, 100, -5., 5 )
 	allHistos[ 'deltavsMassAve_cutBestPair_'+sample ] = TH2F( 'deltavsMassAve_cutBestPair_'+sample, 'deltavsMassAve_cutBestPair_'+sample, 1000, 0., 1000, 2000, -1000., 1000. )
 	allHistos[ 'deltaSumvsMassAve_cutBestPair_'+sample ] = TH2F( 'deltaSumvsMassAve_cutBestPair_'+sample, 'deltaSumvsMassAve_cutBestPair_'+sample, 1000, 0., 1000, 2000, -1000., 1000. )
 	allHistos[ "jet1Btag_cutBestPair_"+sample ] = TH1F( "jet1Btag_cutBestPair_"+sample, "jet1Btag_cutBestPair_"+sample, 20, 0., 1 )
@@ -76,6 +77,7 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 	allHistos[ "massAsym_n-1_"+sample ] = TH1F( "massAsym_n-1_"+sample, "massAsym_n-1_"+sample, 20, 0., 1 )
 	allHistos[ "massAve_massAsym_n-1_"+sample ] = TH1F( "massAve_massAsym_n-1_"+sample, "massAve_massAsym_n-1_"+sample, 3000, 0., 3000 )
 	allHistos[ "deltaEta_n-1_"+sample ] = TH1F( "deltaEta_n-1_"+sample, "deltaEta_n-1_"+sample, 50, 0., 5 )
+	allHistos[ "etas_n-1_"+sample ] = TH2F( "etas_n-1_"+sample, "etas_n-1_"+sample, 100, -5, 5, 100, -5, 5 )
 	allHistos[ "massAve_deltaEta_n-1_"+sample ] = TH1F( "massAve_deltaEta_n-1_"+sample, "massAve_deltaEta_n-1_"+sample, 3000, 0., 3000 )
 	allHistos[ 'deltavsMassAve_n-1_'+sample ] = TH2F( 'deltavsMassAve_n-1_'+sample, 'deltavsMassAve_n-1_'+sample, 1000, 0., 1000, 1000, 0., 1000. )
 
@@ -101,8 +103,9 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 
 #	################################################################################################# Running the Analysis
 	SF = TCut('lumiWeight*puWeight')
-#	lumiWeight = scaleFactor(sample)
-#	SF = 'puWeight*'+str(lumiWeight)
+	#lumiWeight = scaleFactor(sample)
+	#SF = TCut('puWeight*'+str(lumiWeight))
+	btagSF = TCut( '1' if 'JetHT' in sample else 'lumiWeight*puWeight*btagWeight') 
 	presel =  TCut( preselection )
 	fullSel = TCut( preselection + ' && ' + cuts ) 
 	print '-'*40
@@ -216,6 +219,13 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 			presel,
 			allHistos[ 'deltaEta_cutBestPair_'+sample ], 
 			1 )
+	get2DHistoFromTree( fileSample, treeName,
+			'eta1', 'eta2',
+			SF,
+			presel, 
+			allHistos[ 'etas_cutBestPair_'+sample ], 
+			1 ) #( 0.10 if 'JetHT' in sample else 1 ) )
+
 
 #	## Intermediate selection
 	getHistoFromTree( fileSample, treeName,
@@ -247,13 +257,13 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 			1 ) 
 
 #	#### checking diff deltas
-	for d in range( 150, 400, 10) :
-		getHistoFromTree( fileSample, treeName,
-				'massAve',
-				SF,
-				presel + TCut( cuts.replace('(delta1>200) && (delta2>200)', '(delta1>'+str(d)+') && (delta2>'+str(d)+')') ),
-				allHistos[ 'massAve_delta'+str(d)+'_'+sample ], 
-				1 ) #( 0.10 if 'JetHT' in sample else 1 ) )
+#	for d in range( 150, 400, 10) :
+#		getHistoFromTree( fileSample, treeName,
+#				'massAve',
+#				SF,
+#				presel + TCut( cuts.replace('(delta1>200) && (delta2>200)', '(delta1>'+str(d)+') && (delta2>'+str(d)+')') ),
+#				allHistos[ 'massAve_delta'+str(d)+'_'+sample ], 
+#				1 ) #( 0.10 if 'JetHT' in sample else 1 ) )
 
 #		getHistoFromTree( fileSample, treeName,
 #				'massAve',
@@ -305,6 +315,14 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 			presel + TCut( cuts.replace('&& (deltaEta<1.)','') ), 
 			allHistos[ 'deltaEta_n-1_'+sample ], 
 			1 ) #( 0.10 if 'JetHT' in sample else 1 ) )
+
+	get2DHistoFromTree( fileSample, treeName,
+			'eta1', 'eta2',
+			SF,
+			presel + TCut( cuts.replace('&& (deltaEta<1.)','') ), 
+			allHistos[ 'etas_n-1_'+sample ], 
+			1 ) #( 0.10 if 'JetHT' in sample else 1 ) )
+
 
 	getHistoFromTree( fileSample, treeName,
 			'massAve',
@@ -418,12 +436,11 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 	'''
 	getHistoFromTree( fileSample, treeName,
 			'massAve', 
-			SF*TCut('btagWeight'),
+			btagSF,
 			TCut( '('+ preselection + ' && ' + cuts + ' && ((jetsCSVv2[0]>0.5426) || (jetsCSVv2[1]>0.5426) ) && ( (jetsCSVv2[2]>0.5426) || (jetsCSVv2[3]>0.5426) ) )'),
 			allHistos[ 'massAve_delta_2CSVv2L_'+sample ], 
-			1 ) #( 0.10 if 'JetHT' in sample else 1 ) )
+			1 ) 
 
-	'''
 	getHistoFromTree( fileSample, treeName,
 			'jetsCSVv2[0]', 
 			SF*TCut('btagWeight'),
@@ -452,6 +469,7 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 			allHistos[ 'jetsBtag_cutBestPair_'+sample ], 
 			1 )
 
+	'''
 	getHistoFromTree( fileSample, treeName,
 			'jetsCSVv2[0]', 
 			SF*TCut('btagWeight'),
@@ -492,7 +510,7 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 	"""docstring for myAnalyzer: creates new variables from tree """
 
-	outputFileName = 'Rootfiles/RUNMiniResolvedAnalysis_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p12.root' 
+	outputFileName = 'Rootfiles/RUNMiniResolvedAnalysis_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p12_TEST.root' 
 	#outputFileName = 'Rootfiles/RUNMiniResolvedAnalysis_'+sample+UNC+'_'+( '' if 'JetHT' in sample else 'Moriond17_')+'80X_V2p4_'+args.version+'p1_4jetsOnly.root' 
 	outputFile = TFile( outputFileName, 'RECREATE' )
 
@@ -668,8 +686,8 @@ def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 				if (not 'JetHT' in sample) and ('RPV' in sample): tmpGenTLV.SetPtEtaPhiE( events.jetsGenPt[j], events.jetsGenEta[j], events.jetsGenPhi[j], events.jetsGenE[j] )
 				listOfJets.append( [ tmpTLV, events.jetsCSVv2[j], tmpGenTLV ] )
 
-		if (len(listOfJets) > 3) and (HT>1000):
-		#if len(listOfJets) == 4:
+		#if (len(listOfJets) > 3) and (HT>1000):
+		if len(listOfJets) == 4:
 			numPreselection+=1
 			comb = range(0, len(listOfJets) )
 			possibleCombinations = []
@@ -756,6 +774,7 @@ def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 					if ( varDeltaR[5] < .1 ):
 						if (( varDeltaR[8] > 200 ) and ( varDeltaR[9] > 200 )):
 							allHistos[ "massAve_delta_"+sample ].Fill( varDeltaR[0], SF )
+							if varDeltaR[0] > 1200: print str(Run)+':'+str(Lumi)+':'+str(NumEvent)
 	#						allHistos[ "deltaEta_delta_"+sample ].Fill( varDeltaR[4], SF )
 	#						allHistos[ "massAsym_delta_"+sample ].Fill( varDeltaR[5], SF )
 	#						allHistos[ 'deltavsMassAve_delta_'+sample ].Fill( varDeltaR[0], varDeltaR[8], SF )
@@ -879,7 +898,7 @@ def myAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 #	
 #	
 	print numMatched, numEntries, dummy, numPreselection 
-	outputFile.Write()
+#	outputFile.Write()
 #	#### Closing
 	print 'Writing output file: '+ outputFileName
 	outputFile.Close()

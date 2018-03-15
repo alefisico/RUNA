@@ -39,8 +39,8 @@ def finalLabels( signal, X=0.92, Y=0.50, align='right' ):
 def labels( name, camp, X=0.92, Y=0.50, align='right', listSel=[] ):
 
 	if 'cutDijet' in name: listSel = [ 'jet p_{T} > 150 GeV', 'jet |#eta| < 2.4', 'numJets > 1' ] 
-	elif 'presel' in name: listSel = [ 'Preselection' ] 
-	elif 'cutEffTrigger' in name: listSel = [ 'Preselection' ] 
+	elif 'presel' in name: listSel = [ '' ] #'Preselection' ] 
+	elif 'cutEffTrigger' in name: listSel = [ '' ] #'Preselection' ] 
 	elif 'cutHT' in name: listSel = [ 'numJets > 1', 'p_{T}^{j1} = 500 GeV',  'p_{T}^{j2} = 450 GeV' ] 
 	elif 'cutTau21' in name: listSel = [ 'numJets > 1', 'p_{T}^{j1} = 500 GeV',  'p_{T}^{j2} = 450 GeV', '#tau_{21} < 0.6']
 	elif 'cutMassAsym' in name: listSel = [ 'numJets > 1', 'p_{T}^{j1} = 500 GeV',  'p_{T}^{j2} = 450 GeV', '#tau_{21} < 0.6', '|cos(#theta*)| < 0.2', 'A < 0.1' ]
@@ -69,7 +69,7 @@ def labelAxis(name, histo, Grom ):
 
 	if ('massAve' in name) or ('MassAve' in name): 
 		if 'trimmed' in Grom: histo.GetXaxis().SetTitle( 'Average Trimmed Mass [GeV]' )
-		elif 'pruned' in Grom: histo.GetXaxis().SetTitle( 'Average Pruned Mass [GeV]' )
+		elif 'pruned' in Grom: histo.GetXaxis().SetTitle( '#bar{m} [GeV]' ) #'Average Pruned Mass [GeV]' )
 		elif 'softDrop' in Grom: histo.GetXaxis().SetTitle( 'Average Soft Drop Mass [GeV]' )
 		elif 'filtered' in Grom: histo.GetXaxis().SetTitle( 'Average Filtered Mass [GeV]' )
 		else: histo.GetXaxis().SetTitle( 'Average Mass [GeV]' )
@@ -83,8 +83,8 @@ def labelAxis(name, histo, Grom ):
 	elif 'jet2SoftDropMass' in name: histo.GetXaxis().SetTitle( '2nd Leading Soft Drop Jet Mass [GeV]' )
 	elif 'jet1Rho' in name: histo.GetXaxis().SetTitle( 'Leading Jet #rho [GeV]' )
 	elif 'jet2Rho' in name: histo.GetXaxis().SetTitle( '2nd Leading Jet #rho [GeV]' )
-	elif 'prunedMassAsym' in name: histo.GetXaxis().SetTitle( 'M_{Asym}' )
-	elif 'massAsym' in name: histo.GetXaxis().SetTitle( 'M_{Asym}' )
+	elif 'prunedMassAsym' in name: histo.GetXaxis().SetTitle( 'm_{asym}' )
+	elif 'massAsym' in name: histo.GetXaxis().SetTitle( 'M_{asym}' )
 	elif ('jet1CosThetaStar' in name) or ('cosThetaStar1' in name ): histo.GetXaxis().SetTitle( 'cos(#theta *)_{1}' )
 	elif ('jet2CosThetaStar' in name) or ('cosThetaStar2' in name ): histo.GetXaxis().SetTitle( 'cos(#theta *)_{2}' )
 	elif 'jetEta' in name: histo.GetXaxis().SetTitle( 'Jet #eta' )
@@ -129,7 +129,8 @@ def labelAxis(name, histo, Grom ):
 	elif 'jet2Mass' in name: histo.GetXaxis().SetTitle( '2nd Leading Jet Mass [GeV]' )
 	elif 'jet2Eta' in name: histo.GetXaxis().SetTitle( '2nd Leading Jet #eta' )
 	elif ('jetNum' in name) or ('numJets' in name): histo.GetXaxis().SetTitle( 'Number of Jets' )
-	elif 'deltaEta' in name: histo.GetXaxis().SetTitle( '#Delta #eta (j^{1}, j^{2})' )
+	elif 'deltaEtaDijet' in name: histo.GetXaxis().SetTitle( '#Delta #eta' )
+	elif 'deltaEta' in name: histo.GetXaxis().SetTitle( '#Delta #eta_{dijet}' )
 	elif 'deltaR' in name: histo.GetXaxis().SetTitle( '#Delta R dijet' )
 	elif 'NPV' in name: histo.GetXaxis().SetTitle( 'Number of Primary Vertex' )
 	elif 'massRes' in name: histo.GetXaxis().SetTitle( 'Fractional mass difference' )
