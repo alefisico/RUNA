@@ -239,7 +239,7 @@ def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax
 		if 'DATA' in args.process: 
 			dataHistos[ 'DATA' ].SetMarkerStyle(8)
 			dataHistos[ 'DATA' ].Draw('same')
-			CMS_lumi.extraText = "Preliminary"
+			CMS_lumi.extraText = ""#"Preliminary"
 			legend.SetNColumns(2)
 			if not 'Tau32' in args.cut:
 				for sample in signalHistos: 
@@ -364,7 +364,7 @@ def plotSignalBkg( signalFiles, bkgFiles, dataFile, nameInRoot, name, xmin, xmax
 		if 'DATA' in args.process: 
 			dataHistos[ 'DATA' ].SetMarkerStyle(8)
 			dataHistos[ 'DATA' ].Draw('same')
-			CMS_lumi.extraText = "Preliminary"
+			CMS_lumi.extraText = ""#"Preliminary"
 		signalHistos[args.mass].SetMaximum( 1.1 * max( maxList ) )
 
 		if not 'DATA' in args.process: CMS_lumi.lumi_13TeV = ''
@@ -439,7 +439,7 @@ def plot2D( inFiles, sample, scale, Groom, nameInRoot, name, titleXAxis, titleXA
 	#h1.SetMinimum(0.1)
 	h1.Draw('colz')
 
-	CMS_lumi.extraText = "Simulation Preliminary"
+	CMS_lumi.extraText = ""#"Simulation Preliminary"
 	CMS_lumi.relPosX = 0.13
 	CMS_lumi.CMS_lumi(can, 4, 0)
 	if not (legX and legY): labels( name, args.camp )
@@ -452,18 +452,22 @@ def plot2D( inFiles, sample, scale, Groom, nameInRoot, name, titleXAxis, titleXA
 def plot2DResolved( inFile1, sample1, scale1, inFile2, sample2, scale2, nameInRoot, name, titleXAxis, titleXAxis2, Xmin, Xmax, rebinx, Ymin, Ymax, rebiny, legX, legY ):
 	"""docstring for plot"""
 
-	outputFileName = nameInRoot+'_'+sample1+sample2+'_'+args.boosted+'AnalysisPlots'+args.version+'.'+args.ext 
+	outputFileName = nameInRoot+'_'+sample1+'_'+args.boosted+'AnalysisPlots'+args.version+'.'+args.ext 
 	print 'Processing.......', outputFileName
-	print nameInRoot+'_'+sample1+sample2
 	h1 = inFile1.Get( nameInRoot+'_'+sample1 if args.miniTree else args.boosted+'AnalysisPlots/'+nameInRoot )
-	tmph1 = h1.Clone()
-	tmph1.Rebin2D( rebinx, rebiny )
+	h1.Scale( scale1 )
+	#tmph1 = h1.Clone()
+	#tmph1.Rebin2D( rebinx, rebiny )
 	h2 = inFile2.Get( nameInRoot+'_'+sample2 if args.miniTree else args.boosted+'AnalysisPlots/'+nameInRoot )
-	tmph2 = h2.Clone()
-	if 'delta' in nameInRoot: tmph2.Rebin2D( 25, 100 )
-	else: tmph2.Rebin2D( 5, 10 )
-	tmph2.Scale( scale2 )
+	#tmph2 = h2.Clone()
+	if 'delta' in nameInRoot: 
+		h1.Rebin2D( 10, 100 )
+		h2.Rebin2D( 10, 100 )
+	#else: tmph2.Rebin2D( 2, 2 )
+	#else: tmph2.Rebin2D( 5, 10 )
+	h2.Scale( scale2 )
 
+	'''
 	for biny in range( 1, tmph2.GetNbinsY()+1):
 		for binx in range( 1, tmph2.GetNbinsX()+1):
 			cont = tmph2.GetBinContent( binx, biny )
@@ -471,27 +475,37 @@ def plot2DResolved( inFile1, sample1, scale1, inFile2, sample2, scale2, nameInRo
 				tmph2.SetBinContent( binx, biny, 0 )
 				tmph2.SetBinError( binx, biny, 0 )
 			else: continue
+	'''
 	
-	h1.SetMarkerColor(17)
+	h1.SetMarkerColor(15)
 	h1.GetXaxis().SetTitle( titleXAxis )
-	h1.GetYaxis().SetTitleOffset( 1.0 )
+	h1.GetYaxis().SetTitleOffset( 0.9 )
 	h1.GetYaxis().SetTitle( titleXAxis2 )
+	h2.SetMarkerColor(15)
+	h2.GetXaxis().SetTitle( titleXAxis )
+	h2.GetYaxis().SetTitleOffset( 0.9 )
+	h2.GetYaxis().SetTitle( titleXAxis2 )
 
 	if (Xmax or Ymax):
 		h1.GetXaxis().SetRangeUser( Xmin, Xmax )
 		h1.GetYaxis().SetRangeUser( Ymin, Ymax )
+		h2.GetXaxis().SetRangeUser( Xmin, Xmax )
+		h2.GetYaxis().SetRangeUser( Ymin, Ymax )
 
 	tdrStyle.SetPadRightMargin(0.12)
 	can = TCanvas('c1', 'c1',  750, 500 )
 	can.SetLogz()
 	can.SetRightMargin(0.1)
-	gStyle.SetNumberContours(10)
-	tmph1.SetLineWidth(2)
-	tmph1.SetMinimum(100)
-	tmph2.SetMinimum(1)
-	h1.Draw()
-	tmph1.Draw('same cont1')
-	tmph2.Draw('same cont')
+	#gStyle.SetNumberContours(10)
+	gStyle.SetPalette(kBird)
+	#tmph1.SetLineWidth(2)
+	#tmph1.SetMinimum(500)
+	#tmph2.SetMinimum(1)
+	h1.Draw("col")
+	#h2.Draw("col")
+	#tmph1.Draw('same cont1')
+	#tmph2.Draw('same cont')
+	#tmph2.Draw('same box')
 
 	if 'delta' in nameInRoot:
 		xline = array('d', [0,1000])
@@ -502,36 +516,38 @@ def plot2DResolved( inFile1, sample1, scale1, inFile2, sample2, scale2, nameInRo
 		line.SetLineWidth(2)
 		line.Draw("same")
 	else:
-		xline = array('d', [  -1, 2.4])
-		yline = array('d', [-2.4, 1])
+		xline = array('d', [  -1, 2.98])
+		yline = array('d', [-3.0, 1])
 		line = TGraph(2, xline, yline)
 		line.SetLineColor(kRed)
 		line.SetLineStyle(9)
 		line.SetLineWidth(2)
 		line.Draw("same")
 
-		xline2 = array('d', [-2.4, 1])
-		yline2 = array('d', [  -1, 2.4])
+		xline2 = array('d', [-3.0, 1])
+		yline2 = array('d', [  -1, 2.98])
 		line2 = TGraph(2, xline2, yline2)
 		line2.SetLineColor(kRed)
 		line2.SetLineStyle(9)
 		line2.SetLineWidth(2)
 		line2.Draw("same")
 
-	text = TLatex( 0.65, (0.8 if 'delta' in nameInRoot else 0.2 ), "#splitline{#tilde{t} #rightarrow qq' }{M_{#tilde{t}} = "+str(args.mass)+' GeV}' )
+	#text = TLatex( 0.65, (0.8 if 'delta' in nameInRoot else 0.2 ), "#splitline{#tilde{t} #rightarrow qq' }{m_{#tilde{t}} = "+str(args.mass)+' GeV}' )
+	text = TLatex( ( 0.55 if 'delta' in nameInRoot else 0.14), 0.84, "QCD multijets" )
+	#text = TLatex( ( 0.55 if 'delta' in nameInRoot else 0.14), 0.84, "#tilde{t} #rightarrow qq', m_{#tilde{t}} = "+str(args.mass)+" GeV" )
 	text.SetNDC()
 	text.SetTextFont(42) ### 62 is bold, 42 is normal
 	text.SetTextSize(0.055)
 	text.Draw('same')
 
-	CMS_lumi.extraText = "Simulation Preliminary"
-	CMS_lumi.relPosX = 0.13
+	CMS_lumi.extraText = "Simulation"#" Preliminary"
+	CMS_lumi.relPosX = 0.12
+	CMS_lumi.lumi_13TeV = ""
 	CMS_lumi.CMS_lumi(can, 4, 0)
 	if not (legX and legY): labels( name, args.camp )
 	else: labels( name, args.camp, legX, legY )
 
 	can.SaveAs( 'Plots/'+outputFileName )
-	#can.SaveAs( 'Plots/'+outputFileName.replace(''+args.ext, 'gif') )
 	del can
 
 
@@ -782,7 +798,7 @@ def plotSignalShape( nameInRoot, rebinX, massList, massWidthList, log ):
 			histos[ massList[m] ].SetLineWidth(2)
 			histos[ massList[m] ].SetLineColor( dummy )
 			histos[ massList[m] ].SetFillColorAlpha( dummy, 0.2 )
-			legend.AddEntry( histos[ massList[m] ], 'M_{#tilde{t}} = '+str( massList[m] )+' GeV' , 'l' )
+			legend.AddEntry( histos[ massList[m] ], 'm_{#tilde{t}} = '+str( massList[m] )+' GeV' , 'l' )
 		else:
 			functs[ massList[m] ] = TF1( "RPVStop"+str(massList[m]), "gaus", massList[m]-massWindow, massList[m]+massWindow )
 			functs[ massList[m] ].SetParameter( 0, histos[ massList[m] ].GetFunction("gaus").GetParameter( 0 ) )
@@ -792,7 +808,7 @@ def plotSignalShape( nameInRoot, rebinX, massList, massWidthList, log ):
 			tmpTGraph.SetLineColor( dummy )
 			tmpTGraph.SetLineWidth( 2 )
 			tmpTGraph.SetFillColorAlpha( dummy, 0.2 )
-			legend.AddEntry( tmpTGraph, 'M_{#tilde{t}} = '+str( massList[m] )+' GeV' , 'l' )
+			legend.AddEntry( tmpTGraph, 'm_{#tilde{t}} = '+str( massList[m] )+' GeV' , 'l' )
 			multiGraph.Add( tmpTGraph )
 			del tmpTGraph
 		dummy+= 1
@@ -822,7 +838,7 @@ def plotSignalShape( nameInRoot, rebinX, massList, massWidthList, log ):
 
 
 	legend.Draw()
-	CMS_lumi.extraText = "Simulation Preliminary"
+	CMS_lumi.extraText = "Simulation" # Preliminary"
 	CMS_lumi.lumi_13TeV = ''
 	CMS_lumi.relPosX = 0.12
 	CMS_lumi.CMS_lumi(can, 4, 0)
@@ -974,7 +990,7 @@ def plotSignalAcceptance( miniRunaFile, nameInRoot, massList, massWidthList, log
 
 
 	legend.Draw()
-	CMS_lumi.extraText = "Simulation Preliminary"
+	CMS_lumi.extraText = "Simulation" # Preliminary"
 	CMS_lumi.lumi_13TeV = ''
 	CMS_lumi.relPosX = 0.12
 	CMS_lumi.CMS_lumi(can, 4, 0)
@@ -1613,12 +1629,12 @@ if __name__ == '__main__':
 		dataFile = TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_JetHT_Run2016_80X_V2p4_'+args.version+'.root')
 
 		signalFiles[ args.mass ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_Moriond17_80X_V2p4_'+args.version+'.root'), 
-				args.lumi, 'M_{#tilde{t}} = '+str(args.mass)+' GeV', kRed]
+				args.lumi, 'm_{#tilde{t}} = '+str(args.mass)+' GeV', kRed]
 
-		if ( 'Norm' in args.process ) or ( 'DATA' in args.process ) or ( 'CF' in args.process ): 
-			otherMass = ( '200' if args.boosted == 'Boosted' else '700' )
-			signalFiles[ otherMass ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+otherMass+'_Moriond17_80X_V2p4_'+args.version+'.root'), 
-					args.lumi, 'M_{#tilde{t}} = '+otherMass+' GeV',  kPink+9]
+		#if ( 'Norm' in args.process ) or ( 'DATA' in args.process ) or ( 'CF' in args.process ): 
+		#	otherMass = ( '200' if args.boosted == 'Boosted' else '700' )
+		#	signalFiles[ otherMass ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_RPVStopStopToJets_'+args.decay+'_M-'+otherMass+'_Moriond17_80X_V2p4_'+args.version+'.root'), 
+		#			args.lumi, 'm_{#tilde{t}} = '+otherMass+' GeV',  kPink+9]
 
 		if 'Boosted' in args.boosted: 
 			bkgFiles[ 'Dibosons' ] = [ TFile.Open(folder+'/RUNMini'+args.boosted+'Analysis'+( '' if 'Resolved' in args.boosted else '_'+args.grooming )+'_Dibosons_Moriond17_80X_V2p4_'+args.version+'.root'), 
@@ -1640,12 +1656,12 @@ if __name__ == '__main__':
 		dataFile = TFile.Open(folder+'/RUNAnalysis_JetHT_Run2016_80X_V2p4_'+args.version+'.root')
 
 		signalFiles[ args.mass ] = [ TFile.Open(folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass)+'_80X_V2p4_'+args.version+'.root'), 
-						args.lumi, 'M_{#tilde{t}} = '+str(args.mass)+' GeV', kRed]
+						args.lumi, 'm_{#tilde{t}} = '+str(args.mass)+' GeV', kRed]
 
 		if ( 'Norm' in args.process ) or ( 'DATA' in args.process ) or ( 'CF' in args.process ): 
 			otherMass = ( 180 if args.boosted == 'Boosted' else 700 )
 			signalFiles[ otherMass ] = [ TFile.Open(folder+'/RUNAnalysis_RPVStopStopToJets_'+args.decay+'_M-'+str(otherMass)+'_80X_V2p4_'+args.version+'.root'), 
-						args.lumi, 'M_{#tilde{t}} = '+str(otherMass)+' GeV', kRed]
+						args.lumi, 'm_{#tilde{t}} = '+str(otherMass)+' GeV', kRed]
 
 		if 'Boosted' in args.boosted: 
 			bkgFiles[ 'Dibosons' ] = [ TFile.Open(folder+'/RUNAnalysis_Dibosons_80X_V2p4_'+args.version+'.root'), 
@@ -1698,7 +1714,7 @@ if __name__ == '__main__':
 		[ '2D', 'Resolved', 'massAvevsjet34Mass', 'average dijet mass [GeV]', 'dijet 2 mass [GeV]', 0, 1000, 20, 0, 1000, 20, jetMassHTlabX, jetMassHTlabY],
 		[ '2D', 'Resolved', 'massAvevsjet12Mass', 'average dijet mass [GeV]', 'dijet 1 mass [GeV]', 0, 1000, 20, 0, 1000, 20, jetMassHTlabX, jetMassHTlabY],
 		[ '2DResolved', 'Resolved', 'deltavsMassAve', '#bar{M} [GeV]', '#Delta [GeV]', 350, 900, 200, -100, 1000, 40, jetMassHTlabX, jetMassHTlabY],
-		[ '2DResolved', 'Resolved', 'etas', '#eta_{jj1}', '#eta_{jj2}', -2.4, 2.4, 10, -2.4, 2.4, 10, jetMassHTlabX, jetMassHTlabY],
+		[ '2DResolved', 'Resolved', 'etas', '#eta_{jj1}', '#eta_{jj2}', -3.0, 3.0, 10, -3.0, 3.0, 10, jetMassHTlabX, jetMassHTlabY],
 
 		[ '1D', 'Boosted', 'jet1Pt', 100, 1500, 1, '', '', False],
 		[ '1D', 'Boosted', 'jet1Eta', -3, 3, 1, '', '', False],
@@ -1815,7 +1831,7 @@ if __name__ == '__main__':
 		[ 'Norm', 'Boosted', 'subjetPtRatio', '', '', 1, '', '', True, False],
 		[ 'Norm', 'Boosted', 'jet1CosThetaStar', '', '', 1, '', '', False, False],
 		[ 'NormDATA', 'Resolved', 'massAsym', '', '', 1, '', '', False, False],
-		[ 'NormDATA', 'Resolved', 'deltaEta', '', '', 5, '', '', False, False],
+		[ 'NormDATA', 'Resolved', 'deltaEta', '', '', 10, '', '', False, False],
 		[ 'NormDATA', 'Resolved', 'jetsBtag', '', '', 1, '', '', False, False],
 		[ 'Norm', 'Resolved', 'minDeltaR', '', '', 1, '', '', False, False],
 		[ 'Norm', 'Resolved', 'minChi2', 0, 1, 1, '', '', False, False],
@@ -1909,7 +1925,11 @@ if __name__ == '__main__':
 			#plot2D( inputFileZJetsToQQ, 'ZJets', args.grooming, i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10] )
 
 		elif '2DResolved' in args.process:
-			plot2DResolved( dataFile, 'JetHT_Run2016', 1, signalFiles[ args.mass ][0], 'RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass), signalFiles[ args.mass ][1], i[0]+'_'+args.cut, i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10] )
+			plot2DResolved( 
+					bkgFiles[ 'QCD'+args.qcd+'All' ][0], 'QCD'+args.qcd+'All', bkgFiles[ 'QCD'+args.qcd+'All' ][1],
+					#dataFile, 'JetHT_Run2016', 1, 
+					signalFiles[ args.mass ][0], 'RPVStopStopToJets_'+args.decay+'_M-'+str(args.mass), signalFiles[ args.mass ][1], 
+					i[0]+'_'+args.cut, i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10] )
 
 		elif '1D' in args.process:
 			plotSignalBkg( signalFiles, bkgFiles, dataFile, 

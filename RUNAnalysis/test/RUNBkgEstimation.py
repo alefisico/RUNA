@@ -526,7 +526,7 @@ def ABCDTFunctionCalculation( nameInRoot, binning, minX, maxX,
 		#hDataCD.Draw("sames")
 		hDataMinusResBkgCD.Draw("sames")
 
-		CMS_lumi.extraText = "Preliminary"
+		CMS_lumi.extraText = ""#"Preliminary"
 		CMS_lumi.relPosX = 0.13
 		CMS_lumi.CMS_lumi(canCD, 4, 0)
 
@@ -967,7 +967,7 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 				binWidth, xmin, xmax, 
 				[dataHistos[ 'DATA_A' ], hABCDOnlySys], "Data/Bkg", 
 				'', 'Log_BCDratio'+args.ratioABCD+'PlusMCbkgs_'+args.cutTop, 
-				False, 
+				True, 
 				addHisto=addAllBkg, 
 				stackHistos=[ 
 					[ MCBkgHistos[ 'Dibosons_A' ].Clone(), 'Dibosons' ], 
@@ -1242,7 +1242,7 @@ def bkgEstimation( dataFile, bkgFiles, signalFiles, cutFinal, xmin, xmax, rebinX
 				binWidth, xmin, xmax, 
 				[dataHistos[ 'DATA_'+args.numBtags+'_A' ], hBtagABCDOnlySys], "Data/Bkg", 
 				'', args.numBtags+'_Log_BCDratio'+args.ratioABCD+'PlusMCbkgs_'+args.cutTop, 
-				False, 
+				True, 
 				addHisto=addAllBkgBtag, 
 				stackHistos=[ 
 					[ MCBkgHistos[ 'Dibosons_'+args.numBtags+'_A' ].Clone(), 'Dibosons' ], 
@@ -1453,7 +1453,7 @@ def makePlots( nameInRoot,
 	else: legend.AddEntry( histo1, labelh1, 'l' )
 	if isinstance(tmphisto2, THStack):
 		for sh in stackHistos: 
-			if isinstance(sh, int): legend.AddEntry( signalHistos[ str(sh) ], 'M_{#tilde{t}} = '+str(sh)+' GeV', 'l' )
+			if isinstance(sh, int): legend.AddEntry( signalHistos[ str(sh) ], 'm_{#tilde{t}} = '+str(sh)+' GeV', 'l' )
 			else: legend.AddEntry( sh[0], sh[1], 'f' ) 
 	else: legend.AddEntry( histo2, labelh2, 'pl' )
 	
@@ -1538,7 +1538,8 @@ def makePlots( nameInRoot,
 	if 'Data' in labelh1: tmpLabel = 'Data'
 	else: tmpLabel = 'SR'
 
-	CMS_lumi.extraText = ("Preliminary" if 'Data' in labelh1 else "Simulation Preliminary")
+	#CMS_lumi.extraText = ("Preliminary" if 'Data' in labelh1 else "Simulation Preliminary")
+	CMS_lumi.extraText = ("" if 'Data' in labelh1 else "Simulation")
 	CMS_lumi.relPosX = 0.13
 	CMS_lumi.CMS_lumi(pad1, 4, 0)
 	legend.Draw()
@@ -1732,7 +1733,7 @@ def tmpPlotBkgEstimation( dataFile, nameInRoot, xmin, xmax, rebinX, labX, labY, 
 	hData_A.Draw("histe")
 	tmpBCD.Draw('histe same')
 
-	CMS_lumi.extraText = "Preliminary"
+	CMS_lumi.extraText = ""#Preliminary"
 	CMS_lumi.relPosX = 0.13
 	CMS_lumi.CMS_lumi(pad1, 4, 0)
 	legend3.Draw()
@@ -1863,8 +1864,8 @@ def plot2DBkgEstimation( rootFile, dataFile, sample, nameInRoot, scale, titleXAx
 		quantileHistos[ 'Y'+str(q) ] = hBkg.QuantilesY( q/10., hBkg.GetName()+'_qY0p'+str(q) )
 		quantileHistos[ 'Y'+str(q) ] = convertTH1toTGraph( quantileHistos[ 'Y'+str(q) ] )
 
-	if 'DATA' in sample: CMS_lumi.extraText = "Preliminary"
-	else: CMS_lumi.extraText = "Simulation Preliminary"
+	if 'JetHT' in sample: CMS_lumi.extraText = ""#"Preliminary"
+	else: CMS_lumi.extraText = "Simulation" # Preliminary"
 	hBkg.GetXaxis().SetTitle( titleXAxis )
 	hBkg.GetYaxis().SetTitleOffset( 0.9 )
 	hBkg.GetYaxis().SetTitle( titleXAxis2 )
@@ -1889,7 +1890,7 @@ def plot2DBkgEstimation( rootFile, dataFile, sample, nameInRoot, scale, titleXAx
 	#	quantileHistos[k].SetLineWidth(2)
 	#	quantileHistos[k].Draw( ( "C" if ('Y' in k) else "hist same" ) )
 
-	textBox.DrawLatex(0.85, 0.85, ( 'M_{#tilde{t}} = '+args.mass+' GeV' if 'RPV' in sample else 'Data - incl. selection' ) )
+	textBox.DrawLatex(0.85, 0.85, ( 'm_{#tilde{t}} = '+args.mass+' GeV' if 'RPV' in sample else 'Data - incl. selection' ) )
 	textBox1 = textBox.Clone()
 	textBox1.DrawLatex(0.85, 0.8, 'Corr. Factor = '+str(round(corrFactor,2)))
 	textBox2 = textBox.Clone()
@@ -2002,10 +2003,10 @@ if __name__ == '__main__':
 	#dataFileName = filePrefix+'_JetHT_Run2016_80X_V2p4_v09p10.root'
 	dataFile = TFile.Open(dataFileName)
 
-	signalFiles[ args.mass ] = [ TFile.Open(filePrefix+'_RPVStopStopToJets_'+args.decay+'_M-'+args.mass+'_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = '+args.mass+' GeV', kRed]
+	signalFiles[ args.mass ] = [ TFile.Open(filePrefix+'_RPVStopStopToJets_'+args.decay+'_M-'+args.mass+'_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'm_{#tilde{t}} = '+args.mass+' GeV', kRed]
 	if args.final:
-		signalFiles[ '200' ] = [ TFile.Open(filePrefix+'_RPVStopStopToJets_'+args.decay+'_M-200_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = 200 GeV', kMagenta]
-		#signalFiles[ '240' ] = [ TFile.Open(filePrefix+'_RPVStopStopToJets_'+args.decay+'_M-240_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'M_{#tilde{t}} = 240 GeV', kMagenta-4]
+		signalFiles[ '200' ] = [ TFile.Open(filePrefix+'_RPVStopStopToJets_'+args.decay+'_M-200_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'm_{#tilde{t}} = 200 GeV', kMagenta]
+		#signalFiles[ '240' ] = [ TFile.Open(filePrefix+'_RPVStopStopToJets_'+args.decay+'_M-240_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'm_{#tilde{t}} = 240 GeV', kMagenta-4]
 	bkgFiles[ 'Dibosons' ] = [ TFile.Open(filePrefix+'_Dibosons_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi, 'Dibosons', kMagenta+2 ]
     	bkgFiles[ 'DYJetsToQQ' ] = [ TFile.Open(filePrefix+'_DYJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi*1.45, 'Z(q#bar{q})+jets', kOrange]
     	bkgFiles[ 'WJetsToQQ' ] = [ TFile.Open(filePrefix+'_WJetsToQQ_Moriond17_80X_V2p4_'+args.version+'.root'), args.lumi*1.35, "W(q'#bar{q})+jets", 38]
@@ -2026,7 +2027,6 @@ if __name__ == '__main__':
 		scaleFactorABCD = 'B'
 
 	if '2D' in args.proc: 
-		'''
 		for signal in signalFiles: 
 			plot2DBkgEstimation( 
 					signalFiles[ signal ][0], '', 'RPVStopStopToJets_'+args.decay+'_M-'+str(signal), 
@@ -2034,6 +2034,7 @@ if __name__ == '__main__':
 					signalFiles[ signal ][1],
 					'm_{asym}', '#Delta #eta', 
 					0, 1, 1, 0, 5, 1, jetMassHTlabX, jetMassHTlabY)
+		'''
 		for bkg in bkgFiles: 
 			plot2DBkgEstimation( 
 					bkgFiles[ bkg ][0], '', bkg, 

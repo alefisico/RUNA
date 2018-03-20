@@ -79,7 +79,7 @@ def myPlotAnalyzer( fileSample, preselection, cuts, sample, UNC ):
 	allHistos[ "deltaEta_n-1_"+sample ] = TH1F( "deltaEta_n-1_"+sample, "deltaEta_n-1_"+sample, 50, 0., 5 )
 	allHistos[ "etas_n-1_"+sample ] = TH2F( "etas_n-1_"+sample, "etas_n-1_"+sample, 100, -5, 5, 100, -5, 5 )
 	allHistos[ "massAve_deltaEta_n-1_"+sample ] = TH1F( "massAve_deltaEta_n-1_"+sample, "massAve_deltaEta_n-1_"+sample, 3000, 0., 3000 )
-	allHistos[ 'deltavsMassAve_n-1_'+sample ] = TH2F( 'deltavsMassAve_n-1_'+sample, 'deltavsMassAve_n-1_'+sample, 1000, 0., 1000, 1000, 0., 1000. )
+	allHistos[ 'deltavsMassAve_n-1_'+sample ] = TH2F( 'deltavsMassAve_n-1_'+sample, 'deltavsMassAve_n-1_'+sample, 1000, 0., 1000, 2000, -1000., 1000. )
 
 	#allHistos[ "massAve_delta_1qgl_"+sample ] = TH1F( "massAve_delta_1qgl_"+sample, "massAve_delta_1qgl_"+sample, 3000, 0., 3000 )
 	#allHistos[ "massAve_delta_2qgl_"+sample ] = TH1F( "massAve_delta_2qgl_"+sample, "massAve_delta_2qgl_"+sample, 3000, 0., 3000 )

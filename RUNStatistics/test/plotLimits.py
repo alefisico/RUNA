@@ -447,6 +447,7 @@ def plotFinalLimits( boostedMasses, boostedVersion, resolvedMasses, resolvedVers
 #		textBox3 = textBox.Clone()
 #		textBox3.DrawLatex( (0.43 if args.log else ( 0.27 if 'UDD312' in args.decay else 0.30 ) ), 0.17, 'Resolved')
 
+	CMS_lumi.extraText = "" #Preliminary"
 	CMS_lumi.relPosX = 0.13
 	CMS_lumi.CMS_lumi(c, 4, 0)
 
